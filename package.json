@@ -36,6 +36,5 @@
     "sass": "^1.72.0",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
-  },
-  "packageManager": "yarn@4.2.2+sha256.1aa43a5304405be7a7cb9cb5de7b97de9c4e8ddd3273e4dad00d6ae3eb39f0ef"
+  }
 }
