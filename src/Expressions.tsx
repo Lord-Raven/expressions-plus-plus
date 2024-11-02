@@ -1,7 +1,7 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import {env, pipeline} from '@xenova/transformers';
+import { Client } from "@gradio/client";
 
 type MessageStateType = { [key: string]: Emotion };
 type ConfigType = {
@@ -73,14 +73,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         this.charsToPacks = {};
         this.hasPack = false;
         this.pipeline = null;
-        // This env setup is our own convention and not likely to be something
-        // you'll want to do. We only host an extremely small subset of ONNX
-        // HF models for things like this.
-        env.allowRemoteModels = true;
-        env.allowLocalModels = false;
-        // This is fake and redirected within Cloudflare. If you need a model hosted/redirected
-        // for this let me know.
-        env.remoteHost = 'https://expressions-extension-768927333d4d.c5v4v4jx6pq5.win/';
 
         // Very very ugly, but just loading up emotion packs and current state,
         // with a lot of ick from most fields being optional/possibly-undefined
@@ -110,8 +102,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
         try {
-            this.pipeline = await pipeline("text-classification",
-                "SamLowe/roberta-base-go_emotions");
+            this.pipeline = await Client.connect("lloorree/SamLowe-roberta-base-go_emotions");
         } catch (except: any) {
             console.error(`Error loading expressions pipeline, error: ${except}`);
             return { success: true, error: null }
@@ -154,7 +145,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         let newEmotion = 'neutral';
         if(this.pipeline != null) {
             try {
-                newEmotion = (await this.pipeline(botMessage.content))[0].label;
+                newEmotion = (await this.pipeline.predict("/predict", {
+                    param_0: botMessage.content,
+                })).data[0].label;
             } catch (except: any) {
                 console.warn(`Error classifying expression, error: ${except}`);
                 newEmotion = this.fallbackClassify(botMessage.content);
