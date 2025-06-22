@@ -147,7 +147,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async beforePrompt(userMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
-        // Don't really care about this.
         return {
             extensionMessage: null,
             stageDirections: null,

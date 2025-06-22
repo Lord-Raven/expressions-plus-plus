@@ -2,7 +2,7 @@
 #   in which case these values can be managed in the UI.
 
 # The name of the extension.
-project_name: "Expressions PLUS PLUS"
+project_name: "Expressions++"
 
 # A short tagline to show in search.
 tagline: "Shows character emotions based on a set of images. PLUS PLUS."
@@ -31,20 +31,32 @@ tags:
 #   defined schema, it won't work.
 # Config schemas are a superset of JSON Schema format
 # @link https://json-schema.org
+# Whether this REQUIRES a user-given configuration,
+#   versus being able to handle nulls/default values.
+needs_config: false
+# The schema of any user-supplied config.
+# If your extension requires a configuration but has no
+#   defined schema, it won't work.
+# Config schemas are a superset of JSON Schema format
+# @link https://json-schema.org
 config_schema:
+  # Ignored.
+  $schema: "https://json-schema.org/draft/2020-12/schema"
   # Will show in the UI. If not given, will be `${project_name} Config`
   title: Expressions Config
-  type: object
+  # Will show in the UI if not null or empty as a subtitle.
+  description: ''
+  type: "object"
   properties:
     selected:
       # The beginning of non-standard JSON Schema behavior.
       # JSchema isn't great with the concept of dynamic
       # schema generation. This is our little addition
       # to make it easy to define "I need this setting for each character".
-      type: character_map
+      type: "character_map"
       # Could also be an object, etc.
       value_type:
-        type: string,
+        type: "string",
         enum: 'character.extensions.chub.alt_expressions.keys()'
         default: 'default'
       # For the type "character_map",
@@ -58,6 +70,7 @@ config_schema:
       type: boolean
       default: false
       required: false
+  required: []
 
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
 
