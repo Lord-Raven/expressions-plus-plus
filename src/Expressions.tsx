@@ -75,11 +75,15 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             messageState,
             chatState
         } = data;
+
+        console.log("constructing");
+
         this.charsToEmotions = {};
         this.charsToPacks = {};
         this.hasPack = false;
         this.pipeline = null;
         this.autoGenerate = config?.autoGenerate ?? true;
+
 
         // Very very ugly, but just loading up emotion packs and current state,
         // with a lot of ick from most fields being optional/possibly-undefined
@@ -107,15 +111,20 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }
             }
         });
+
+        console.log("done constructing");
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
+        console.log("loading");
+
         try {
             this.pipeline = await Client.connect("ravenok/emotions");
         } catch (except: any) {
             console.error(`Error loading expressions pipeline, error: ${except}`);
             return { success: true, error: null }
         }
+        console.log(`done loading: ${this.hasPack}`);
         return {
             success: this.hasPack,
             error: null
