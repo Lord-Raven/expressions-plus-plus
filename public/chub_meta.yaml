@@ -34,14 +34,7 @@ tags:
 # Whether this REQUIRES a user-given configuration,
 #   versus being able to handle nulls/default values.
 needs_config: false
-# The schema of any user-supplied config.
-# If your extension requires a configuration but has no
-#   defined schema, it won't work.
-# Config schemas are a superset of JSON Schema format
-# @link https://json-schema.org
 config_schema:
-  # Ignored.
-  $schema: "https://json-schema.org/draft/2020-12/schema"
   # Will show in the UI. If not given, will be `${project_name} Config`
   title: Expressions Config
   # Will show in the UI if not null or empty as a subtitle.
