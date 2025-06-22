@@ -133,7 +133,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.error(`Error loading expressions pipeline, error: ${except}`);
             return { success: true, error: null }
         }
-        console.log(`done loading: ${this.hasPack}`);
+        console.log(`Done loading: ${this.hasPack}`);
         return {
             success: this.hasPack,
             error: null

@@ -5,7 +5,7 @@
 project_name: "Expressions by Ravenok"
 
 # A short tagline to show in search.
-tagline: "Shows character emotions based on a set of images. PLUS PLUS."
+tagline: "Shows character emotions based on a set of images. Ravenok's Cut."
 
 # A longer explanation. Supports Markdown format.
 creator_notes: "Requires at least one character in the chat to have an expression pack to work. 
