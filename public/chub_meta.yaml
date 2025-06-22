@@ -5,7 +5,7 @@
 project_name: "Expressions Plus Plus"
 
 # A short tagline to show in search.
-tagline: "Shows character emotions based on a set of images. The Ravenok's cut."
+tagline: "Shows character emotions based on a set of images. The Ravenok cut."
 
 # A longer explanation. Supports Markdown format.
 creator_notes: "Requires at least one character in the chat to have an expression pack to work. 
@@ -40,7 +40,7 @@ config_schema:
   # Will show in the UI. If not given, will be `${project_name} Config`
   title: Expressions Config
   # Will show in the UI if not null or empty as a subtitle.
-  description: Configuration for this stage.
+  description: ''
   type: "object"
   properties:
     selected:
@@ -59,7 +59,7 @@ config_schema:
       # If true, required for each character.
       required: false
       # Information shown beside this part of the form.
-      description: Which expression pack to use, if there are multiple.
+      description: "Which expression pack to use, if there are multiple.""
   required: []
 
 needs_history: false
