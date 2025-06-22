@@ -59,7 +59,7 @@ config_schema:
       # If true, required for each character.
       required: false
       # Information shown beside this part of the form.
-      description: "Which expression pack to use, if there are multiple.""
+      description: "Which expression pack to use, if there are multiple."
   required: []
 
 needs_history: false
