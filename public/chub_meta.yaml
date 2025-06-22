@@ -2,7 +2,7 @@
 #   in which case these values can be managed in the UI.
 
 # The name of the extension.
-project_name: "Expressions Plus Plus"
+project_name: "Expressions Plusity Plus"
 
 # A short tagline to show in search.
 tagline: "Shows character emotions based on a set of images. The Ravenok's cut."
@@ -48,7 +48,7 @@ config_schema:
       # JSchema isn't great with the concept of dynamic
       # schema generation. This is our little addition
       # to make it easy to define "I need this setting for each character".
-      type: character_map
+      type: "character_map"
       # Could also be an object, etc.
       value_type:
         type: string,
