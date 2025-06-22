@@ -2,7 +2,7 @@
 #   in which case these values can be managed in the UI.
 
 # The name of the extension.
-project_name: "Expressions Plusity Plus Plus"
+project_name: "Expressions Plus Plus"
 
 # A short tagline to show in search.
 tagline: "Shows character emotions based on a set of images. The Ravenok's cut."
@@ -41,7 +41,7 @@ config_schema:
   title: Expressions Config
   # Will show in the UI if not null or empty as a subtitle.
   description: Configuration for this stage.
-  type: object
+  type: "object"
   properties:
     selected:
       # The beginning of non-standard JSON Schema behavior.
