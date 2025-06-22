@@ -17,12 +17,12 @@ visibility: 'PRIVATE'
 
 # Self-explanatory.
 tags:
-  - 'Extension'
-  - 'Expressions'
-  - 'Expression Packs'
-  - 'Emotions'
-  - 'Stage'
-  - 'Add-on'
+ - 'Extension'
+ - 'Expressions'
+ - 'Expression Packs'
+ - 'Emotions'
+ - 'Stage'
+ - 'Add-on'
 
 # Whether this REQUIRES a user-given configuration,
 #   versus being able to handle nulls/default values.
