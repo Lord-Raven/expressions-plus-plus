@@ -87,3 +87,4 @@ ratings_disabled: false
 #    but currently does nothing.
 permissions:
 
+github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
