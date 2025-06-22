@@ -62,6 +62,13 @@ config_schema:
       description: Which expression pack to use, if there are multiple.
   required: []
 
+needs_history: false
+state_schema:
+  type: "character_map"
+  value_type:
+    type: "string"
+    default: "neutral"
+
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
 
 extension_id: 'expressions-plus-plus-a8db5f0bd422'
