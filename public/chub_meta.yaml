@@ -2,7 +2,7 @@
 #   in which case these values can be managed in the UI.
 
 # The name of the extension.
-project_name: "Expression Packs"
+project_name: "Expressions++"
 
 # A short tagline to show in search.
 tagline: "Shows character emotions based on a set of images."
@@ -13,7 +13,7 @@ creator_notes: "Requires at least one character in the chat to have an expressio
 Uses Transformers.js with a quantized ONNX version of [SamLowe/roberta-base-go_emotions](https://huggingface.co/SamLowe/roberta-base-go_emotions)."
 
 # 'PUBLIC', 'PRIVATE', or 'UNLISTED'.
-visibility: 'PUBLIC'
+visibility: 'PRIVATE'
 
 # Self-explanatory.
 tags:
@@ -21,6 +21,8 @@ tags:
   - 'Expressions'
   - 'Expression Packs'
   - 'Emotions'
+  - 'Stage'
+  - 'Add-on'
 
 # Whether this REQUIRES a user-given configuration,
 #   versus being able to handle nulls/default values.
@@ -85,9 +87,3 @@ ratings_disabled: false
 #    but currently does nothing.
 permissions:
 
-# This is automatically generated on push with a new project;
-#    you should not make or set this value.
-extension_id: 'expressions-extension-768927333d4d'
-
-# Will be added if it does not exist. The URL of the repo.
-github_path: 'https://github.com/CharHubAI/expressions-stage'

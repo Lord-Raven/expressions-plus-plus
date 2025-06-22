@@ -102,7 +102,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
         try {
-            this.pipeline = await Client.connect("lloorree/SamLowe-roberta-base-go_emotions");
+            this.pipeline = await Client.connect("ravenok/emotions");
         } catch (except: any) {
             console.error(`Error loading expressions pipeline, error: ${except}`);
             return { success: true, error: null }
@@ -145,9 +145,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         let newEmotion = 'neutral';
         if(this.pipeline != null) {
             try {
-                newEmotion = (await this.pipeline.predict("/predict", {
+                const emotionResult = (await this.pipeline.predict("/predict", {
                     param_0: botMessage.content,
-                })).data[0].label;
+                }))
+                console.log(`Emotion result: ${emotionResult}`);
+                newEmotion = emotionResult.data[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.2)?.label ?? newEmotion;
             } catch (except: any) {
                 console.warn(`Error classifying expression, error: ${except}`);
                 newEmotion = this.fallbackClassify(botMessage.content);
