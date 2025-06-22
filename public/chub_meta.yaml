@@ -2,7 +2,7 @@
 #   in which case these values can be managed in the UI.
 
 # The name of the extension.
-project_name: "Expressions Plusity Plus"
+project_name: "Expressions Plusity Plus Plus"
 
 # A short tagline to show in search.
 tagline: "Shows character emotions based on a set of images. The Ravenok's cut."
@@ -51,7 +51,7 @@ config_schema:
       type: "character_map"
       # Could also be an object, etc.
       value_type:
-        type: string,
+        type: "string",
         enum: 'character.extensions.chub.alt_expressions.keys()'
         default: 'default'
       # For the type "character_map",
