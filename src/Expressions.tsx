@@ -125,7 +125,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
-        console.log("loading");
+        console.log("Loading");
 
         try {
             this.pipeline = await Client.connect("ravenok/emotions");

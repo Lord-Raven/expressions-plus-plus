@@ -5,7 +5,7 @@
 project_name: "Expressions by Ravenok"
 
 # A short tagline to show in search.
-tagline: "Shows character emotions based on a set of images. Ravenok's Cut."
+tagline: "Shows character emotions based on a set of images. The Ravenok's cut."
 
 # A longer explanation. Supports Markdown format.
 creator_notes: "Requires at least one character in the chat to have an expression pack to work. 
@@ -38,18 +38,18 @@ config_schema:
   # Will show in the UI. If not given, will be `${project_name} Config`
   title: Expressions Config
   # Will show in the UI if not null or empty as a subtitle.
-  description: ''
-  type: "object"
+  description: Configuration for this stage.
+  type: object
   properties:
     selected:
       # The beginning of non-standard JSON Schema behavior.
       # JSchema isn't great with the concept of dynamic
       # schema generation. This is our little addition
       # to make it easy to define "I need this setting for each character".
-      type: "character_map"
+      type: character_map
       # Could also be an object, etc.
       value_type:
-        type: "string",
+        type: string,
         enum: 'character.extensions.chub.alt_expressions.keys()'
         default: 'default'
       # For the type "character_map",
@@ -57,7 +57,7 @@ config_schema:
       # If true, required for each character.
       required: false
       # Information shown beside this part of the form.
-      description: "Which expression pack to use, if there are multiple."
+      description: Which expression pack to use, if there are multiple.
   required: []
 
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
