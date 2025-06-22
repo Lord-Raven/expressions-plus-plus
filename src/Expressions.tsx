@@ -92,6 +92,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             if(!characters[charAnonId].isRemoved) {
                 console.log(characters[charAnonId]);
                 console.log(characters[charAnonId].partial_extensions?.chub);
+                console.log(characters[charAnonId].partial_extensions.chub?.extensions)
                 console.log(characters[charAnonId].partial_extensions?.chub?.expressions);
                 this.charsToEmotions[charAnonId] = messageState != null && messageState.hasOwnProperty(charAnonId) && EMOTIONS.has(messageState[charAnonId]) ? messageState[charAnonId] : 'neutral';
 
