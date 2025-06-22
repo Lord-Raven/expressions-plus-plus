@@ -51,7 +51,7 @@ config_schema:
       type: "character_map"
       # Could also be an object, etc.
       value_type:
-        type: "string",
+        type: "string"
         enum: 'character.extensions.chub.alt_expressions.keys()'
         default: 'default'
       # For the type "character_map",
