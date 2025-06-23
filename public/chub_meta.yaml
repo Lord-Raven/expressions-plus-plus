@@ -60,6 +60,16 @@ config_schema:
       required: false
       # Information shown beside this part of the form.
       description: "Which expression pack to use, if there are multiple."
+    autoGenerate:
+      title: Auto Generate
+      description: Automatically generate an expression pack for characters (may expend daily credits).
+      type: "boolean"
+      default: true
+    artStyle:
+      title: Art Style
+      description: A brief description of the desired character art style.
+      type: "string"
+      default "Bold, visual novel style illustration, clean lines"
   required: []
 
 needs_history: false
