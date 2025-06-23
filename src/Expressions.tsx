@@ -224,7 +224,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     param_0: botMessage.content,
                 }))
                 console.log(`Emotion result: `);
-                console.log(`${emotionResult}`);
+                console.log(emotionResult);
                 newEmotion = emotionResult.data[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.2)?.label ?? newEmotion;
             } catch (except: any) {
                 console.warn(`Error classifying expression, error: ${except}`);
