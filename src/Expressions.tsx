@@ -261,8 +261,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log(`Generate a physical description of ${character.name}.`);
             const imageDescription = await this.generator.textGen({
                 prompt: 
-                    `Character Information: ${character.description}\n\n` +
-                    `Instruction: The goal of this task is to digest the character information and construct a comprehensive and concise visual description of this character` +
+                    `Character Information: ${character.personality}\n\n` +
+                    `Essential Instruction: The goal of this task is to digest the character information and construct a comprehensive and concise visual description of this character` +
                     `This system response will be fed directly into an image generator, which is unfamiliar with this character; ` +
                     `use tags and keywords to convey all essential details about them, ` +
                     `presenting ample character appearance notes--particularly if they seem obvious: gender, skin tone, hair style/color, physique, outfit, etc.`,
