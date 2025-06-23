@@ -334,32 +334,35 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     render(): ReactElement {
         const count = Object.values(this.characters).filter(character => !character.isRemoved).length;
         let index = 0;
-        return <div className="big-stacker"
-                    key={'big-over-stacker'}
-                    style={{
-                        width: '100vw',
-                        height: '100vh',
-                        display: 'grid',
-                        alignItems: 'stretch',
-                        overflow: 'visible'
-                    }
-                }>
-            {Object.values(this.characters).map(character => {
-                // Must have at least a neutral image in order to display this character:
-                if (!character.isRemoved && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
-                    const position = ++index * (100 / (count + 1));
-                    return <CharacterImage
-                        character={character}
-                        emotion={this.getCharacterEmotion(character.anonymizedId)}
-                        xPosition={position}
-                        imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
-                        isTalking={this.messageState.characterFocus == character.anonymizedId}
-                    />
-                } else {
-                    return <></>
+        return(
+            <div className="big-stacker"
+                key={'big-over-stacker'}
+                style={{
+                    width: '100vw',
+                    height: '100vh',
+                    display: 'grid',
+                    position: 'relative',
+                    alignItems: 'stretch',
+                    overflow: 'visible'
                 }
-            })}
-        </div>;
+            }>
+                {Object.values(this.characters).map(character => {
+                    // Must have at least a neutral image in order to display this character:
+                    if (!character.isRemoved && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
+                        const position = ++index * (100 / (count + 1));
+                        return <CharacterImage
+                            character={character}
+                            emotion={this.getCharacterEmotion(character.anonymizedId)}
+                            xPosition={position}
+                            imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
+                            isTalking={this.messageState.characterFocus == character.anonymizedId}
+                        />
+                    } else {
+                        return <></>
+                    }
+                })}
+            </div>
+        );
     }
 
 }
