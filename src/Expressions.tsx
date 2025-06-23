@@ -248,9 +248,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.log(`${character.name} is missing ${emotion}? ${!this.chatState.generatedPacks[character.anonymizedId][emotion]}`);
             }
             console.log(`${character.name}: ${Object.values(Emotion).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0}`);
-
         }
         const targetCharacter = Object.values(this.characters).find(character => {Object.values(Emotion).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0});
+        console.log(`Looked up a character: ${targetCharacter}.`);
         if (targetCharacter) {
             console.log('Need to generate an image');
             this.generateImage(targetCharacter, Object.values(Emotion).find(emotion => !this.chatState.generatedPacks[targetCharacter.anonymizedId][emotion]) ?? Emotion.neutral).then(() => this.generateNextImage());
