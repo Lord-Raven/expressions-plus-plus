@@ -34,9 +34,9 @@ export const TestExtensionRunner = <ExtensionType extends StageBase<InitStateTyp
                 content: "I'm so confused. I don't understand. What? Why? How?",
                 isBot: true
             }).then(() => setNode(new Date()));
-            (new Promise(f => setTimeout(f, 5000))).then(() => {
+            /*(new Promise(f => setTimeout(f, 5000))).then(() => {
                 extension.setState({'1': 'embarrassment', '2': 'excitement', '3': 'love'}).then(() => setNode(new Date()));
-            });
+            });*/
         });
     }, []);
 
