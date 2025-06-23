@@ -244,16 +244,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async generateNextImage() {
         console.log(this.chatState.generatedPacks);
         for (let character of Object.values(this.characters)) {
-            for (let emotion of Object.values(Emotion)) {
-                console.log(`${character.name} is missing ${emotion}? ${!this.chatState.generatedPacks[character.anonymizedId][emotion]}`);
-            }
+
             console.log(`${character.name}: ${Object.values(Emotion).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0}`);
-        }
-        const targetCharacter = Object.values(this.characters).find(character => {Object.values(Emotion).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0});
-        console.log(`Looked up a character: ${targetCharacter}.`);
-        if (targetCharacter) {
-            console.log('Need to generate an image');
-            this.generateImage(targetCharacter, Object.values(Emotion).find(emotion => !this.chatState.generatedPacks[targetCharacter.anonymizedId][emotion]) ?? Emotion.neutral).then(() => this.generateNextImage());
+            if (Object.values(Emotion).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0) {
+                console.log('Need to generate an image');
+                this.generateImage(character, Object.values(Emotion).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]) ?? Emotion.neutral).then(() => this.generateNextImage());
+                return;
+            }
         }
     }
 
