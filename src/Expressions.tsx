@@ -306,7 +306,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             if (imageUrl == silhouetteUrl) {
                 console.warn(`Failed to generate a ${emotion} image for ${character.name}; falling back to silhouette.`);
             }
-            this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral] = imageUrl;
+            this.chatState.generatedPacks[character.anonymizedId][emotion] = imageUrl;
         }
     }
 
