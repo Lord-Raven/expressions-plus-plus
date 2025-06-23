@@ -132,10 +132,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             characterEmotion: {},
             characterFocus: ''
         }
+        console.log(chatState);
         this.chatState = chatState ?? {
             generatedPacks: {},
             generatedDescriptions: {}
         };
+        console.log(this.chatState);
         this.loadedPacks = {};
         this.anyPack = false;
         this.pipeline = null;
@@ -338,7 +340,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         width: '100vw',
                         height: '100vh',
                         display: 'grid',
-                        alignItems: 'stretch'
+                        alignItems: 'stretch',
+                        overflow: 'visible'
                     }
                 }>
             {Object.values(this.characters).map(character => {
