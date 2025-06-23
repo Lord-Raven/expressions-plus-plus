@@ -170,7 +170,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log("Loading");
 
         // Kick off auto-genned stuff
-
+        this.generateNextImage()
 
         try {
             this.pipeline = await Client.connect("ravenok/emotions");
@@ -241,9 +241,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         };
     }
 
-    generateNextImage(character: Character) {
-        if (Object.values(Emotion).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0) {
-            this.generateImage(character, Object.values(Emotion).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]) ?? Emotion.neutral).then(() => this.generateNextImage(character));
+    async generateNextImage() {
+        const targetCharacter = Object.values(this.characters).find(character => {Object.values(Emotion).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0});
+        if (targetCharacter) {
+            this.generateImage(targetCharacter, Object.values(Emotion).find(emotion => !this.chatState.generatedPacks[targetCharacter.anonymizedId][emotion]) ?? Emotion.neutral).then(() => this.generateNextImage());
         }
     }
 
