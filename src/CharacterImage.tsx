@@ -3,7 +3,7 @@ import { Emotion } from "./Expressions";
 import { Character } from "@chub-ai/stages-ts";
 import { FC } from "react";
 
-const CHARACTER_HEIGHT: number = 100;
+const CHARACTER_HEIGHT: number = 80;
 
 interface CharacterImageProps {
     character: Character;
@@ -25,7 +25,7 @@ const CharacterImage: FC<CharacterImageProps> = ({character, emotion, imageUrl, 
             variants={variants}
             initial='idle'
             animate={isTalking ? 'talking' : 'idle'}
-            style={{position: 'absolute', bottom: '-25vh', width: 'auto', aspectRatio: '9 / 16', zIndex: 10}}>
+            style={{position: 'absolute', bottom: '5vh', width: 'auto', aspectRatio: '9 / 16', zIndex: 10}}>
             <img src={imageUrl} style={{position: 'relative', width: '100%', height: '100%', transform: 'translate(-50%, 0)'}} alt={`${character.name} (${emotion})`}/>
         </motion.div>
     );
