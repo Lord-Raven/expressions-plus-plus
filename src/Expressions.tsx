@@ -20,7 +20,7 @@ type InitStateType = null;
 
 type MessageStateType = {
     backgroundUrl: string;
-    characterEmotion: {[key: string]: Emotion};
+    characterEmotion: {[key: string]: string};
     characterFocus: string;
 };
 
@@ -95,7 +95,7 @@ const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), background elem
 
 
 
-type EmotionPack = {[K in Emotion]?: string};
+type EmotionPack = {[key: string]: string};
 
 export class Expressions extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
 
@@ -222,10 +222,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async afterResponse(botMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
-        const {
-            anonymizedId
-        } = botMessage;
-        
+
         let newEmotion = 'neutral';
         if(this.pipeline != null) {
             try {
@@ -234,7 +231,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }))
                 console.log(`Emotion result: `);
                 console.log(emotionResult);
-                newEmotion = emotionResult.data[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.2)?.label ?? newEmotion;
+                newEmotion = emotionResult.data[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.1)?.label ?? newEmotion;
             } catch (except: any) {
                 console.warn(`Error classifying expression, error: ${except}`);
                 newEmotion = this.fallbackClassify(botMessage.content);
@@ -243,8 +240,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             newEmotion = this.fallbackClassify(botMessage.content);
         }
         console.info(`New emotion for ${this.characters[botMessage.anonymizedId]}: ${newEmotion}`);
-        this.messageState.characterEmotion[botMessage.anonymizedId] = newEmotion as Emotion;
-        this.messageState.characterFocus = anonymizedId;
+        this.messageState.characterEmotion[botMessage.anonymizedId] = newEmotion;
+        this.messageState.characterFocus = botMessage.anonymizedId;
         return {
             extensionMessage: null,
             stageDirections: null,
@@ -257,10 +254,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async generateNextImage() {
         for (let character of Object.values(this.characters)) {
-            if (Object.keys(EMOTION_PROMPTS).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion as Emotion]).length > 0) {
+            if (Object.keys(EMOTION_PROMPTS).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0) {
                 this.generateImage(
                     character,
-                    ((Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion as Emotion]) as Emotion) ?? Emotion.neutral)).then(() => this.generateNextImage());
+                    ((Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]) as Emotion) ?? Emotion.neutral)).then(() => this.generateNextImage());
                 return;
             }
         }
@@ -326,11 +323,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getCharacterEmotion(anonymizedId: string): Emotion {
-        return this.messageState.characterEmotion[anonymizedId] ?? Emotion.neutral;
+        return this.messageState.characterEmotion[anonymizedId] as Emotion ?? Emotion.neutral;
     }
 
     getCharacterImage(anonymizedId: string, emotion: Emotion): string {
-        return this.chatState.generatedPacks[anonymizedId][EMOTION_MAPPING[emotion] as Emotion] ?? this.chatState.generatedPacks[anonymizedId][Emotion.neutral] ?? silhouetteUrl;
+        return this.chatState.generatedPacks[anonymizedId][EMOTION_MAPPING[emotion] ?? Emotion.neutral] ?? this.chatState.generatedPacks[anonymizedId][Emotion.neutral] ?? silhouetteUrl;
     }
 
     render(): ReactElement {
