@@ -187,6 +187,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log(`Done loading: ${this.anyPack}`);
         return {
             success: this.anyPack,
+            chatState: this.chatState,
+            messageState: this.messageState,
             error: null
         };
     }
@@ -340,7 +342,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 style={{
                     width: '100vw',
                     height: '100vh',
-                    display: 'grid',
                     position: 'relative',
                     alignItems: 'stretch',
                     overflow: 'visible'
