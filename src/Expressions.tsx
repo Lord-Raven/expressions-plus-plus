@@ -3,6 +3,7 @@ import {StageBase, StageResponse, InitialData, Message, Character, AspectRatio} 
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Client } from "@gradio/client";
 import silhouetteUrl from './assets/silhouette.png'
+import CharacterImage from "./CharacterImage";
 
 type ChatStateType = {
     generatedPacks:{[key: string]: EmotionPack};
@@ -24,7 +25,7 @@ type MessageStateType = {
 };
 
 
-enum Emotion {
+export enum Emotion {
     neutral = 'neutral',
     admiration = 'admiration',
     amusement = 'amusement',
@@ -57,8 +58,8 @@ enum Emotion {
 
 export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
     admiration: Emotion.joy,
-    approval: Emotion.joy,
-    caring: Emotion.joy,
+    approval: Emotion.amusement,
+    caring: Emotion.neutral,
     curiosity: Emotion.neutral,
     disapproval: Emotion.disappointment,
     optimism: Emotion.gratitude,
@@ -69,10 +70,10 @@ export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     neutral: 'calm expression',
-    amusement: 'amused expression',
+    amusement: 'subtle smirk, amused expression',
     anger: 'angry expression',
     annoyance: 'annoyed, dismayed expression',
-    confusion: 'stunned, confused expression',
+    confusion: 'stunned, baffled, confused expression',
     desire: 'sexy, seductive expression',
     disappointment: 'unhappy, disappointed expression',
     disgust: 'disgusted expression',
@@ -84,7 +85,7 @@ export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     joy: 'happy, smiling',
     love: 'adorable, grinning, blushing, lovestruck expression',
     nervousness: 'nervous, uneasy expression',
-    pride: 'proud, haughty expression',
+    pride: 'proud, haughty, puffed up expression',
     sadness: 'sad, upset expression, teary',
     surprise: 'shocked, surprised expression',
 }
@@ -217,6 +218,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async afterResponse(botMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
+        const {
+            anonymizedId
+        } = botMessage;
+        
         let newEmotion = 'neutral';
         if(this.pipeline != null) {
             try {
@@ -235,6 +240,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
         console.info(`New emotion for ${this.characters[botMessage.anonymizedId]}: ${newEmotion}`);
         this.messageState.characterEmotion[botMessage.anonymizedId] = newEmotion as Emotion;
+        this.messageState.characterFocus = anonymizedId;
         return {
             extensionMessage: null,
             stageDirections: null,
@@ -276,7 +282,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     `Sample Response:\nMan in a billowing cloak, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.\n\n` +
                     `Default Instruction:`,
                 min_tokens: 50,
-                max_tokens: 200,
+                max_tokens: 150,
                 include_history: false
             });
             if (imageDescription?.result) {
@@ -310,7 +316,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true,
-                strength: 0.05
+                strength: 0.1
             }))?.url ?? this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral];
             if (imageUrl == silhouetteUrl) {
                 console.warn(`Failed to generate a ${emotion} image for ${character.name}; falling back to silhouette.`);
@@ -319,32 +325,37 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
     }
 
+    getCharacterEmotion(anonymizedId: string): Emotion {
+        return this.messageState.characterEmotion[anonymizedId] ?? Emotion.neutral;
+    }
+
     getCharacterImage(anonymizedId: string, emotion: Emotion): string {
         return this.chatState.generatedPacks[anonymizedId][EMOTION_MAPPING[emotion] as Emotion] ?? this.chatState.generatedPacks[anonymizedId][Emotion.neutral] ?? silhouetteUrl;
     }
 
     render(): ReactElement {
+        const count = Object.values(this.characters).filter(character => !character.isRemoved).length;
+        let index = 0;
         return <div className="big-stacker"
                     key={'big-over-stacker'}
                     style={{
-            width: '100vw',
-            height: '100vh',
-            display: 'grid',
-            alignItems: 'stretch'
-            }}>
-            {Object.entries(this.messageState.characterEmotion).map(([charId, emotion]) => {
+                        width: '100vw',
+                        height: '100vh',
+                        display: 'grid',
+                        alignItems: 'stretch'
+                    }
+                }>
+            {Object.values(this.characters).map(character => {
                 // Must have at least a neutral image in order to display this character:
-                if (this.chatState.generatedPacks[charId][Emotion.neutral]) {
-                    return <img
-                        key={`img-${charId}-${emotion}`}
-                        style={{
-                            width: '100%',
-                            maxHeight: '100vh',
-                            minHeight: '10px',
-                            objectFit: 'contain'
-                        }}
-                        src={this.getCharacterImage(charId, emotion)}
-                        alt={''} />
+                if (!character.isRemoved && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
+                    const position = ++index * (100 / (count + 1));
+                    return <CharacterImage
+                        character={character}
+                        emotion={this.getCharacterEmotion(character.anonymizedId)}
+                        xPosition={position}
+                        imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
+                        isTalking={this.messageState.characterFocus == character.anonymizedId}
+                    />
                 } else {
                     return <></>
                 }
