@@ -268,7 +268,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     `presenting ample character appearance notes--particularly if they seem obvious: gender, skin tone, hair style/color, physique, outfit, etc.`,
                 min_tokens: 50,
                 max_tokens: 200,
-                include_history: true
+                include_history: false
             });
             if (imageDescription?.result) {
                 console.log(`Received an image description: ${imageDescription.result}`);
