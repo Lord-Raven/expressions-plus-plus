@@ -55,35 +55,38 @@ enum Emotion {
     surprise = 'surprise',
 }
 
-export const EMOTION_PROMPTS: {[emotion in Emotion]: string} = {
+export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
+    admiration: Emotion.joy,
+    approval: Emotion.joy,
+    caring: Emotion.joy,
+    curiosity: Emotion.neutral,
+    disapproval: Emotion.disappointment,
+    optimism: Emotion.gratitude,
+    realization: Emotion.surprise,
+    relief: Emotion.gratitude,
+    remorse: Emotion.sadness
+}
+
+export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     neutral: 'calm expression',
-    admiration: 'admiring expression',
-    amusement: 'amusemed expression',
+    amusement: 'amused expression',
     anger: 'angry expression',
     annoyance: 'annoyed, dismayed expression',
-    approval: 'approving expression',
-    caring: 'thoughtful, caring expression',
     confusion: 'stunned, confused expression',
-    curiosity: 'curious, interested expression',
     desire: 'sexy, seductive expression',
     disappointment: 'unhappy, disappointed expression',
-    disapproval: 'disapproving expression',
     disgust: 'disgusted expression',
     embarrassment: 'embarrassed, blushing',
     excitement: 'excited expression',
     fear: 'terrified expression',
-    gratitude: 'thankful expression',
+    gratitude: 'relieved, thankful expression',
     grief: 'depressed, sobbing expression',
     joy: 'happy, smiling',
     love: 'adorable, grinning, blushing, lovestruck expression',
     nervousness: 'nervous, uneasy expression',
-    optimism: 'hopeful expression',
     pride: 'proud, haughty expression',
-    realization: 'epiphany',
-    relief: 'relieved expression',
-    remorse: 'guilty expression',
     sadness: 'sad, upset expression, teary',
-    surprise: 'pleasantly surprised expression',
+    surprise: 'shocked, surprised expression',
 }
 
 const CHARACTER_ART_PROMPT: string = 'plain flat background, standing, full body';
@@ -220,7 +223,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 const emotionResult = (await this.pipeline.predict("/predict", {
                     param_0: botMessage.content,
                 }))
-                console.log(`Emotion result: ${emotionResult}`);
+                console.log(`Emotion result: `);
+                console.log(`${emotionResult}`);
                 newEmotion = emotionResult.data[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.2)?.label ?? newEmotion;
             } catch (except: any) {
                 console.warn(`Error classifying expression, error: ${except}`);
@@ -245,10 +249,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log(this.chatState.generatedPacks);
         for (let character of Object.values(this.characters)) {
 
-            console.log(`${character.name}: ${Object.values(Emotion).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0}`);
-            if (Object.values(Emotion).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0) {
+            console.log(`${character.name}: ${Object.keys(EMOTION_PROMPTS).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion as Emotion]).length > 0}`);
+            if (Object.keys(EMOTION_PROMPTS).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion as Emotion]).length > 0) {
                 console.log('Need to generate an image');
-                this.generateImage(character, Object.values(Emotion).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]) ?? Emotion.neutral).then(() => this.generateNextImage());
+                this.generateImage(
+                    character,
+                    ((Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion as Emotion]) as Emotion) ?? Emotion.neutral)).then(() => this.generateNextImage());
                 return;
             }
         }
@@ -262,10 +268,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             const imageDescription = await this.generator.textGen({
                 prompt: 
                     `Character Information: ${character.personality}\n\n` +
-                    `Essential Instruction: The goal of this task is to digest the character information and construct a comprehensive and concise visual description of this character` +
+                    `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of this character` +
                     `This system response will be fed directly into an image generator, which is unfamiliar with this character; ` +
                     `use tags and keywords to convey all essential details about them, ` +
-                    `presenting ample character appearance notes--particularly if they seem obvious: gender, skin tone, hair style/color, physique, outfit, etc.`,
+                    `presenting ample character appearance notes--particularly if they seem obvious: gender, skin tone, hair style/color, physique, outfit, etc.\n\n` +
+                    `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, tanned skin, muscular, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, running shoes, white tanktop.\n\n` +
+                    `Sample Response:\nMan in a billowing cloak, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.\n\n` +
+                    `Default Instruction:`,
                 min_tokens: 50,
                 max_tokens: 200,
                 include_history: false
@@ -310,6 +319,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
     }
 
+    getCharacterImage(anonymizedId: string, emotion: Emotion): string {
+        return this.chatState.generatedPacks[anonymizedId][EMOTION_MAPPING[emotion] as Emotion] ?? this.chatState.generatedPacks[anonymizedId][Emotion.neutral] ?? silhouetteUrl;
+    }
+
     render(): ReactElement {
         return <div className="big-stacker"
                     key={'big-over-stacker'}
@@ -319,21 +332,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             display: 'grid',
             alignItems: 'stretch'
             }}>
-            {Object.keys(this.messageState.characterEmotion).map(charId => {
-                if(this.messageState.characterEmotion.hasOwnProperty(charId) && this.messageState.characterEmotion[charId] != null &&
-                    this.chatState.generatedPacks.hasOwnProperty(charId) && this.chatState.generatedPacks[charId] != null &&
-                    this.chatState.generatedPacks[charId].hasOwnProperty(this.messageState.characterEmotion[charId]) &&
-                    this.chatState.generatedPacks[charId][this.messageState.characterEmotion[charId]] != null
-                ) {
+            {Object.entries(this.messageState.characterEmotion).map(([charId, emotion]) => {
+                // Must have at least a neutral image in order to display this character:
+                if (this.chatState.generatedPacks[charId][Emotion.neutral]) {
                     return <img
-                        key={`img-${charId}-${this.messageState.characterEmotion[charId]}`}
+                        key={`img-${charId}-${emotion}`}
                         style={{
                             width: '100%',
                             maxHeight: '100vh',
                             minHeight: '10px',
                             objectFit: 'contain'
                         }}
-                        src={this.chatState.generatedPacks[charId][this.messageState.characterEmotion[charId]]}
+                        src={this.getCharacterImage(charId, emotion)}
                         alt={''} />
                 } else {
                     return <></>
