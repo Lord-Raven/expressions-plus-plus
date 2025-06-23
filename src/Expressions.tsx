@@ -242,8 +242,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async generateNextImage() {
+        console.log(this.chatState.generatedPacks);
         const targetCharacter = Object.values(this.characters).find(character => {Object.values(Emotion).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0});
         if (targetCharacter) {
+            console.log('Need to generate an image');
             this.generateImage(targetCharacter, Object.values(Emotion).find(emotion => !this.chatState.generatedPacks[targetCharacter.anonymizedId][emotion]) ?? Emotion.neutral).then(() => this.generateNextImage());
         }
     }
