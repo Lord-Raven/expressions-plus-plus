@@ -95,6 +95,33 @@ const CHARACTER_ART_PROMPT: string = 'plain flat background, standing, full body
 const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), background elements, special effects, scene, dynamic angle, action, cut-off';
 const BACKGROUND_ART_PROMPT: string = 'unpopulated, visual novel background scenery';
 
+// Replace trigger words with less triggering words, so image gen can succeed.
+export function substitute(input: string) {
+    const synonyms: {[key: string]: string} = {
+        'old-school': 'retro',
+        'old school': 'retro',
+        'oldschool': 'retro',
+        'schoolgirl': 'college girl',
+        'school girl': 'college girl',
+        'schoolboy': 'college guy',
+        'school boy': 'college guy',
+        'school teacher': 'professor',
+        'schoolteacher': 'professor',
+        'school': 'campus',
+        'youngster': 'individual',
+        'child': 'individual',
+        'kid': 'individual',
+        'young ': 'youthful'
+    }
+    const regex = new RegExp(Object.keys(synonyms).join('|'), 'gi');
+
+    return input.replace(regex, (match) => {
+        const synonym = synonyms[match.toLowerCase()];
+        return match[0] === match[0].toUpperCase()
+            ? synonym.charAt(0).toUpperCase() + synonym.slice(1)
+            : synonym;
+    });
+}
 
 type EmotionPack = {[key: string]: string};
 
@@ -302,7 +329,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (emotion == Emotion.neutral) {
             console.log(`Generate ${emotion} image for ${character.name}.`)
             const imageUrl = (await this.generator.makeImage({
-                prompt: `(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[character.anonymizedId]}), (${CHARACTER_ART_PROMPT}), (${EMOTION_PROMPTS[emotion]})`,
+                prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[character.anonymizedId]}), (${CHARACTER_ART_PROMPT}), (${EMOTION_PROMPTS[emotion]})`),
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true
@@ -315,7 +342,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log(`Generate ${emotion} image for ${character.name}.`)
             const imageUrl = (await this.generator.imageToImage({
                 image: this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral],
-                prompt: `(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[character.anonymizedId]}), (${CHARACTER_ART_PROMPT}), (${EMOTION_PROMPTS[emotion]})`,
+                prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[character.anonymizedId]}), (${CHARACTER_ART_PROMPT}), (${EMOTION_PROMPTS[emotion]})`),
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true,
@@ -375,13 +402,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (imageDescription?.result) {
             console.log(`Received an image description: ${imageDescription.result}. Generating a background.`);
             const imageUrl = (await this.generator.makeImage({
-                prompt: `(Art style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${imageDescription.result})`,
+                prompt: substitute(`(Art style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${imageDescription.result})`),
                 aspect_ratio: AspectRatio.WIDESCREEN_HORIZONTAL,
             }))?.url ?? '';
             if (imageUrl == '') {
                 console.warn(`Failed to generate a background image.`);
             }
             this.messageState.backgroundUrl = imageUrl;
+            this.messenger.updateEnvironment({background: this.messageState.backgroundUrl});
         } else {
             return;
         }
