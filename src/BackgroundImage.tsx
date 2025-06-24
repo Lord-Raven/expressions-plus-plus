@@ -41,7 +41,6 @@ const BackgroundImage: FC<BackgroundImageProps> = ({imageUrl}) => {
                             userSelect: 'none',
                             pointerEvents: 'none',
                         }}
-                        draggable={false}
                     />
                 </motion.div>
             )}

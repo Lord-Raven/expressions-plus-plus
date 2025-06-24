@@ -336,14 +336,16 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             const TRANSITION_LABEL = 'transitions to a new location';
             const STAY_LABEL = 'remains in the same location';
             try {
-                const response = JSON.parse(`${await this.zeroShotPipeline.predict("/predict", {data_string: JSON.stringify({
+                const response = await this.zeroShotPipeline.predict("/predict", {data_string: JSON.stringify({
                     sequence: content,
                     candidate_labels: [STAY_LABEL, TRANSITION_LABEL],
                     hypothesis_template: 'This passage {}',
                     multi_label: true
-                })}).data[0]}`);
+                })});
                 console.log('Zero-shot result:');
                 console.log(response);
+                const result = JSON.parse(`${Response.data[0]}`);
+                console.log(result);
                 if (response.labels[0] == STAY_LABEL || response.scores[0] < 0.5) {
                     return;
                 }
