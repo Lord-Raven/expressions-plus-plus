@@ -325,37 +325,35 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     
     async generateBackground(character: Character): Promise<void> {
 
-        if (!this.chatState.generatedDescriptions[character.anonymizedId]) {
-            // Must first build a visual description for the background
-            console.log(`Generate a physical description of ${character.name}.`);
-            const imageDescription = await this.generator.textGen({
-                prompt: 
-                    `Character Information:\n${character.personality}\n\n` +
-                    `Chat History:\n{{messages}}\n\n` +
-                    `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of this current scene. ` +
-                    `This system response will be fed directly into an image generator, which is unfamiliar with the setting; ` +
-                    `use tags and keywords to convey all essential details about the location, ` +
-                    `presenting ample appearance notes.\n\n` +
-                    `Sample Response:\nDesolate wasteland, sandy, oppressively bright, glare, cracked earth, forelorn crags.\n\n` +
-                    `Sample Response:\nSmall-town America, charming street, quaint houses, alluring shopfronts, crisp fall folliage.\n\n` +
-                    `Default Instruction:`,
-                min_tokens: 50,
-                max_tokens: 150,
-                include_history: true
-            });
-            if (imageDescription?.result) {
-                console.log(`Received an image description: ${imageDescription.result}. Generating a background.`);
-                const imageUrl = (await this.generator.makeImage({
-                    prompt: `(Art style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${imageDescription.result})`,
-                    aspect_ratio: AspectRatio.WIDESCREEN_HORIZONTAL,
-                }))?.url ?? '';
-                if (imageUrl == '') {
-                    console.warn(`Failed to generate a background image.`);
-                }
-                this.messageState.backgroundUrl = imageDescription.result;
-            } else {
-                return;
+        // Must first build a visual description for the background
+        console.log(`Generate a physical description of ${character.name}.`);
+        const imageDescription = await this.generator.textGen({
+            prompt: 
+                `Character Information:\n${character.personality}\n\n` +
+                `Chat History:\n{{messages}}\n\n` +
+                `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of this current scene. ` +
+                `This system response will be fed directly into an image generator, which is unfamiliar with the setting; ` +
+                `use tags and keywords to convey all essential details about the location, ` +
+                `presenting ample appearance notes.\n\n` +
+                `Sample Response:\nDesolate wasteland, sandy, oppressively bright, glare, cracked earth, forelorn crags.\n\n` +
+                `Sample Response:\nSmall-town America, charming street, quaint houses, alluring shopfronts, crisp fall folliage.\n\n` +
+                `Default Instruction:`,
+            min_tokens: 50,
+            max_tokens: 150,
+            include_history: true
+        });
+        if (imageDescription?.result) {
+            console.log(`Received an image description: ${imageDescription.result}. Generating a background.`);
+            const imageUrl = (await this.generator.makeImage({
+                prompt: `(Art style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${imageDescription.result})`,
+                aspect_ratio: AspectRatio.WIDESCREEN_HORIZONTAL,
+            }))?.url ?? '';
+            if (imageUrl == '') {
+                console.warn(`Failed to generate a background image.`);
             }
+            this.messageState.backgroundUrl = imageDescription.result;
+        } else {
+            return;
         }
     }
 
