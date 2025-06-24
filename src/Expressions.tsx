@@ -143,6 +143,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     artStyle: string;
     characters: {[key: string]: Character};
     loadedPacks: {[key: string]: EmotionPack}
+    backgroundCooldown: number = 0;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
         super(data);
@@ -277,6 +278,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.info(`New emotion for ${this.characters[botMessage.anonymizedId]}: ${newEmotion}`);
         this.messageState.characterEmotion[botMessage.anonymizedId] = newEmotion;
         this.messageState.characterFocus = botMessage.anonymizedId;
+        this.backgroundCooldown--;
         this.generateBackground(this.characters[botMessage.anonymizedId], botMessage.content);
         return {
             extensionMessage: null,
@@ -360,7 +362,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     
     async generateBackground(character: Character, content: string): Promise<void> {
 
-        if (!this.generateBackgrounds || !content) return;
+        if (!this.generateBackgrounds || !content || this.backgroundCooldown > 0) return;
 
         if (this.messageState.backgroundUrl) {
             const TRANSITION_LABEL = 'transitions to a new location';
@@ -384,6 +386,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }
         }
 
+        this.backgroundCooldown = 2;
         // Must first build a visual description for the background
         console.log(`Generate a description of the background.`);
         const imageDescription = await this.generator.textGen({
@@ -429,6 +432,31 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const count = Object.values(this.characters).filter(character => !character.isRemoved).length;
         let index = 0;
 
+        // Separate talking and idle characters
+        const idleCharacters:JSX.Element[] = [];
+        const talkingCharacters:JSX.Element[] = [];
+        Object.values(this.characters).forEach(character => {
+            if (!character.isRemoved && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
+                const position = ++index * (100 / (count + 1));
+                const isTalking = this.messageState.characterFocus == character.anonymizedId;
+                const charImage = (
+                    <CharacterImage
+                        key={character.anonymizedId}
+                        character={character}
+                        emotion={this.getCharacterEmotion(character.anonymizedId)}
+                        xPosition={position}
+                        imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
+                        isTalking={isTalking}
+                    />
+                );
+                if (isTalking) {
+                    talkingCharacters.push(charImage);
+                } else {
+                    idleCharacters.push(charImage);
+                }
+            }
+        });
+
         return(
             <div className="big-stacker"
                 key={'big-over-stacker'}
@@ -441,22 +469,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }
             }>
                 <BlurredGradientOverlay/>
-                <BackgroundImage imageUrl={this.messageState.backgroundUrl}/>
-                {Object.values(this.characters).map(character => {
-                    // Must have at least a neutral image in order to display this character:
-                    if (!character.isRemoved && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
-                        const position = ++index * (100 / (count + 1));
-                        return <CharacterImage
-                            character={character}
-                            emotion={this.getCharacterEmotion(character.anonymizedId)}
-                            xPosition={position}
-                            imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
-                            isTalking={this.messageState.characterFocus == character.anonymizedId}
-                        />
-                    } else {
-                        return <></>
-                    }
-                })}
+                <BackgroundImage imageUrl={this.messageState.backgroundUrl}>{idleCharacters}</BackgroundImage>
+                {talkingCharacters}
             </div>
         );
     }

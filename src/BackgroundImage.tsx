@@ -4,9 +4,10 @@ import {FastAverageColor} from "fast-average-color";
 
 interface BackgroundImageProps {
     imageUrl: string;
+    children?: React.ReactNode;
 }
 
-const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl }) => {
+const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, children }) => {
     const imgRef = useRef<HTMLImageElement>(null);
     const [borderColor, setBorderColor] = useState<string>("rgba(255,255,255,0.5)");
 
@@ -64,6 +65,17 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl }) => {
                             pointerEvents: "none",
                         }}
                     />
+                    <div
+                        className="background-frame-content"
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            zIndex: 4,
+                            pointerEvents: "none",
+                        }}
+                    >
+                        {children}
+                    </div>
                 </motion.div>
             )}
         </AnimatePresence>
