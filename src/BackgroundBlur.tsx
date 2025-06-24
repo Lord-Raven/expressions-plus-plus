@@ -1,21 +1,17 @@
 import React from "react";
 
 type BlurredGradientOverlayProps = {
-  direction: "horizontal" | "vertical";
   style?: React.CSSProperties;
   className?: string;
 };
 
 const BlurredGradientOverlay: React.FC<BlurredGradientOverlayProps> = ({
-  direction,
   style,
   className = "",
 }) => {
-  // Horizontal: left to right; Vertical: bottom to top
+  // Radial gradient: center is opaque, edges are transparent
   const mask =
-    direction === "horizontal"
-      ? "linear-gradient(to right, rgba(0,0,0,0.1) 0%, rgba(0,0,0,1) 100%)"
-      : "linear-gradient(to top, rgba(0,0,0,0.1) 0%, rgba(0,0,0,1) 100%)";
+    "radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)";
 
   return (
     <div

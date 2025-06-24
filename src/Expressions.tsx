@@ -435,7 +435,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const count = Object.values(this.characters).filter(character => !character.isRemoved).length;
         let index = 0;
 
-        const blurDirection = window.innerHeight > window.innerWidth ? "horizontal" : "vertical";
         return(
             <div className="big-stacker"
                 key={'big-over-stacker'}
@@ -447,7 +446,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     overflow: 'visible'
                 }
             }>
-                <BlurredGradientOverlay direction={blurDirection} />
+                <BlurredGradientOverlay/>
                 <BackgroundImage imageUrl={this.messageState.backgroundUrl}/>
                 {Object.values(this.characters).map(character => {
                     // Must have at least a neutral image in order to display this character:

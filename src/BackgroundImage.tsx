@@ -26,7 +26,7 @@ const BackgroundImage: FC<BackgroundImageProps> = ({imageUrl}) => {
                         borderRadius: '5vw',
                         overflow: 'hidden',
                         zIndex: 3,
-                        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                        boxShadow: '5px 5px 32px 4px rgba(0, 0, 0, 0.37)',
                     }}
                 >
                     <img
