@@ -13,8 +13,8 @@ type ChatStateType = {
 
 type ConfigType = {
     artStyle?: string;
-    generateCharacters?: boolean;
-    generateBackgrounds?: boolean;
+    generateCharacters?: string;
+    generateBackgrounds?: string;
     selected?: {[key: string]: string} | null;
 };
 
@@ -143,8 +143,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log(this.chatState);
         this.loadedPacks = {};
         this.anyPack = false;
-        this.generateCharacters = config?.generateCharacters ?? true;
-        this.generateBackgrounds = config?.generateBackgrounds ?? true;
+        this.generateCharacters = (config?.generateCharacters == "true") ?? true;
+        this.generateBackgrounds = (config?.generateBackgrounds == "true") ?? true;
         this.artStyle = config?.artStyle ?? 'Bold, visual novel style illustration, clean lines';
 
         // Look at characters, set up packs, and initialize values that aren't present in message/chat state
