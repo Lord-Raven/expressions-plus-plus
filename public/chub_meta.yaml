@@ -5,7 +5,7 @@
 project_name: "Expressions++"
 
 # A short tagline to show in search.
-tagline: "Shows character emotions based on a set of images.++.."
+tagline: "Shows character emotions based on a set of images.++"
 
 # A longer explanation. Supports Markdown format.
 creator_notes: "
@@ -52,12 +52,18 @@ config_schema:
   title: Expressions Config
   type: object
   properties:
-    generate_characters:
+    generateCharacters:
       title: Generate Character Art
       description: Automatically generate an expression pack for characters (will expend daily credits); this is basically all the stage currently does, so maybe leave this one on.
       type: string
-      default: "true"
-      enum: ["true", "false"]
+      default: "True"
+      enum: ["True", "False"]
+    generate_backgrounds:
+      title: Generate Background Art
+      description: Automatically generate backgrounds during scene changes.
+      type: string
+      default: "True"
+      enum: ["True", "False"]
 
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
 
