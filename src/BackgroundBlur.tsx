@@ -11,7 +11,7 @@ const BlurredGradientOverlay: React.FC<BlurredGradientOverlayProps> = ({
 }) => {
   // Radial gradient: center is opaque (shows blur), edges are transparent (no blur)
   const mask =
-    "radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)";
+    "radial-gradient(ellipse at 50% 50%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)";
 
   return (
     <div
