@@ -50,16 +50,15 @@ tags:
 
 config_schema:
   title: Expressions Config
-  description: Some settings to play with. Bother me if you think of something else.
   type: object
   properties:
-    generateCharacters:
+    generate_characters:
       title: Generate Character Art
       description: Automatically generate an expression pack for characters (will expend daily credits); this is basically all the stage currently does, so maybe leave this one on.
       type: string
       default: "true"
       enum: ["true", "false"]
-    generateBackgrounds:
+    generate_backgrounds:
       title: Generate Background Art
       description: Automatically generate backgrounds during scene changes.
       type: string
