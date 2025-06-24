@@ -1,9 +1,10 @@
-import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, Character, AspectRatio} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Client } from "@gradio/client";
 import silhouetteUrl from './assets/silhouette.png'
 import CharacterImage from "./CharacterImage";
+import { ReactElement } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 type ChatStateType = {
     generatedPacks:{[key: string]: EmotionPack};
@@ -23,7 +24,6 @@ type MessageStateType = {
     characterEmotion: {[key: string]: string};
     characterFocus: string;
 };
-
 
 export enum Emotion {
     neutral = 'neutral',
@@ -92,7 +92,7 @@ export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
 
 const CHARACTER_ART_PROMPT: string = 'plain flat background, standing, full body';
 const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), background elements, special effects, scene, dynamic angle, action, cut-off';
-
+const BACKGROUND_ART_PROMPT: string = 'unpopulated, visual novel background scenery';
 
 
 type EmotionPack = {[key: string]: string};
@@ -242,6 +242,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.info(`New emotion for ${this.characters[botMessage.anonymizedId]}: ${newEmotion}`);
         this.messageState.characterEmotion[botMessage.anonymizedId] = newEmotion;
         this.messageState.characterFocus = botMessage.anonymizedId;
+        this.generateBackground(this.characters[botMessage.anonymizedId]);
         return {
             extensionMessage: null,
             stageDirections: null,
@@ -270,8 +271,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log(`Generate a physical description of ${character.name}.`);
             const imageDescription = await this.generator.textGen({
                 prompt: 
-                    `Character Information: ${character.personality}\n\n` +
-                    `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of this character` +
+                    `Character Information:\n${character.personality}\n\n` +
+                    `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of this character. ` +
                     `This system response will be fed directly into an image generator, which is unfamiliar with this character; ` +
                     `use tags and keywords to convey all essential details about them, ` +
                     `presenting ample character appearance notes--particularly if they seem obvious: gender, skin tone, hair style/color, physique, outfit, etc.\n\n` +
@@ -321,6 +322,42 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             this.chatState.generatedPacks[character.anonymizedId][emotion] = imageUrl;
         }
     }
+    
+    async generateBackground(character: Character): Promise<void> {
+
+        if (!this.chatState.generatedDescriptions[character.anonymizedId]) {
+            // Must first build a visual description for the background
+            console.log(`Generate a physical description of ${character.name}.`);
+            const imageDescription = await this.generator.textGen({
+                prompt: 
+                    `Character Information:\n${character.personality}\n\n` +
+                    `Chat History:\n{{messages}}\n\n` +
+                    `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of this current scene. ` +
+                    `This system response will be fed directly into an image generator, which is unfamiliar with the setting; ` +
+                    `use tags and keywords to convey all essential details about the location, ` +
+                    `presenting ample appearance notes.\n\n` +
+                    `Sample Response:\nDesolate wasteland, sandy, oppressively bright, glare, cracked earth, forelorn crags.\n\n` +
+                    `Sample Response:\nSmall-town America, charming street, quaint houses, alluring shopfronts, crisp fall folliage.\n\n` +
+                    `Default Instruction:`,
+                min_tokens: 50,
+                max_tokens: 150,
+                include_history: true
+            });
+            if (imageDescription?.result) {
+                console.log(`Received an image description: ${imageDescription.result}. Generating a background.`);
+                const imageUrl = (await this.generator.makeImage({
+                    prompt: `(Art style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${imageDescription.result})`,
+                    aspect_ratio: AspectRatio.WIDESCREEN_HORIZONTAL,
+                }))?.url ?? '';
+                if (imageUrl == '') {
+                    console.warn(`Failed to generate a background image.`);
+                }
+                this.messageState.backgroundUrl = imageDescription.result;
+            } else {
+                return;
+            }
+        }
+    }
 
     getCharacterEmotion(anonymizedId: string): Emotion {
         return this.messageState.characterEmotion[anonymizedId] as Emotion ?? Emotion.neutral;
@@ -344,6 +381,44 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     overflow: 'visible'
                 }
             }>
+                <AnimatePresence>
+                    {this.messageState.backgroundUrl && (
+                        <motion.div
+                            key={this.messageState.backgroundUrl}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.7 }}
+                            style={{
+                                position: 'absolute',
+                                left: '50%',
+                                top: 'calc(50% + 5vh)', // slightly above bottom of CharacterImages
+                                transform: 'translate(-50%, -60%)',
+                                width: '80vw',
+                                height: '80vh',
+                                borderRadius: '3vw',
+                                overflow: 'hidden',
+                                zIndex: 0,
+                                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+                            }}
+                        >
+                            <img
+                                src={this.messageState.backgroundUrl}
+                                alt="Background"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    filter: 'blur(3px)',
+                                    borderRadius: '3vw',
+                                    userSelect: 'none',
+                                    pointerEvents: 'none',
+                                }}
+                                draggable={false}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 {Object.values(this.characters).map(character => {
                     // Must have at least a neutral image in order to display this character:
                     if (!character.isRemoved && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
