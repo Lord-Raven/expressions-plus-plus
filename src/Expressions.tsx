@@ -5,6 +5,7 @@ import silhouetteUrl from './assets/silhouette.png'
 import CharacterImage from "./CharacterImage";
 import { ReactElement } from "react";
 import BackgroundImage from "./BackgroundImage";
+import BlurredGradientOverlay from "./BackgroundBlur";
 
 type ChatStateType = {
     generatedPacks:{[key: string]: EmotionPack};
@@ -433,6 +434,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     render(): ReactElement {
         const count = Object.values(this.characters).filter(character => !character.isRemoved).length;
         let index = 0;
+
+        const blurDirection = window.innerHeight > window.innerWidth ? "horizontal" : "vertical";
         return(
             <div className="big-stacker"
                 key={'big-over-stacker'}
@@ -444,6 +447,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     overflow: 'visible'
                 }
             }>
+                <BlurredGradientOverlay direction={blurDirection} />
                 <BackgroundImage imageUrl={this.messageState.backgroundUrl}/>
                 {Object.values(this.characters).map(character => {
                     // Must have at least a neutral image in order to display this character:
