@@ -55,9 +55,8 @@ config_schema:
     generateCharacters:
       title: Generate Character Art
       description: Automatically generate an expression pack for characters (will expend daily credits); this is basically all the stage currently does, so maybe leave this one on.
-      type: string
-      default: "True"
-      enum: ["True", "False"]
+      type: boolean
+      default: true
     generateBackgrounds:
       title: Generate Background Art
       description: Automatically generate backgrounds during scene changes.
@@ -68,7 +67,7 @@ config_schema:
       title: Art Style
       description: A brief description of the desired character art style.
       type: string
-      default "Bold, visual novel style illustration, clean lines"
+      default: "Bold, visual novel style illustration, clean lines"
 
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
 
