@@ -163,12 +163,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             characterEmotion: {},
             characterFocus: ''
         }
-        console.log(chatState);
         this.chatState = chatState ?? {
             generatedPacks: {},
             generatedDescriptions: {}
         };
-        console.log(this.chatState);
         this.loadedPacks = {};
         this.anyPack = false;
         this.generateCharacters = (config?.generateCharacters ?? "True") == "True";
@@ -204,11 +202,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
-        console.log("Loading");
-
         // Kick off auto-genned stuff
         this.generateNextImage()
-
         this.updateBackground();
         
         try {
@@ -218,7 +213,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.error(`Error loading pipelines, error: ${except}`);
             return { success: false, error: except }
         }
-        console.log(`Done loading: ${this.anyPack}`);
+
         return {
             success: this.anyPack,
             chatState: this.chatState,
@@ -270,7 +265,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     param_0: botMessage.content,
                 }))
                 console.log(`Emotion result: `);
-                console.log(emotionResult);
+                console.log(emotionResult.data[0].confidences);
                 newEmotion = emotionResult.data[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.1)?.label ?? newEmotion;
             } catch (except: any) {
                 console.warn(`Error classifying expression, error: ${except}`);
@@ -308,7 +303,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         if (!this.chatState.generatedDescriptions[character.anonymizedId]) {
             // Must first build a visual description for this character:
-            console.log(`Generate a physical description of ${character.name}.`);
+            console.log(`Generating a physical description of ${character.name}.`);
             const imageDescription = await this.generator.textGen({
                 prompt: 
                     `Character Information:\n${character.personality}\n\n` +
@@ -335,7 +330,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             emotion = Emotion.neutral;
         }
         if (emotion == Emotion.neutral) {
-            console.log(`Generate ${emotion} image for ${character.name}.`)
+            console.log(`Generating ${emotion} image for ${character.name}.`)
             const imageUrl = (await this.generator.makeImage({
                 prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[character.anonymizedId]}), (${CHARACTER_ART_PROMPT}), (${EMOTION_PROMPTS[emotion]})`),
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
@@ -347,7 +342,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }
             this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral] = imageUrl;
         } else {
-            console.log(`Generate ${emotion} image for ${character.name}.`)
+            console.log(`Generating ${emotion} image for ${character.name}.`)
             const imageUrl = (await this.generator.imageToImage({
                 image: this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral],
                 prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[character.anonymizedId]}), (${CHARACTER_ART_PROMPT}), (${EMOTION_PROMPTS[emotion]})`),
@@ -377,9 +372,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     hypothesis_template: 'This passage {}',
                     multi_label: true
                 })});
-                console.log('Zero-shot result:');
-                console.log(response);
                 const result = JSON.parse(`${response.data[0]}`);
+                console.log('Zero-shot result:');
                 console.log(result);
                 if (result.labels[0] == STAY_LABEL || result.scores[0] < 0.3) {
                     return;
@@ -394,7 +388,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log(`Generate a description of the background.`);
         const imageDescription = await this.generator.textGen({
             prompt: 
-                character?.personality ? `Character Information:\n${character.personality}\n\n` : '' +
+                (character?.personality ? `Character Information:\n${character.personality}\n\n` : '') +
                 `Chat History:\n{{messages}}\n\n` +
                 `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of the current scenery. ` +
                 `This system response will be fed directly into an image generator, which is unfamiliar with the setting; ` +
@@ -411,7 +405,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log(`Received an image description: ${imageDescription.result}. Generating a background.`);
             const imageUrl = (await this.generator.makeImage({
                 prompt: substitute(`(Art style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${imageDescription.result})`),
-                aspect_ratio: AspectRatio.WIDESCREEN_HORIZONTAL,
+                aspect_ratio: AspectRatio.CINEMATIC_HORIZONTAL,
             }))?.url ?? '';
             if (imageUrl == '') {
                 console.warn(`Failed to generate a background image.`);

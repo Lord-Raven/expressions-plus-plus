@@ -9,23 +9,28 @@ tagline: "Shows character emotions based on a set of images.++"
 
 # A longer explanation. Supports Markdown format.
 creator_notes: "
-This is a shameless knock-off of the [official Expression Packs stage](https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d).  
-  
-### No Expression Pack Support  
+This is a shameless knock-off of the [official Expression Packs stage](https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d).   
+   
+### No Expression Pack Support   
 
-_However_, unlike that stage, this one doesn't actually support expression packs; they appear to currently be locked to the official stage.  
-  
-### So, uh, what is this, then?  
+_However_, unlike that stage, this one doesn't actually support expression packs; they appear to currently be locked to the official stage. Write your congressperson. 
+When this changes, I'll update this stage to use the character's pack by default.   
+   
+
+### So, uh, what is this, then?   
 
 This stage generates its own expression images by producing a visual description of each character and 
 then making lots of image generation calls.  
-  
+   
+   
 Images my initially take time to appear as they must be generated up front; they are lazy loaded, so you can continue to chat while the stage gets things ready. 
 The result is that it works with any character, but _it uses lots of image generation tokens_ (if you aren't paying for Mars), and your mileage may vary.  
-  
+   
+
 This stage also generates background images based on the scene. These are also lazy loaded, but because they are history-sensitive, it is currently very easy to get the background out of sync with the chat.  
-  
-### External Dependences  
+   
+   
+### External Dependences   
 
 This stage leverages [SamLowe/roberta-base-go_emotions](https://huggingface.co/SamLowe/roberta-base-go_emotions) for emotion inference ([my HF space for this](https://huggingface.co/spaces/Ravenok/emotions)) 
 and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0) for zero-shot classification ([my HF space for that](https://huggingface.co/spaces/Ravenok/statosphere-backend)).
