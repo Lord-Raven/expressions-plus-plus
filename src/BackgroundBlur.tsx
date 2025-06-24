@@ -9,7 +9,7 @@ const BlurredGradientOverlay: React.FC<BlurredGradientOverlayProps> = ({
   style,
   className = "",
 }) => {
-  // Radial gradient: center is opaque, edges are transparent
+  // Radial gradient: center is opaque (shows blur), edges are transparent (no blur)
   const mask =
     "radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)";
 
@@ -18,10 +18,7 @@ const BlurredGradientOverlay: React.FC<BlurredGradientOverlayProps> = ({
       className={className}
       style={{
         position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
+        inset: 0, // fills parent
         pointerEvents: "none",
         zIndex: 2,
         ...style,
@@ -35,6 +32,10 @@ const BlurredGradientOverlay: React.FC<BlurredGradientOverlayProps> = ({
           WebkitBackdropFilter: "blur(16px)",
           maskImage: mask,
           WebkitMaskImage: mask,
+          maskSize: "100% 100%",
+          WebkitMaskSize: "100% 100%",
+          maskRepeat: "no-repeat",
+          WebkitMaskRepeat: "no-repeat",
         }}
       />
     </div>
