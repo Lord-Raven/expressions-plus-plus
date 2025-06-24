@@ -208,6 +208,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // Kick off auto-genned stuff
         this.generateNextImage()
 
+        this.updateBackground();
+        
         try {
             this.emotionPipeline = await Client.connect("ravenok/emotions");
             this.zeroShotPipeline = await Client.connect("ravenok/statosphere-backend");
@@ -224,9 +226,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         };
     }
 
+    async updateBackground() {
+        await this.messenger.updateEnvironment({background: this.messageState.backgroundUrl});
+    }
+
     async setState(state: MessageStateType): Promise<void> {
         if (state != null) {
             this.messageState = state
+            this.updateBackground();
         }
     }
 
@@ -409,7 +416,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.warn(`Failed to generate a background image.`);
             }
             this.messageState.backgroundUrl = imageUrl;
-            this.messenger.updateEnvironment({background: this.messageState.backgroundUrl});
+            this.updateBackground();
         } else {
             return;
         }
