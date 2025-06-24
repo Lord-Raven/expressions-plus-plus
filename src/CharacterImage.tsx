@@ -26,7 +26,7 @@ const CharacterImage: FC<CharacterImageProps> = ({character, emotion, imageUrl, 
             initial='idle'
             animate={isTalking ? 'talking' : 'idle'}
             style={{position: 'absolute', bottom: '5vh', width: 'auto', aspectRatio: '9 / 16', zIndex: 10, overflow: 'visible'}}>
-            <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', filter: 'blur(3px)', pointerEvents: 'none', transform: 'translate(-50%, 0)', zIndex: 0}} alt={`${character.name} (${emotion})`}/>
+            <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', filter: 'blur(2px)', pointerEvents: 'none', transform: 'translate(-50%, 0)', zIndex: 0}} alt={`${character.name} (${emotion})`}/>
             <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', opacity: 0.8, pointerEvents: 'none', transform: 'translate(-50%, 0)', zIndex: 1}} alt={`${character.name} (${emotion})`}/>
         </motion.div>
     );

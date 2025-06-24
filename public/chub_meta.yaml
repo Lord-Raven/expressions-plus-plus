@@ -14,7 +14,7 @@ creator_notes: "This is a shameless knock-off of the [official Expression Packs 
 _However_, unlike that stage, this one doesn't actually support expression packs; they appear to currently be locked to the official stage. 
 
 
-##So, uh, what is this, then?##
+**So, uh, what is this, then?**<br>
 This stage generates its own expression images by producing a visual description of each character and 
 then making lots of image generation calls. 
 
@@ -28,6 +28,7 @@ The result is that it works with any character, but _it uses lots of image gener
 This stage also generates background images based on the scene. These are also lazy loaded, but because they are history-sensitive, it is currently very easy to get the background out of sync with the chat.
 
 
+**External Dependences**<br>
 This stage leverages [SamLowe/roberta-base-go_emotions](https://huggingface.co/SamLowe/roberta-base-go_emotions) for emotion inference ([my HF space for this](https://huggingface.co/spaces/Ravenok/emotions)) 
 and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0) for zero-shot classification ([my HF space for that](https://huggingface.co/spaces/Ravenok/statosphere-backend)).
 "
@@ -55,54 +56,26 @@ tags:
 #   versus being able to handle nulls/default values.
 needs_config: false
 config_schema:
-  # Ignored.
-  # $schema: "https://json-schema.org/draft/2020-12/schema"
-  # Will show in the UI. If not given, will be `${project_name} Config`
   title: Expressions Config
-  # Will show in the UI if not null or empty as a subtitle.
-  description: ''
-  type: "object"
+  description: "Some settings to play with. Bother me if you think of something else."
+  type: object
   properties:
-    #selected:
-      # The beginning of non-standard JSON Schema behavior.
-      # JSchema isn't great with the concept of dynamic
-      # schema generation. This is our little addition
-      # to make it easy to define "I need this setting for each character".
-    #  type: "character_map"
-      # Could also be an object, etc.
-    #  value_type:
-    #    type: "string"
-    #    enum: 'character.extensions.chub.alt_expressions.keys()'
-    #    default: 'default'
-      # For the type "character_map",
-      # this is a boolean instead of the normal list.
-      # If true, required for each character.
-    #  required: false
-      # Information shown beside this part of the form.
-    #  description: "Which expression pack to use, if there are multiple."
     generateCharacters:
       title: Generate Character Art
       description: Automatically generate an expression pack for characters (will expend daily credits); this is basically all the stage currently does, so maybe leave this one on.
-      type: "boolean"
+      type: boolean
       default: true
     generateBackgrounds:
       title: Generate Background Art
       description: Automatically generate backgrounds during scene changes.
-      type: "boolean"
+      type: boolean
       default: true
     artStyle:
       title: Art Style
       description: A brief description of the desired character art style.
-      type: "string"
+      type: string
       default "Bold, visual novel style illustration, clean lines"
   required: []
-
-needs_history: false
-state_schema:
-  type: "character_map"
-  value_type:
-    type: "string"
-    default: "neutral"
 
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
 
