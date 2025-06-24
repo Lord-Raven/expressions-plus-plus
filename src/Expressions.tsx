@@ -351,7 +351,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             if (imageUrl == '') {
                 console.warn(`Failed to generate a background image.`);
             }
-            this.messageState.backgroundUrl = imageDescription.result;
+            this.messageState.backgroundUrl = imageUrl;
         } else {
             return;
         }
