@@ -204,7 +204,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
         // Kick off auto-genned stuff
-        this.generateNextImage()
+        this.generateNextImage(0)
         this.updateBackground();
         
         try {
@@ -290,12 +290,16 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         };
     }
 
-    async generateNextImage() {
+    async generateNextImage(comboBreaker: number) {
+        // This is a failsafe to keep this method from cycling forever if something is going wrong.
+        if (comboBreaker > 200) {
+            return;
+        }
         for (let character of Object.values(this.characters)) {
             if (Object.keys(EMOTION_PROMPTS).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0) {
                 this.generateImage(
                     character,
-                    ((Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]) as Emotion) ?? Emotion.neutral)).then(() => this.generateNextImage());
+                    ((Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]) as Emotion) ?? Emotion.neutral)).then(() => this.generateNextImage(comboBreaker + 1));
                 return;
             }
         }

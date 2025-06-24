@@ -37,16 +37,18 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl }) => {
                     transition={{ duration: 0.7 }}
                     style={{
                         position: "absolute",
-                        left: "50%",
-                        top: "calc(50% + 5vh)",
-                        transform: "translate(-50%, -60%)",
+                        left: "10vw",
+                        top: "10vh",
                         width: "80vw",
                         height: "80vh",
                         borderRadius: "5vw",
-                        overflow: "hidden",
+                        overflow: "hidden", // This clips the image to the frame
                         zIndex: 3,
                         boxShadow: "5px 5px 40px 6px rgba(0, 0, 0, 0.37)",
                         border: `3px solid ${borderColor}`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                     }}
                 >
                     <img
@@ -55,11 +57,13 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl }) => {
                         alt="Background"
                         crossOrigin="anonymous"
                         style={{
-                            width: "100%",
-                            height: "100%",
+                            position: "absolute",
+                            left: "10vw",
+                            bottom: "10vh",
+                            width: "80vw",
+                            height: "80vh",
                             objectFit: "cover",
                             filter: "blur(1px)",
-                            borderRadius: "5vw",
                             userSelect: "none",
                             pointerEvents: "none",
                         }}
