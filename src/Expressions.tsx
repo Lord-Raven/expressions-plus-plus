@@ -344,7 +344,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 })});
                 console.log('Zero-shot result:');
                 console.log(response);
-                const result = JSON.parse(`${Response.data[0]}`);
+                const result = JSON.parse(`${response.data[0]}`);
                 console.log(result);
                 if (response.labels[0] == STAY_LABEL || response.scores[0] < 0.5) {
                     return;
