@@ -204,7 +204,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async beforePrompt(userMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
-        this.generateBackground(this.characters[userMessage.anonymizedId], userMessage.content);
+        this.generateBackground(this.characters[userMessage.promptForId ?? ''], userMessage.content);
         return {
             extensionMessage: null,
             stageDirections: null,
@@ -359,7 +359,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log(`Generate a description of the background.`);
         const imageDescription = await this.generator.textGen({
             prompt: 
-                `Character Information:\n${character.personality}\n\n` +
+                character?.personality ? `Character Information:\n${character.personality}\n\n` : '' +
                 `Chat History:\n{{messages}}\n\n` +
                 `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of the current scenery. ` +
                 `This system response will be fed directly into an image generator, which is unfamiliar with the setting; ` +
