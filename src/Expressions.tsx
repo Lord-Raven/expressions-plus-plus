@@ -4,7 +4,7 @@ import { Client } from "@gradio/client";
 import silhouetteUrl from './assets/silhouette.png'
 import CharacterImage from "./CharacterImage";
 import { ReactElement } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import BackgroundImage from "./BackgroundImage";
 
 type ChatStateType = {
     generatedPacks:{[key: string]: EmotionPack};
@@ -13,7 +13,8 @@ type ChatStateType = {
 
 type ConfigType = {
     artStyle?: string;
-    autoGenerate?: boolean;
+    generateCharacters?: boolean;
+    generateBackgrounds?: boolean;
     selected?: {[key: string]: string} | null;
 };
 
@@ -106,9 +107,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     messageState: MessageStateType;
 
     // Not saved:
-    pipeline: any;
+    emotionPipeline: any = null;
+    zeroShotPipeline: any = null;
     anyPack: boolean;
-    autoGenerate: boolean;
+    generateCharacters: boolean;
+    generateBackgrounds: boolean;
     artStyle: string;
     characters: {[key: string]: Character};
     loadedPacks: {[key: string]: EmotionPack}
@@ -140,8 +143,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log(this.chatState);
         this.loadedPacks = {};
         this.anyPack = false;
-        this.pipeline = null;
-        this.autoGenerate = config?.autoGenerate ?? true;
+        this.generateCharacters = config?.generateCharacters ?? true;
+        this.generateBackgrounds = config?.generateBackgrounds ?? true;
         this.artStyle = config?.artStyle ?? 'Bold, visual novel style illustration, clean lines';
 
         // Look at characters, set up packs, and initialize values that aren't present in message/chat state
@@ -156,7 +159,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     this.anyPack = true;
                 } else {
                     this.chatState.generatedPacks[charAnonId] = {};
-                    this.anyPack = this.anyPack || this.autoGenerate;
+                    this.anyPack = this.anyPack || this.generateCharacters;
                 }
                 if (config != null && config.selected != null
                         && config.selected?.hasOwnProperty(charAnonId)
@@ -179,10 +182,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         this.generateNextImage()
 
         try {
-            this.pipeline = await Client.connect("ravenok/emotions");
+            this.emotionPipeline = await Client.connect("ravenok/emotions");
+            this.zeroShotPipeline = await Client.connect("ravenok/statosphere-backend");
         } catch (except: any) {
-            console.error(`Error loading expressions pipeline, error: ${except}`);
-            return { success: true, error: null }
+            console.error(`Error loading pipelines, error: ${except}`);
+            return { success: false, error: except }
         }
         console.log(`Done loading: ${this.anyPack}`);
         return {
@@ -200,6 +204,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async beforePrompt(userMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
+        this.generateBackground(this.characters[userMessage.anonymizedId], userMessage.content);
         return {
             extensionMessage: null,
             stageDirections: null,
@@ -224,9 +229,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async afterResponse(botMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
 
         let newEmotion = 'neutral';
-        if(this.pipeline != null) {
+        if(this.emotionPipeline != null) {
             try {
-                const emotionResult = (await this.pipeline.predict("/predict", {
+                const emotionResult = (await this.emotionPipeline.predict("/predict", {
                     param_0: botMessage.content,
                 }))
                 console.log(`Emotion result: `);
@@ -242,7 +247,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.info(`New emotion for ${this.characters[botMessage.anonymizedId]}: ${newEmotion}`);
         this.messageState.characterEmotion[botMessage.anonymizedId] = newEmotion;
         this.messageState.characterFocus = botMessage.anonymizedId;
-        this.generateBackground(this.characters[botMessage.anonymizedId]);
+        this.generateBackground(this.characters[botMessage.anonymizedId], botMessage.content);
         return {
             extensionMessage: null,
             stageDirections: null,
@@ -323,17 +328,40 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
     }
     
-    async generateBackground(character: Character): Promise<void> {
+    async generateBackground(character: Character, content: string): Promise<void> {
+
+        if (!this.generateBackgrounds || !content) return;
+
+        if (this.messageState.backgroundUrl) {
+            const TRANSITION_LABEL = 'transitions to a new location';
+            const STAY_LABEL = 'remains in the same location';
+            try {
+                const response = JSON.parse(`${await this.zeroShotPipeline.predict("/predict", {data_string: JSON.stringify({
+                    sequence: content,
+                    candidate_labels: [STAY_LABEL, TRANSITION_LABEL],
+                    hypothesis_template: 'This passage {}',
+                    multi_label: true
+                })}).data[0]}`);
+                console.log('Zero-shot result:');
+                console.log(response);
+                if (response.labels[0] == STAY_LABEL || response.scores[0] < 0.5) {
+                    return;
+                }
+            } catch (except) {
+                console.warn(except);
+                return;
+            }
+        }
 
         // Must first build a visual description for the background
-        console.log(`Generate a physical description of ${character.name}.`);
+        console.log(`Generate a description of the background.`);
         const imageDescription = await this.generator.textGen({
             prompt: 
                 `Character Information:\n${character.personality}\n\n` +
                 `Chat History:\n{{messages}}\n\n` +
-                `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of this current scene. ` +
+                `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of the current scenery. ` +
                 `This system response will be fed directly into an image generator, which is unfamiliar with the setting; ` +
-                `use tags and keywords to convey all essential details about the location, ` +
+                `use tags and keywords to convey all essential details about the location, ambiance, weather, or time of day (as applicable), ` +
                 `presenting ample appearance notes.\n\n` +
                 `Sample Response:\nDesolate wasteland, sandy, oppressively bright, glare, cracked earth, forelorn crags.\n\n` +
                 `Sample Response:\nSmall-town America, charming street, quaint houses, alluring shopfronts, crisp fall folliage.\n\n` +
@@ -379,44 +407,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     overflow: 'visible'
                 }
             }>
-                <AnimatePresence>
-                    {this.messageState.backgroundUrl && (
-                        <motion.div
-                            key={this.messageState.backgroundUrl}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.7 }}
-                            style={{
-                                position: 'absolute',
-                                left: '50%',
-                                top: 'calc(50% + 5vh)', // slightly above bottom of CharacterImages
-                                transform: 'translate(-50%, -60%)',
-                                width: '80vw',
-                                height: '80vh',
-                                borderRadius: '3vw',
-                                overflow: 'hidden',
-                                zIndex: 0,
-                                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                            }}
-                        >
-                            <img
-                                src={this.messageState.backgroundUrl}
-                                alt="Background"
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                    filter: 'blur(3px)',
-                                    borderRadius: '3vw',
-                                    userSelect: 'none',
-                                    pointerEvents: 'none',
-                                }}
-                                draggable={false}
-                            />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                <BackgroundImage imageUrl={this.messageState.backgroundUrl}/>
                 {Object.values(this.characters).map(character => {
                     // Must have at least a neutral image in order to display this character:
                     if (!character.isRemoved && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
