@@ -58,7 +58,7 @@ tags:
 needs_config: false
 config_schema:
   title: Expressions Config
-  description: "Some settings to play with. Bother me if you think of something else."
+  description: Some settings to play with. Bother me if you think of something else.
   type: object
   properties:
     generateCharacters:
@@ -77,7 +77,6 @@ config_schema:
       description: A brief description of the desired character art style.
       type: string
       default "Bold, visual novel style illustration, clean lines"
-  required: []
 
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
 
