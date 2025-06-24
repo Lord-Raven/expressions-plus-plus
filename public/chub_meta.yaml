@@ -5,7 +5,7 @@
 project_name: "Expressions++"
 
 # A short tagline to show in search.
-tagline: "Shows character emotions based on a set of images.++"
+tagline: "Shows character emotions based on a set of images.++."
 
 # A longer explanation. Supports Markdown format.
 creator_notes: "
@@ -48,35 +48,35 @@ tags:
  - 'Stage'
  - 'Add-on'
 
-# The schema of any user-supplied config.
-# If your extension requires a configuration but has no
-#   defined schema, it won't work.
-# Config schemas are a superset of JSON Schema format
-# @link https://json-schema.org
-# Whether this REQUIRES a user-given configuration,
-#   versus being able to handle nulls/default values.
-needs_config: false
 config_schema:
-  title: Expressions Config
-  description: Some settings to play with. Bother me if you think of something else.
+  title: Alien Infestation Settings
   type: object
   properties:
-    generateCharacters:
-      title: Generate Character Art
-      description: Automatically generate an expression pack for characters (will expend daily credits); this is basically all the stage currently does, so maybe leave this one on.
+    alien:
+      title: Alien
+      description: Alien archetype present in the scenario.
       type: string
-      default: "true"
-      enum: ["true", "false"]
-    generateBackgrounds:
-      title: Generate Background Art
-      description: Automatically generate backgrounds during scene changes.
-      type: "true"
-      enum: ["true", "false"]
-    artStyle:
-      title: Art Style
-      description: A brief description of the desired character art style.
+      default: Random
+      enum: ["Random", "Bugs", "Flood", "Shoggoth", "Skinwalker", "Stalker", "Xenomorph"]
+    sex_level:
+      title: Gratuity, Sex
+      description: Relative prevalence or extremity of sexual content.
       type: string
-      default "Bold, visual novel style illustration, clean lines"
+      default: "Rakish"
+      enum: ["Chaste", "Rakish", "Debaucherous", "Depraved"]
+    violence_level:
+      title: Gratuity, Violence
+      description: Relative prevalence or extremity of violent content.
+      type: string
+      default: "Bloody"
+      enum: ["Nerf", "Bloody", "Grisly"]
+    pacing:
+      title: Pacing
+      description: Relative rate of escalation during the scenario.
+      type: string
+      default: "Deliberate"
+      enum: ["Glacial", "Plodding", "Deliberate", "Brisk", "Harrowing"]
+    
 
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
 
