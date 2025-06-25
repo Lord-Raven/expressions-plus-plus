@@ -451,7 +451,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             xPosition={position}
                             imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
                             isTalking={this.messageState.characterFocus == character.anonymizedId}
-                            //clipBackground={this.messageState.characterFocus != character.anonymizedId && !!this.messageState.backgroundUrl}
                         />
                     } else {
                         return <></>
