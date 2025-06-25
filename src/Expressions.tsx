@@ -3,10 +3,12 @@ import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Client } from "@gradio/client";
 import silhouetteUrl from './assets/silhouette.png'
 import CharacterImage from "./CharacterImage";
-import { ReactElement } from "react";
+import {ReactElement} from "react";
 import BackgroundImage from "./BackgroundImage";
 import CharacterButton from "./CharacterButton";
 import {createTheme, ThemeProvider} from "@mui/material";
+import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
+import {GenerateButton} from "./GenerateButton.tsx";
 
 type ChatStateType = {
     generatedPacks:{[key: string]: EmotionPack};
@@ -150,6 +152,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     characters: {[key: string]: Character};
     loadedPacks: {[key: string]: EmotionPack}
     backgroundCooldown: number = 0;
+    generating: boolean = false;
+    private messageHandle?: MessageQueueHandle;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
         super(data);
@@ -210,7 +214,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
         // Kick off auto-genned stuff
-        this.generateNextImage(0)
         this.updateBackground();
         
         try {
@@ -241,9 +244,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async beforePrompt(userMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
-        this.generateBackground(this.characters[userMessage.promptForId ?? ''], userMessage.content);
+        this.backgroundCheck(this.characters[userMessage.promptForId ?? ''], userMessage.content);
         return {
-            extensionMessage: null,
             stageDirections: null,
             messageState: this.messageState,
             chatState: this.chatState,
@@ -281,13 +283,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } else {
             newEmotion = this.fallbackClassify(botMessage.content);
         }
-        console.info(`New emotion for ${this.characters[botMessage.anonymizedId]}: ${newEmotion}`);
+        console.info(`New emotion for ${this.characters[botMessage.anonymizedId].name}: ${newEmotion}`);
         this.messageState.characterEmotion[botMessage.anonymizedId] = newEmotion;
         this.messageState.characterFocus = botMessage.anonymizedId;
         this.backgroundCooldown--;
-        this.generateBackground(this.characters[botMessage.anonymizedId], botMessage.content);
+        this.backgroundCheck(this.characters[botMessage.anonymizedId], botMessage.content);
         return {
-            extensionMessage: null,
             stageDirections: null,
             messageState: this.messageState,
             chatState: this.chatState,
@@ -296,23 +297,40 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         };
     }
 
-    async generateNextImage(comboBreaker: number) {
+    isUngeneratedContent(): boolean {
+        for (let character of Object.values(this.characters)) {
+            if (!character.isRemoved && Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    generateNextImage(comboBreaker: number) {
+        this.generating = true;
         // This is a failsafe to keep this method from cycling forever if something is going wrong.
         if (comboBreaker > 200) {
+            this.generating = false;
             return;
         }
         for (let character of Object.values(this.characters)) {
-            if (Object.keys(EMOTION_PROMPTS).filter(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]).length > 0) {
-                this.generateImage(
-                    character,
-                    ((Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion]) as Emotion) ?? Emotion.neutral)).then(() => this.generateNextImage(comboBreaker + 1));
+            const emotion = Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion])
+            if (emotion && !character.isRemoved) {
+                this.wrapPromise(this.generateCharacterImage(character, emotion as Emotion), `Generating ${emotion} image for ${character.name}.`).then(() => this.generateNextImage(comboBreaker + 1));
                 return;
             }
         }
+        this.generating = false;
     }
 
-    async generateImage(character: Character, emotion: Emotion): Promise<void> {
+    async wrapPromise(promise: Promise<void>, message: string): Promise<void> {
+        if (this.messageHandle) {
+            this.messageHandle.addLoadingMessage(promise, message);
+        }
+        return promise;
+    }
 
+    async generateCharacterImage(character: Character, emotion: Emotion): Promise<void> {
         if (!this.chatState.generatedDescriptions[character.anonymizedId]) {
             // Must first build a visual description for this character:
             console.log(`Generating a physical description of ${character.name}.`);
@@ -333,7 +351,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             if (imageDescription?.result) {
                 console.log(`Received an image description: ${imageDescription.result}`);
                 this.chatState.generatedDescriptions[character.anonymizedId] = imageDescription.result;
-                this.messenger.updateChatState(this.chatState);
+                await this.messenger.updateChatState(this.chatState);
             } else {
                 return;
             }
@@ -370,11 +388,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.warn(`Failed to generate a ${emotion} image for ${character.name}; falling back to silhouette.`);
             }
             this.chatState.generatedPacks[character.anonymizedId][emotion] = imageUrl;
+            await this.messenger.updateChatState(this.chatState);
         }
     }
-    
-    async generateBackground(character: Character, content: string): Promise<void> {
 
+    async backgroundCheck(character: Character, content: string): Promise<void> {
         if (!this.generateBackgrounds || !content || this.backgroundCooldown > 0) return;
 
         if (this.messageState.backgroundUrl) {
@@ -382,11 +400,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             const STAY_LABEL = 'remains in the same location';
             try {
                 const response = await this.zeroShotPipeline.predict("/predict", {data_string: JSON.stringify({
-                    sequence: content,
-                    candidate_labels: [STAY_LABEL, TRANSITION_LABEL],
-                    hypothesis_template: 'This passage {}',
-                    multi_label: true
-                })});
+                        sequence: content,
+                        candidate_labels: [STAY_LABEL, TRANSITION_LABEL],
+                        hypothesis_template: 'This passage {}',
+                        multi_label: true
+                    })});
                 const result = JSON.parse(`${response.data[0]}`);
                 console.log('Zero-shot result:');
                 console.log(result);
@@ -399,19 +417,25 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }
         }
 
+        this.wrapPromise(this.generateBackgroundImage(character, content), 'Generating new background image.');
+    }
+
+    async generateBackgroundImage(character: Character, content: string): Promise<void> {
         this.backgroundCooldown = 2;
         // Must first build a visual description for the background
         console.log(`Generate a description of the background.`);
         const imageDescription = await this.generator.textGen({
-            prompt: 
-                (character?.personality ? `Character Information:\n${character.personality}\n\n` : '') +
+            prompt:
+                (character?.personality ? `Information about ${character.name}, for Flavor:\n${character.personality}` : '') +
                 `Chat History:\n{{messages}}\n\n` +
-                `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of the current scenery. ` +
+                `Current Instruction:\nThe goal of this task is to digest the flavor text and chat history to construct a comprehensive and concise visual description of the current scenery. ` +
                 `This system response will be fed directly into an image generator, which is unfamiliar with the setting; ` +
                 `use tags and keywords to convey all essential details about the location, ambiance, weather, or time of day (as applicable), ` +
-                `presenting ample appearance notes.\n\n` +
-                `Sample Response:\nDesolate wasteland, sandy, oppressively bright, glare, cracked earth, forelorn crags.\n\n` +
-                `Sample Response:\nSmall-town America, charming street, quaint houses, alluring shopfronts, crisp fall folliage.\n\n` +
+                `presenting ample appearance notes. Fixate on the visual details of the surroundings, ignoring action or characters.\n\n` +
+                `Sample Response:\nDesolate wasteland, sandy, oppressively bright, glare, cracked earth, forlorn crags.\n\n` +
+                `Sample Response:\nSmall-town America, charming street, quaint houses, alluring shopfronts, crisp fall foliage.\n\n` +
+                `Sample Response:\nCramped sci-fi hallway, dim emergency lighting, aboard a space station, haunting shapes, loose ducts.\n\n` +
+                `Sample Response:\nForgotten ruins, mossy worn stonework, dense forest, swampy surroundings, entrance leading deep into the unknown, pervasive mist.\n\n` +
                 `Default Instruction:`,
             min_tokens: 50,
             max_tokens: 150,
@@ -428,8 +452,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }
             this.messageState.backgroundUrl = imageUrl;
             this.updateBackground();
-        } else {
-            return;
         }
     }
 
@@ -457,15 +479,19 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         overflow: 'visible'
                     }
                 }>
+                    <MessageQueue register={(handle) => {this.messageHandle = handle;}}/>
+                    <GenerateButton shouldShow={() => {return !this.generating && this.isUngeneratedContent()}} onClick={() => this.generateNextImage(0)}/>
+
                     {/* Regenerate buttons for each character */}
                     {Object.values(this.characters).filter(c => !c.isRemoved).map((character, i) => (
                         <CharacterButton
-                            key={character.anonymizedId}
+                            key={`character_options_${character.anonymizedId}`}
                             character={character}
                             stage={this}
                             top={20 + i * 50}
-                            onRegenerate={async (char, emotion) => {
-                                this.generateImage(char, emotion);
+                            onRegenerate={(char, emotion) => {
+                                console.log('onRegenerate');
+                                this.wrapPromise(this.generateCharacterImage(char, emotion), `Regenerating ${emotion} image for ${char.name}.`);
                             }}
                         />
                     ))}
@@ -480,6 +506,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                                     (Math.floor(index / 2) * (50 / (Math.floor(count / 2) + 1)) + 50));
 
                             return <CharacterImage
+                                key={`character_${character.anonymizedId}`}
                                 character={character}
                                 emotion={this.getCharacterEmotion(character.anonymizedId)}
                                 xPosition={position}

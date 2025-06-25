@@ -34,9 +34,7 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                     width: 40, height: 40,
                     borderRadius: "50%",
                     boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    background: stage.getCharacterImage(character.anonymizedId, Emotion.neutral)
-                        ? `url(${stage.getCharacterImage(character.anonymizedId, Emotion.neutral)}) center top/cover no-repeat`
-                        : "#eee",
+                    backgroundImage: `url(${stage.getCharacterImage(character.anonymizedId, Emotion.neutral)})`,
                     backgroundPosition: "center top",
                     backgroundSize: "200% 356%", // 16/9 = 1.78, so show top 9/16
                 }}
@@ -45,20 +43,21 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
             >
             </IconButton>
             {/* Emotion selection dialog */}
-            <Dialog open={open} onClose={() => setOpen(false)}>
+            <Dialog open={open} onClose={() => setOpen(false)} sx={{overflow: "visible"}}>
                 <DialogTitle>
                     <b>{character.name}</b>
                 </DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{overflow: "visible"}}>
                     <Typography variant="body2" sx={{ mb: 2 }}>
                         Choose an image to regenerate for <b>{character.name}</b>:
                     </Typography>
-                    <Grid container spacing={1}>
+                    <Grid container spacing={1} justifyContent={"center"}>
                         {Object.keys(EMOTION_PROMPTS).map((emotion, index) => (
                             <Grid key={emotion} component={motion.div}
                                   initial={{ opacity: 0, x: 50 }}
+                                  whileHover={{ scale: 1.1, zIndex: 2000 }}
                                   animate={{ opacity: 1, x: 0 }}
-                                  transition={{ duration: 0.3, delay: index * 0.05 }} // staggered effect
+                                  transition={{ duration: 0.3, delay: index * 0.05 }}
                             >
                                 <Button
                                     variant="outlined"
@@ -69,7 +68,7 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                                         alignItems: "flex-end", // pushes content to the bottom vertically
                                         justifyContent: "center", // centers label horizontally
                                         borderRadius: 2,
-                                        background: `url(${stage.getCharacterImage(character.anonymizedId, emotion as Emotion)}) center top/cover no-repeat`,
+                                        backgroundImage: `url(${stage.getCharacterImage(character.anonymizedId, emotion as Emotion)})`,
                                         backgroundPosition: "center top",
                                         backgroundSize: "200% 356%", // 16/9 = 1.78, so show top 9/16
                                         color: "#222",
