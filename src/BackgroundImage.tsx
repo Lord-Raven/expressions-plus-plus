@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useMotionValue, useTransform } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { FC, useEffect, useRef, useState } from "react";
 import {FastAverageColor} from "fast-average-color";
 
@@ -12,19 +12,6 @@ const FRAME_END_LEFT = "10vw";
 const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl }) => {
     const imgRef = useRef<HTMLImageElement>(null);
     const [borderColor, setBorderColor] = useState<string>("rgba(255,255,255,0.5)");
-
-    // Use a motion value for left so we can sync the offset
-    const left = useMotionValue(FRAME_START_LEFT);
-
-    // This transform will always be the negative of the frame's left (in px)
-    const imageOffset = useTransform(left, (latest) => {
-        // Convert vw to px if needed
-        if (typeof window !== "undefined" && latest.endsWith("vw")) {
-            const vw = parseFloat(latest);
-            return `-${(vw / 100) * window.innerWidth}px`;
-        }
-        return `-${latest}`;
-    });
 
     useEffect(() => {
         if (!imageUrl) return;
@@ -55,7 +42,6 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl }) => {
                         style={{
                             position: "absolute",
                             top: "10vh",
-                            left,
                             width: "80vw",
                             height: "80vh",
                             borderRadius: "5vw",
@@ -67,9 +53,13 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl }) => {
                         }}
                     >
                         <motion.div
+                            key="background-frame"
+                            initial={{ left: -FRAME_START_LEFT, opacity: 1 }}
+                            animate={{ left: -FRAME_END_LEFT, opacity: 1 }}
+                            exit={{ left: -FRAME_START_LEFT, opacity: 1 }}
+                            transition={{ duration: 0.7 }}
                             style={{
                                 position: "absolute",
-                                left: imageOffset,
                                 top: " -10vh",
                                 width: "100vw",
                                 height: "100vh",
