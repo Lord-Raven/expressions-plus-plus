@@ -69,9 +69,7 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                                         alignItems: "flex-end", // pushes content to the bottom vertically
                                         justifyContent: "center", // centers label horizontally
                                         borderRadius: 2,
-                                        background: stage.getCharacterImage(character.anonymizedId, emotion as Emotion)
-                                            ? `url(${stage.getCharacterImage(character.anonymizedId, emotion as Emotion)}) center top/cover no-repeat`
-                                            : "#eee",
+                                        background: `url(${stage.getCharacterImage(character.anonymizedId, emotion as Emotion)}) center top/cover no-repeat`,
                                         backgroundPosition: "center top",
                                         backgroundSize: "200% 356%", // 16/9 = 1.78, so show top 9/16
                                         color: "#222",

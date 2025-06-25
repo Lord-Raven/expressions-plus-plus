@@ -439,7 +439,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     getCharacterImage(anonymizedId: string, emotion: Emotion): string {
         console.log(`${emotion}=>${EMOTION_MAPPING[emotion]}`);
-        return this.chatState.generatedPacks[anonymizedId][EMOTION_MAPPING[emotion] ?? Emotion.neutral] ?? this.chatState.generatedPacks[anonymizedId][Emotion.neutral] ?? silhouetteUrl;
+        return this.chatState.generatedPacks[anonymizedId][EMOTION_MAPPING[emotion] ?? emotion] ?? this.chatState.generatedPacks[anonymizedId][Emotion.neutral] ?? silhouetteUrl;
     }
 
     render(): ReactElement {
