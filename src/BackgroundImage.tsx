@@ -95,7 +95,7 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, children }) => {
                                 style={{
                                     position: "absolute",
                                     left: 0,
-                                    top: "10vh",
+                                    bottom: "10vh",
                                     width: "100vw",
                                     height: "80vh",
                                     objectFit: "cover",
