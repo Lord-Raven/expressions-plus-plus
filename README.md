@@ -1,28 +1,8 @@
-# Expressions Extension for Chub
+# Expressions Extension for Chub(++)
 
-This is a simple extension that classifies bot responses in order to 
-show their expression pack images based on their current emotion.
+This is a shameless rip-off of the [official Expression Packs stage](https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d),
+but with generated character images and backgrounds.
 
-It also serves as an example of how to develop an extension that 
-can't be handled in the editor UI, or if you just prefer to use
-a normal development environment.
-
-Feel free to clone this project for use as a template. In particular, src/TestRunner.tsx
-is a useful example of how to test things locally without a running chat.
-
-You'll need node@21.7.1 and yarn installed.
-Then, to get started:
-
-``` 
-git clone https://github.com/CharHubAI/expressions-extension
-cd expressions-extension
-yarn install
-yarn dev
-```
-
-This project uses GitHub actions to update the extension in Chub on 
-commits to the main branch. For your project to do this,
-you'll need to get an extension auth token from [the api](https://api.chub.ai/openapi/swagger#/User%20Account/create_projects_token_account_tokens_projects_post).
-
-Then in the GitHub project, go to Settings -> Secrets and Variables -> Actions ->
-Repository secrets -> New Repository Secret. Add the token with the name "CHUB_AUTH_TOKEN".
+The problem with this extension is that it actually can't access the expression packs that bot-makers have attached to their bots. 
+This data appears to be currently reserved for the official stage, although I expect this is not the long-term intent. 
+When this changes, I will make updates to ensure this stage can leverage those images, as well.

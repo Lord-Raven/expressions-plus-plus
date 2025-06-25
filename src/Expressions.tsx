@@ -73,15 +73,15 @@ export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     neutral: 'calm expression',
-    amusement: 'subtle smirk, amused expression',
-    anger: 'angry expression',
+    amusement: 'subtle smirk, bemused expression',
+    anger: 'enraged, angry expression',
     annoyance: 'annoyed, dismayed expression',
     confusion: 'stunned, baffled, confused expression',
-    desire: 'sexy, seductive expression',
+    desire: 'sexy, alluring, seductive expression',
     disappointment: 'unhappy, disappointed expression',
     disgust: 'disgusted expression',
-    embarrassment: 'embarrassed, blushing',
-    excitement: 'excited expression',
+    embarrassment: 'embarrassed, blushing, sheepish expression',
+    excitement: 'keen, excited expression',
     fear: 'terrified expression',
     gratitude: 'relieved, thankful expression',
     grief: 'depressed, sobbing expression',
@@ -89,7 +89,7 @@ export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     love: 'adorable, grinning, blushing, lovestruck expression',
     nervousness: 'nervous, uneasy expression',
     pride: 'proud, haughty, puffed up expression',
-    sadness: 'sad, upset expression, teary',
+    sadness: 'sad, upset expression, teary-eyed',
     surprise: 'shocked, surprised expression',
 }
 
@@ -438,7 +438,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getCharacterImage(anonymizedId: string, emotion: Emotion): string {
-        console.log(`${emotion}=>${EMOTION_MAPPING[emotion]}`);
         return this.chatState.generatedPacks[anonymizedId][EMOTION_MAPPING[emotion] ?? emotion] ?? this.chatState.generatedPacks[anonymizedId][Emotion.neutral] ?? silhouetteUrl;
     }
 

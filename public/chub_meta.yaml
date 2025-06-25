@@ -34,7 +34,7 @@ and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzL
 "
 
 # 'PUBLIC', 'PRIVATE', or 'UNLISTED'.
-visibility: 'PRIVATE'
+visibility: 'PUBLIC'
 
 position: 'ADJACENT'
 
