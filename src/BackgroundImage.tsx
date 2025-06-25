@@ -99,6 +99,7 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, children }) => {
                                     width: "100vw",
                                     height: "80vh",
                                     objectFit: "cover",
+                                    objectPosition: "center bottom",
                                     filter: "blur(1px)",
                                     userSelect: "none",
                                     pointerEvents: "none",

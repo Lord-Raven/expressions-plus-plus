@@ -46,11 +46,11 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
             {/* Emotion selection dialog */}
             <Dialog open={open} onClose={() => setOpen(false)}>
                 <DialogTitle>
-                    Regenerate images for <b>{character.name}</b>
+                    <b>{character.name}</b>
                 </DialogTitle>
                 <DialogContent>
                     <Typography variant="body2" sx={{ mb: 2 }}>
-                        Choose an image to regenerate (regenerating neutral will reset <b>all</b> images):
+                        Choose an image to regenerate <b>{character.name}</b>:
                     </Typography>
                     <Grid container spacing={1}>
                         {Object.keys(EMOTION_PROMPTS).map((emotion) => (
@@ -79,7 +79,8 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                                         padding: "2px 4px",
                                         fontSize: 12,
                                         width: "100%",
-                                        textAlign: "center"
+                                        textAlign: "center",
+                                        verticalAlign: "bottom"
                                     }}>
                                         {emotion}
                                     </span>
