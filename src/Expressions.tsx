@@ -5,6 +5,7 @@ import silhouetteUrl from './assets/silhouette.png'
 import CharacterImage from "./CharacterImage";
 import { ReactElement } from "react";
 import BackgroundImage from "./BackgroundImage";
+import RegenerateButton from "./RegenerateButton";
 
 type ChatStateType = {
     generatedPacks:{[key: string]: EmotionPack};
@@ -339,6 +340,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             if (imageUrl == silhouetteUrl) {
                 console.warn(`Failed to generate a ${emotion} image for ${character.name}; falling back to silhouette.`);
             }
+            // Clear entire pack then assign this image:
+            this.chatState.generatedPacks[character.anonymizedId] = {};
             this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral] = imageUrl;
         } else {
             console.log(`Generating ${emotion} image for ${character.name}.`)
@@ -440,6 +443,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     overflow: 'visible'
                 }
             }>
+                {/* Regenerate buttons for each character */}
+                {Object.values(this.characters).filter(c => !c.isRemoved).map((character, i) => (
+                    <RegenerateButton
+                        key={character.anonymizedId}
+                        character={character}
+                        emotion={this.getCharacterEmotion(character.anonymizedId)}
+                        top={20 + i * 50}
+                        onRegenerate={async (char, emotion) => {
+                            this.generateImage(char, emotion);
+                        }}
+                    />
+                ))}
                 <BackgroundImage imageUrl={this.messageState.backgroundUrl}/>
                 {Object.values(this.characters).map(character => {
                     // Must have at least a neutral image in order to display this character:
