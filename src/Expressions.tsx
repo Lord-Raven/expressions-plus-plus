@@ -388,8 +388,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.warn(`Failed to generate a ${emotion} image for ${character.name}; falling back to silhouette.`);
             }
             this.chatState.generatedPacks[character.anonymizedId][emotion] = imageUrl;
-            await this.messenger.updateChatState(this.chatState);
         }
+        await this.messenger.updateChatState(this.chatState);
     }
 
     async backgroundCheck(character: Character, content: string): Promise<void> {
