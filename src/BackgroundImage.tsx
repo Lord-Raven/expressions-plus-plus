@@ -53,10 +53,10 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl }) => {
                         }}
                     >
                         <motion.div
-                            key="background-frame"
-                            initial={{ left: -FRAME_START_LEFT, opacity: 1 }}
-                            animate={{ left: -FRAME_END_LEFT, opacity: 1 }}
-                            exit={{ left: -FRAME_START_LEFT, opacity: 1 }}
+                            key="background-frame-offset"
+                            initial={{ left: `-${FRAME_START_LEFT}`, opacity: 1 }}
+                            animate={{ left: `-${FRAME_END_LEFT}`, opacity: 1 }}
+                            exit={{ left: `-${FRAME_START_LEFT}`, opacity: 1 }}
                             transition={{ duration: 0.7 }}
                             style={{
                                 position: "absolute",
