@@ -6,6 +6,7 @@ import CharacterImage from "./CharacterImage";
 import { ReactElement } from "react";
 import BackgroundImage from "./BackgroundImage";
 import CharacterButton from "./CharacterButton";
+import {createTheme, ThemeProvider} from "@mui/material";
 
 type ChatStateType = {
     generatedPacks:{[key: string]: EmotionPack};
@@ -91,6 +92,17 @@ export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     sadness: 'sad, upset expression, teary',
     surprise: 'shocked, surprised expression',
 }
+
+
+const darkTheme = createTheme({
+    palette: {
+        mode: 'dark',
+        background: {
+            default: '#121212',
+            paper: '#1e1e1e',
+        },
+    },
+});
 
 const CHARACTER_ART_PROMPT: string = 'plain flat background, standing, full body';
 const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), background elements, special effects, scene, dynamic angle, action, cut-off';
@@ -434,45 +446,47 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         let index = 0;
 
         return(
-            <div className="big-stacker"
-                key={'big-over-stacker'}
-                style={{
-                    width: '100vw',
-                    height: '100vh',
-                    position: 'relative',
-                    alignItems: 'stretch',
-                    overflow: 'visible'
-                }
-            }>
-                {/* Regenerate buttons for each character */}
-                {Object.values(this.characters).filter(c => !c.isRemoved).map((character, i) => (
-                    <CharacterButton
-                        key={character.anonymizedId}
-                        character={character}
-                        stage={this}
-                        top={20 + i * 50}
-                        onRegenerate={async (char, emotion) => {
-                            this.generateImage(char, emotion);
-                        }}
-                    />
-                ))}
-                <BackgroundImage imageUrl={this.messageState.backgroundUrl}/>
-                {Object.values(this.characters).map(character => {
-                    // Must have at least a neutral image in order to display this character:
-                    if (this.messageState.characterEmotion[character.anonymizedId] && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
-                        const position = ++index * (100 / (count + 1));
-                        return <CharacterImage
-                            character={character}
-                            emotion={this.getCharacterEmotion(character.anonymizedId)}
-                            xPosition={position}
-                            imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
-                            isTalking={this.messageState.characterFocus == character.anonymizedId}
-                        />
-                    } else {
-                        return <></>
+            <ThemeProvider theme={darkTheme}>
+                <div className="big-stacker"
+                    key={'big-over-stacker'}
+                    style={{
+                        width: '100vw',
+                        height: '100vh',
+                        position: 'relative',
+                        alignItems: 'stretch',
+                        overflow: 'visible'
                     }
-                })}
-            </div>
+                }>
+                    {/* Regenerate buttons for each character */}
+                    {Object.values(this.characters).filter(c => !c.isRemoved).map((character, i) => (
+                        <CharacterButton
+                            key={character.anonymizedId}
+                            character={character}
+                            stage={this}
+                            top={20 + i * 50}
+                            onRegenerate={async (char, emotion) => {
+                                this.generateImage(char, emotion);
+                            }}
+                        />
+                    ))}
+                    <BackgroundImage imageUrl={this.messageState.backgroundUrl}/>
+                    {Object.values(this.characters).map(character => {
+                        // Must have at least a neutral image in order to display this character:
+                        if (this.messageState.characterEmotion[character.anonymizedId] && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
+                            const position = ++index * (100 / (count + 1));
+                            return <CharacterImage
+                                character={character}
+                                emotion={this.getCharacterEmotion(character.anonymizedId)}
+                                xPosition={position}
+                                imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
+                                isTalking={this.messageState.characterFocus == character.anonymizedId}
+                            />
+                        } else {
+                            return <></>
+                        }
+                    })}
+                </div>
+            </ThemeProvider>
         );
     }
 

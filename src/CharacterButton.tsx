@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {Emotion, EMOTION_PROMPTS} from "./Expressions";
 import { Character } from "@chub-ai/stages-ts";
+import { motion } from "framer-motion";
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, Typography, IconButton
@@ -53,13 +54,20 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                         Choose an image to regenerate <b>{character.name}</b>:
                     </Typography>
                     <Grid container spacing={1}>
-                        {Object.keys(EMOTION_PROMPTS).map((emotion) => (
-                            <Grid key={emotion}>
+                        {Object.keys(EMOTION_PROMPTS).map((emotion, index) => (
+                            <Grid key={emotion} component={motion.div}
+                                  initial={{ opacity: 0, x: 50 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.3, delay: index * 0.05 }} // staggered effect
+                            >
                                 <Button
                                     variant="outlined"
                                     sx={{
                                         width: 64, height: 64,
                                         p: 0,
+                                        display: "flex",
+                                        alignItems: "flex-end", // pushes content to the bottom vertically
+                                        justifyContent: "center", // centers label horizontally
                                         borderRadius: 2,
                                         background: stage.getCharacterImage(character.anonymizedId, emotion)
                                             ? `url(${stage.getCharacterImage(character.anonymizedId, emotion)}) center top/cover no-repeat`
@@ -79,8 +87,7 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                                         padding: "2px 4px",
                                         fontSize: 12,
                                         width: "100%",
-                                        textAlign: "center",
-                                        verticalAlign: "bottom"
+                                        textAlign: "center"
                                     }}>
                                         {emotion}
                                     </span>
