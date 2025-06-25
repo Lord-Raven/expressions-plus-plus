@@ -29,10 +29,10 @@ it is currently very easy to get the background out of sync with the chat.
 
 ### Improvements over the original 
 
-- This stage discards neutral emotion determinations when a secondary emotion is over a certain threshold, which causes characters to appear more expressive.  
-- This stage can be used with any character (although I expect it will not be great for non-character bots).  
-- This stage has some fancy multi-character support.  
-- This stage adds backgrounds.  
+- This stage discards neutral emotion determinations when a secondary emotion is over a certain threshold, which causes characters to appear more expressive.<br>
+- This stage can be used with any character (although I expect it will not be great for non-character bots).<br>
+- This stage has some fancy multi-character support.<br>
+- This stage adds backgrounds.<br>
 
 ### External Dependences 
 
