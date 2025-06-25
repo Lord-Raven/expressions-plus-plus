@@ -51,7 +51,7 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                 </DialogTitle>
                 <DialogContent>
                     <Typography variant="body2" sx={{ mb: 2 }}>
-                        Choose an image to regenerate <b>{character.name}</b>:
+                        Choose an image to regenerate for <b>{character.name}</b>:
                     </Typography>
                     <Grid container spacing={1}>
                         {Object.keys(EMOTION_PROMPTS).map((emotion, index) => (
@@ -69,8 +69,8 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                                         alignItems: "flex-end", // pushes content to the bottom vertically
                                         justifyContent: "center", // centers label horizontally
                                         borderRadius: 2,
-                                        background: stage.getCharacterImage(character.anonymizedId, emotion)
-                                            ? `url(${stage.getCharacterImage(character.anonymizedId, emotion)}) center top/cover no-repeat`
+                                        background: stage.getCharacterImage(character.anonymizedId, emotion as Emotion)
+                                            ? `url(${stage.getCharacterImage(character.anonymizedId, emotion as Emotion)}) center top/cover no-repeat`
                                             : "#eee",
                                         backgroundPosition: "center top",
                                         backgroundSize: "200% 356%", // 16/9 = 1.78, so show top 9/16
