@@ -22,17 +22,23 @@ This stage generates its own expression images by producing a visual description
 then making lots of image generation calls.  
 
 Images may initially take time to appear as they must be generated up front; they are lazy loaded, so you can continue to chat while the stage gets things ready. 
-The result is that it works with any character, but _it uses lots of image generation tokens_ (if you aren't paying for Mars), and your mileage may vary.  
+The result is that it works with any character, but _it uses lots of image generation tokens_ (unless you have a Mars subscription, which is unlimited), and your mileage may vary quality-wise. 
+You can regenerate individual images by clicking the character portraits in the corner.  
 
 This stage also generates background images based on the scene. These are also lazy loaded, but because they are history-sensitive, 
 it is currently very easy to get the background out of sync with the chat.  
 
-### Improvements over the original 
+### Improvements Over the Original 
 
 - This stage discards neutral emotion determinations when a secondary emotion is over a certain threshold, which causes characters to appear more expressive.<br>
 - This stage can be used with any character (although I expect it will not be great for non-character bots).<br>
 - This stage has some fancy multi-character support.<br>
 - This stage adds backgrounds.<br>
+
+### Disimprovements Under the Original 
+
+- This stage does not support actual expression packs.<br>
+- If you don't have a Mars subscription, this could use an exorbitant amount of tokens.<br>
 
 ### External Dependences 
 
