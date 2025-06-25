@@ -5,7 +5,7 @@ import silhouetteUrl from './assets/silhouette.png'
 import CharacterImage from "./CharacterImage";
 import { ReactElement } from "react";
 import BackgroundImage from "./BackgroundImage";
-import RegenerateButton from "./RegenerateButton";
+import CharacterButton from "./CharacterButton";
 
 type ChatStateType = {
     generatedPacks:{[key: string]: EmotionPack};
@@ -321,6 +321,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             if (imageDescription?.result) {
                 console.log(`Received an image description: ${imageDescription.result}`);
                 this.chatState.generatedDescriptions[character.anonymizedId] = imageDescription.result;
+                this.messenger.updateChatState(this.chatState);
             } else {
                 return;
             }
@@ -445,10 +446,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }>
                 {/* Regenerate buttons for each character */}
                 {Object.values(this.characters).filter(c => !c.isRemoved).map((character, i) => (
-                    <RegenerateButton
+                    <CharacterButton
                         key={character.anonymizedId}
                         character={character}
-                        emotion={this.getCharacterEmotion(character.anonymizedId)}
+                        stage={this}
                         top={20 + i * 50}
                         onRegenerate={async (char, emotion) => {
                             this.generateImage(char, emotion);
