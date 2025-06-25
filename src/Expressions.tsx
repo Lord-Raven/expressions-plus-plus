@@ -438,6 +438,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getCharacterImage(anonymizedId: string, emotion: Emotion): string {
+        console.log(`${emotion}=>${EMOTION_MAPPING[emotion]}`);
         return this.chatState.generatedPacks[anonymizedId][EMOTION_MAPPING[emotion] ?? Emotion.neutral] ?? this.chatState.generatedPacks[anonymizedId][Emotion.neutral] ?? silhouetteUrl;
     }
 
@@ -473,7 +474,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     {Object.values(this.characters).map(character => {
                         // Must have at least a neutral image in order to display this character:
                         if (this.messageState.characterEmotion[character.anonymizedId] && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
-                            const position = ++index * (100 / (count + 1));
+                            index++;
+                            const position = count == 1 ? 50 :
+                                ((index % 2 == 1) ?
+                                    (Math.ceil(index / 2) * (50 / (Math.ceil(count / 2) + 1))) :
+                                    (Math.floor(index / 2) * (50 / (Math.floor(count / 2) + 1)) + 50));
+
                             return <CharacterImage
                                 character={character}
                                 emotion={this.getCharacterEmotion(character.anonymizedId)}
