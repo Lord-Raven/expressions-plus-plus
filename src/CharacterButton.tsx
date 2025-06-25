@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import {Emotion, EMOTION_MAPPING} from "./Expressions";
+import {Emotion, EMOTION_PROMPTS} from "./Expressions";
 import { Character } from "@chub-ai/stages-ts";
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
@@ -53,7 +53,7 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                         Choose an image to regenerate (regenerating neutral will reset <b>all</b> images):
                     </Typography>
                     <Grid container spacing={1}>
-                        {Object.values(EMOTION_MAPPING).map((emotion) => (
+                        {Object.keys(EMOTION_PROMPTS).map((emotion) => (
                             <Grid key={emotion}>
                                 <Button
                                     variant="outlined"
@@ -71,7 +71,7 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                                         textShadow: "0 1px 2px #fff",
                                         border: "2px solid #888"
                                     }}
-                                    onClick={() => setConfirmEmotion(emotion)}
+                                    onClick={() => setConfirmEmotion(emotion as Emotion)}
                                 >
                                     <span style={{
                                         background: "rgba(255,255,255,0.7)",
