@@ -446,24 +446,23 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     overflow: 'visible'
                 }
             }>
-                <BackgroundImage imageUrl={this.messageState.backgroundUrl}>
-                    {Object.values(this.characters).map(character => {
-                        // Must have at least a neutral image in order to display this character:
-                        if (!character.isRemoved && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
-                            const position = ++index * (100 / (count + 1));
-                            return <CharacterImage
-                                character={character}
-                                emotion={this.getCharacterEmotion(character.anonymizedId)}
-                                xPosition={position}
-                                imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
-                                isTalking={this.messageState.characterFocus == character.anonymizedId}
-                                //clipBackground={this.messageState.characterFocus != character.anonymizedId && !!this.messageState.backgroundUrl}
-                            />
-                        } else {
-                            return <></>
-                        }
-                    })}
-                </BackgroundImage>
+                <BackgroundImage imageUrl={this.messageState.backgroundUrl}/>
+                {Object.values(this.characters).map(character => {
+                    // Must have at least a neutral image in order to display this character:
+                    if (this.messageState.characterEmotion[character.anonymizedId] && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
+                        const position = ++index * (100 / (count + 1));
+                        return <CharacterImage
+                            character={character}
+                            emotion={this.getCharacterEmotion(character.anonymizedId)}
+                            xPosition={position}
+                            imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
+                            isTalking={this.messageState.characterFocus == character.anonymizedId}
+                            //clipBackground={this.messageState.characterFocus != character.anonymizedId && !!this.messageState.backgroundUrl}
+                        />
+                    } else {
+                        return <></>
+                    }
+                })}
             </div>
         );
     }

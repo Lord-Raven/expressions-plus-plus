@@ -3,7 +3,8 @@ import { Emotion } from "./Expressions";
 import { Character } from "@chub-ai/stages-ts";
 import { FC } from "react";
 
-const CHARACTER_HEIGHT: number = 80;
+const IDLE_HEIGHT: number = 60;
+const SPEAKING_HEIGHT: number = 80;
 
 interface CharacterImageProps {
     character: Character;
@@ -15,15 +16,16 @@ interface CharacterImageProps {
 
 const CharacterImage: FC<CharacterImageProps> = ({character, emotion, imageUrl, xPosition, isTalking}) => {
     const variants: Variants = {
-        talking: {color: '#FFFFFF', opacity: 1, x: `${xPosition}vw`, height: `${CHARACTER_HEIGHT + 2}vh`, filter: 'brightness(1)', zIndex: 12, transition: {x: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
-        idle: {color: '#BBBBBB', opacity: 1, x: `${xPosition}vw`, height: `${CHARACTER_HEIGHT}vh`, filter: 'brightness(0.8)', zIndex: 11, transition: {x: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
+        absent: {color: '#BBBBBB', opacity: 0, x: `150vw`, height: `${IDLE_HEIGHT}vh`, filter: 'brightness(0.8)', zIndex: 10, transition: {x: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
+        talking: {color: '#FFFFFF', opacity: 1, x: `50vw`, height: `${SPEAKING_HEIGHT}vh`, filter: 'brightness(1)', zIndex: 12, transition: {x: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
+        idle: {color: '#BBBBBB', opacity: 1, x: `${xPosition}vw`, height: `${IDLE_HEIGHT}vh`, filter: 'brightness(0.8)', zIndex: 11, transition: {x: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
     };
 
     return (
         <motion.div
             key={character.anonymizedId}
             variants={variants}
-            initial='idle'
+            initial='absent'
             animate={isTalking ? 'talking' : 'idle'}
             style={{position: 'absolute', bottom: '5vh', width: 'auto', aspectRatio: '9 / 16', zIndex: 10, overflow: 'visible'}}>
             <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', filter: 'blur(2.5px)', pointerEvents: 'none', transform: 'translate(-50%, 0)', zIndex: 4}} alt={`${character.name} (${emotion})`}/>
