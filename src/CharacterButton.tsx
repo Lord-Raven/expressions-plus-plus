@@ -15,8 +15,6 @@ type CharacterButtonProps = {
     onRegenerate?: (character: Character, emotion: Emotion) => void;
 };
 
-const EMOTION_LIST = Object.values(Emotion);
-
 const CharacterButton: React.FC<CharacterButtonProps> = ({
     character, stage, top, onRegenerate
 }) => {
@@ -56,7 +54,7 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                         Choose an emotion to regenerate:
                     </Typography>
                     <Grid container spacing={1}>
-                        {EMOTION_LIST.map((emotion) => (
+                        {Object.values(Emotion).map((emotion) => (
                             <Grid key={emotion}>
                                 <Button
                                     variant="outlined"
