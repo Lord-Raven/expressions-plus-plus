@@ -63,7 +63,7 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                                 <Button
                                     variant="outlined"
                                     sx={{
-                                        width: 64, height: 64,
+                                        width: 128, height: 128,
                                         p: 0,
                                         display: "flex",
                                         alignItems: "flex-end", // pushes content to the bottom vertically
@@ -84,7 +84,7 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                                     <span style={{
                                         background: "rgba(255,255,255,0.7)",
                                         borderRadius: 4,
-                                        padding: "2px 4px",
+                                        padding: "2px 2px",
                                         fontSize: 12,
                                         width: "100%",
                                         textAlign: "center"
