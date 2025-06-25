@@ -16,9 +16,9 @@ interface CharacterImageProps {
 
 const CharacterImage: FC<CharacterImageProps> = ({character, emotion, imageUrl, xPosition, isTalking}) => {
     const variants: Variants = {
-        absent: {color: '#BBBBBB', opacity: 0, x: `150vw`, y: `12vh`, height: `${IDLE_HEIGHT}vh`, filter: 'brightness(0.8)', zIndex: 10, transition: {x: {ease: "easeOut"}, y: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
-        talking: {color: '#FFFFFF', opacity: 1, x: `50vw`, y: `5vh`, height: `${SPEAKING_HEIGHT}vh`, filter: 'brightness(1)', zIndex: 12, transition: {x: {ease: "easeOut"}, y: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
-        idle: {color: '#BBBBBB', opacity: 1, x: `${xPosition}vw`, y: `12vh`, height: `${IDLE_HEIGHT}vh`, filter: 'brightness(0.8)', zIndex: 11, transition: {x: {ease: "easeOut"}, y: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
+        absent: {color: '#BBBBBB', opacity: 0, x: `150vw`, bottom: `12vh`, height: `${IDLE_HEIGHT}vh`, filter: 'brightness(0.8)', zIndex: 10, transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
+        talking: {color: '#FFFFFF', opacity: 1, x: `50vw`, bottom: `5vh`, height: `${SPEAKING_HEIGHT}vh`, filter: 'brightness(1)', zIndex: 12, transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
+        idle: {color: '#BBBBBB', opacity: 1, x: `${xPosition}vw`, bottom: `12vh`, height: `${IDLE_HEIGHT}vh`, filter: 'brightness(0.8)', zIndex: 11, transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
     };
 
     return (
