@@ -40,7 +40,7 @@ it is currently very easy to get the background out of sync with the chat.
 <li>This stage does not support actual expression packs.<br>
 <li>If you don't have a Mars subscription, this could use an exorbitant amount of tokens.<br>
 
-### External Dependences 
+### External Dependencies 
 
 This stage leverages [SamLowe/roberta-base-go_emotions](https://huggingface.co/SamLowe/roberta-base-go_emotions) for emotion inference ([my HF space for this](https://huggingface.co/spaces/Ravenok/emotions)) 
 and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0) for zero-shot classification ([my HF space for that](https://huggingface.co/spaces/Ravenok/statosphere-backend)).
