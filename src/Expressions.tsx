@@ -93,7 +93,7 @@ export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
 
 const CHARACTER_ART_PROMPT: string = 'plain flat background, standing, full body';
 const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), background elements, special effects, scene, dynamic angle, action, cut-off';
-const BACKGROUND_ART_PROMPT: string = 'unpopulated, visual novel background scenery';
+const BACKGROUND_ART_PROMPT: string = 'unpopulated, visual novel background scenery, background only, scenery only';
 
 // Replace trigger words with less triggering words, so image gen can succeed.
 export function substitute(input: string) {
@@ -101,17 +101,11 @@ export function substitute(input: string) {
         'old-school': 'retro',
         'old school': 'retro',
         'oldschool': 'retro',
-        'schoolgirl': 'college girl',
-        'school girl': 'college girl',
-        'schoolboy': 'college guy',
-        'school boy': 'college guy',
-        'school teacher': 'professor',
-        'schoolteacher': 'professor',
-        'school': 'campus',
+        ' school': ' college',
         'youngster': 'individual',
         'child': 'individual',
         'kid': 'individual',
-        'young ': 'youthful'
+        'young ': 'youthful '
     }
     const regex = new RegExp(Object.keys(synonyms).join('|'), 'gi');
 

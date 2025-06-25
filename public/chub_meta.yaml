@@ -13,14 +13,14 @@ This is a shameless knock-off of the [official Expression Packs stage](https://c
 <br>
 <br>
 <br>
-<h4>No Expression Pack Support</h4>
+### No Expression Pack Support 
 <br>
 _However_, unlike that stage, this one doesn't actually support expression packs; they appear to currently be locked to the official stage. Write your congressperson. 
 When this changes, I'll update this stage to use the character's pack by default.
 <br>
 <br>
 <br>
-<h4>So, Uh, What Is This, Then?</h4>
+### So, Uh, What Is This, Then? 
 <br>
 This stage generates its own expression images by producing a visual description of each character and 
 then making lots of image generation calls. 
