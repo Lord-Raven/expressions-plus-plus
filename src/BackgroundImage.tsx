@@ -1,34 +1,16 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { FC, useEffect, useRef, useState } from "react";
-import {FastAverageColor} from "fast-average-color";
+import { FC } from "react";
 
 interface BackgroundImageProps {
     imageUrl: string;
     children?: React.ReactNode;
+    borderColor: string;
 }
 
 const FRAME_START_LEFT = "100vw";
-const FRAME_END_LEFT = "10vw";
+const FRAME_END_LEFT = "6vw";
 
-const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, children }) => {
-    const imgRef = useRef<HTMLImageElement>(null);
-    const [borderColor, setBorderColor] = useState<string>("rgba(255,255,255,0.5)");
-
-    useEffect(() => {
-        if (!imageUrl) return;
-        const fac = new FastAverageColor();
-        const img = imgRef.current;
-        if (!img) return;
-
-        const handleLoad = () => {
-            fac.getColorAsync(img)
-                .then(color => setBorderColor(color.rgba))
-                .catch(() => setBorderColor("rgba(255,255,255,0.5)"));
-        };
-
-        img.addEventListener("load", handleLoad);
-        return () => img.removeEventListener("load", handleLoad);
-    }, [imageUrl]);
+const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, children, borderColor }) => {
 
     return (
         <AnimatePresence>
@@ -63,9 +45,9 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, children }) => {
                         transition={{ duration: 0.7 }}
                         style={{
                             position: "absolute",
-                            top: "10vh",
-                            width: "80vw",
-                            height: "80vh",
+                            bottom: "8vh",
+                            width: "88vw",
+                            height: "90vh",
                             borderRadius: "5vw",
                             overflow: "hidden",
                             zIndex: 2,
@@ -82,22 +64,21 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, children }) => {
                             transition={{ duration: 0.7 }}
                             style={{
                                 position: "absolute",
-                                top: " -10vh",
+                                bottom: " -8vh",
                                 width: "100vw",
                                 height: "100vh",
                             }}
                         >
                             <img
-                                ref={imgRef}
                                 src={imageUrl}
                                 alt="Background"
                                 crossOrigin="anonymous"
                                 style={{
                                     position: "absolute",
                                     left: 0,
-                                    bottom: "10vh",
+                                    bottom: "8vh",
                                     width: "100vw",
-                                    height: "80vh",
+                                    height: "90vh",
                                     objectFit: "cover",
                                     objectPosition: "center bottom",
                                     filter: "blur(1px)",

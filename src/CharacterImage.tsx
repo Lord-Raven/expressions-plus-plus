@@ -3,7 +3,7 @@ import { Emotion } from "./Expressions";
 import { Character } from "@chub-ai/stages-ts";
 import { FC } from "react";
 
-const IDLE_HEIGHT: number = 60;
+const IDLE_HEIGHT: number = 65;
 const SPEAKING_HEIGHT: number = 80;
 
 interface CharacterImageProps {
@@ -11,19 +11,21 @@ interface CharacterImageProps {
     emotion: Emotion;
     imageUrl: string;
     xPosition: number;
+    yPosition: number;
+    zIndex: number;
     isTalking: boolean;
 }
 
-const CharacterImage: FC<CharacterImageProps> = ({character, emotion, imageUrl, xPosition, isTalking}) => {
+const CharacterImage: FC<CharacterImageProps> = ({character, emotion, imageUrl, xPosition, yPosition, zIndex, isTalking}) => {
     const variants: Variants = {
-        absent: {color: '#BBBBBB', opacity: 0, x: `150vw`, bottom: `12vh`, height: `${IDLE_HEIGHT}vh`, filter: 'brightness(0.8)', zIndex: 10, transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
-        talking: {color: '#FFFFFF', opacity: 1, x: `50vw`, bottom: `5vh`, height: `${SPEAKING_HEIGHT}vh`, filter: 'brightness(1)', zIndex: 12, transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
-        idle: {color: '#BBBBBB', opacity: 1, x: `${xPosition}vw`, bottom: `12vh`, height: `${IDLE_HEIGHT}vh`, filter: 'brightness(0.8)', zIndex: 11, transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
+        absent: {color: '#BBBBBB', opacity: 0, x: `150vw`, bottom: `${4 + yPosition}vh`, height: `${IDLE_HEIGHT}vh`, filter: 'brightness(0.8)', zIndex: zIndex, transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
+        talking: {color: '#FFFFFF', opacity: 1, x: `50vw`, bottom: `2vh`, height: `${SPEAKING_HEIGHT}vh`, filter: 'brightness(1)', zIndex: 100, transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
+        idle: {color: '#BBBBBB', opacity: 1, x: `${xPosition}vw`, bottom: `${4 + yPosition}vh`, height: `${IDLE_HEIGHT}vh`, filter: 'brightness(0.8)', zIndex: zIndex, transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
     };
 
     return (
         <motion.div
-            key={character.anonymizedId}
+            key={`character_motion_div_${character.anonymizedId}`}
             variants={variants}
             initial='absent'
             animate={isTalking ? 'talking' : 'idle'}

@@ -12,11 +12,12 @@ type CharacterButtonProps = {
     character: Character;
     stage: any;
     top: number;
+    borderColor: string;
     onRegenerate?: (character: Character, emotion: Emotion) => void;
 };
 
 const CharacterButton: React.FC<CharacterButtonProps> = ({
-    character, stage, top, onRegenerate
+    character, stage, top, borderColor, onRegenerate
 }) => {
     const [open, setOpen] = useState(false);
     const [confirmEmotion, setConfirmEmotion] = useState<Emotion | null>(null);
@@ -34,9 +35,11 @@ const CharacterButton: React.FC<CharacterButtonProps> = ({
                     width: 40, height: 40,
                     borderRadius: "50%",
                     boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    backgroundColor: '#333333',
                     backgroundImage: `url(${stage.getCharacterImage(character.anonymizedId, Emotion.neutral)})`,
                     backgroundPosition: "center top",
                     backgroundSize: "200% 356%", // 16/9 = 1.78, so show top 9/16
+                    border: `3px solid ${borderColor}`,
                 }}
                 title={`Regenerate image for ${character.name}`}
                 onClick={() => setOpen(true)}

@@ -35,7 +35,7 @@ export const MessageQueue: React.FC<MessageQueueProps> = ({ register }) => {
         <AnimatePresence>
             {messages.map(({ id, message }, index) => (
                 <Box
-                    key={id}
+                    key={`message_${id}`}
                     component={motion.div}
                     sx={{
                         position: 'fixed',

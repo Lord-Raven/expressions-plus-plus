@@ -9,6 +9,7 @@ import CharacterButton from "./CharacterButton";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
 import {GenerateButton} from "./GenerateButton.tsx";
+import {FastAverageColor} from "fast-average-color";
 
 type ChatStateType = {
     generatedPacks:{[key: string]: EmotionPack};
@@ -26,6 +27,7 @@ type InitStateType = null;
 
 type MessageStateType = {
     backgroundUrl: string;
+    borderColor: string;
     characterEmotion: {[key: string]: string};
     characterFocus: string;
 };
@@ -110,6 +112,8 @@ const CHARACTER_ART_PROMPT: string = 'plain flat background, standing, full body
 const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), background elements, special effects, scene, dynamic angle, action, cut-off';
 const BACKGROUND_ART_PROMPT: string = 'unpopulated, visual novel background scenery, background only, scenery only';
 
+const DEFAULT_BORDER_COLOR: string = '#1e1e1edd'
+
 // Replace trigger words with less triggering words, so image gen can succeed.
 export function substitute(input: string) {
     const synonyms: {[key: string]: string} = {
@@ -153,6 +157,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     loadedPacks: {[key: string]: EmotionPack}
     backgroundCooldown: number = 0;
     generating: boolean = false;
+
+    readonly fac = new FastAverageColor();
     private messageHandle?: MessageQueueHandle;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
@@ -171,6 +177,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // Set states or default them.
         this.messageState = messageState ?? {
             backgroundUrl: '',
+            borderColor: DEFAULT_BORDER_COLOR,
             characterEmotion: {},
             characterFocus: ''
         }
@@ -451,6 +458,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.warn(`Failed to generate a background image.`);
             }
             this.messageState.backgroundUrl = imageUrl;
+            try {
+                this.messageState.borderColor = (await this.fac.getColorAsync(imageUrl)).rgba;
+            } catch(err) {
+                this.messageState.borderColor = DEFAULT_BORDER_COLOR;
+            }
             this.updateBackground();
         }
     }
@@ -489,27 +501,34 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             character={character}
                             stage={this}
                             top={20 + i * 50}
+                            borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
                             onRegenerate={(char, emotion) => {
                                 console.log('onRegenerate');
                                 this.wrapPromise(this.generateCharacterImage(char, emotion), `Regenerating ${emotion} image for ${char.name}.`);
                             }}
                         />
                     ))}
-                    <BackgroundImage imageUrl={this.messageState.backgroundUrl}/>
+                    <BackgroundImage imageUrl={this.messageState.backgroundUrl} borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}/>
                     {Object.values(this.characters).map(character => {
                         // Must have at least a neutral image in order to display this character:
                         if (this.messageState.characterEmotion[character.anonymizedId] && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
                             index++;
-                            const position = count == 1 ? 50 :
+                            const xPosition = count == 1 ? 50 :
                                 ((index % 2 == 1) ?
                                     (Math.ceil(index / 2) * (50 / (Math.ceil(count / 2) + 1))) :
                                     (Math.floor(index / 2) * (50 / (Math.floor(count / 2) + 1)) + 50));
+                            // Farther from 50, higher up on the screen:
+                            const yPosition = Math.ceil(Math.abs(xPosition - 50) / 5);
+                            // Closer to 50, higher visual priority:
+                            const zIndex = Math.ceil((50 - Math.abs(xPosition - 50)) / 5);
 
                             return <CharacterImage
                                 key={`character_${character.anonymizedId}`}
                                 character={character}
                                 emotion={this.getCharacterEmotion(character.anonymizedId)}
-                                xPosition={position}
+                                xPosition={xPosition}
+                                yPosition={yPosition}
+                                zIndex={zIndex}
                                 imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
                                 isTalking={this.messageState.characterFocus == character.anonymizedId}
                             />
