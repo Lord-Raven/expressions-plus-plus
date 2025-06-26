@@ -157,6 +157,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     loadedPacks: {[key: string]: EmotionPack}
     backgroundCooldown: number = 0;
     generating: boolean = false;
+    flagBackground: boolean = false;
 
     readonly fac = new FastAverageColor();
     private messageHandle?: MessageQueueHandle;
@@ -294,7 +295,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         this.messageState.characterEmotion[botMessage.anonymizedId] = newEmotion;
         this.messageState.characterFocus = botMessage.anonymizedId;
         this.backgroundCooldown--;
-        this.backgroundCheck(this.characters[botMessage.anonymizedId], botMessage.content);
+        await this.backgroundCheck(this.characters[botMessage.anonymizedId], botMessage.content);
+        if (this.flagBackground) {
+            await this.wrapPromise(this.generateBackgroundImage(this.characters[botMessage.anonymizedId], botMessage.content), 'Generating new background image.');
+        }
         return {
             stageDirections: null,
             messageState: this.messageState,
@@ -400,7 +404,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async backgroundCheck(character: Character, content: string): Promise<void> {
-        if (!this.generateBackgrounds || !content || this.backgroundCooldown > 0) return;
+        if (this.flagBackground || !this.generateBackgrounds || !content || this.backgroundCooldown > 0) return;
 
         if (this.messageState.backgroundUrl) {
             const TRANSITION_LABEL = 'transitions to a new location';
@@ -424,7 +428,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }
         }
 
-        this.wrapPromise(this.generateBackgroundImage(character, content), 'Generating new background image.');
+        this.flagBackground = true;
     }
 
     async generateBackgroundImage(character: Character, content: string): Promise<void> {
@@ -463,7 +467,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             } catch(err) {
                 this.messageState.borderColor = DEFAULT_BORDER_COLOR;
             }
-            this.updateBackground();
+            await this.updateBackground();
         }
     }
 

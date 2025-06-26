@@ -26,8 +26,10 @@ Images may initially take time to appear as they must be generated up front; the
 The result is that it works with any character, but _it uses lots of image generation credits_ (unless you have a Mars subscription, which is unlimited), and your mileage may vary quality-wise. 
 You can regenerate individual images by clicking the character portraits in the corner.  
 
-This stage also generates background images based on the scene. These are also lazy loaded, but because they are history-sensitive, 
-it is currently very easy to get the background out of sync with the chat.  
+This stage also generates background images based on the scene. These are not lazy loaded because it causes saving issues and they can become easily out of sync. 
+They can add quite a bit of load time to responses when they occur; they can be disabled from the stage's configuration menu.
+
+From the configuration menu, you can also alter the basic art style element of the stage's image prompts, to attempt to taylor the style to suit your aesthetic.  
 
 ### Improvements Over the Original 
 
