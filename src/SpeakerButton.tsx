@@ -79,6 +79,7 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                         pointerEvents: "none"
                     }}
                 >
+                    {!stage.isSpeakerVisible(speaker) && (<VisibilityOffIcon fontSize="small" sx={{backgroundColor: "#00000033"}}/>)}
                 </IconButton>
                 <motion.div
                     style={{display: "flex", gap: 4}}
