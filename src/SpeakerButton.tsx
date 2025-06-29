@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import {DEFAULT_OUTFIT_NAME, Emotion} from "./Expressions";
 import { Speaker } from "@chub-ai/stages-ts";
 import {AnimatePresence, motion} from "framer-motion";
@@ -9,6 +9,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CheckroomIcon from '@mui/icons-material/Checkroom';
 import silhouetteUrl from './assets/silhouette.png'
 
+
 type SpeakerButtonProps = {
     speaker: Speaker;
     stage: any;
@@ -18,6 +19,7 @@ type SpeakerButtonProps = {
 
 const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColor, onOpenSettings}) => {
     const [showOutfits, setShowOutfits] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const handleToggleVisibility = () => {
         const id = speaker.anonymizedId;
@@ -39,8 +41,9 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
     return (
         <motion.div
             variants={containerVariants}
-            initial="collapsed"
-            whileHover="expanded"
+            animate={isExpanded ? "expanded" : "collapsed"}
+            onMouseEnter={() => setIsExpanded(true)}
+            onMouseLeave={() => {setIsExpanded(false); setShowOutfits(false);}}
             style={{
                 position: "relative",
                 display: "flex",
@@ -55,9 +58,6 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                 zIndex: 20,
             }}
             transition={{type: "spring", stiffness: 300, damping: 30}}
-            onHoverEnd={() => {
-                setShowOutfits(false);
-            }}
         >
             {/* Top Capsule Row */}
             <div
@@ -78,6 +78,7 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                         backgroundPosition: "center top",
                         pointerEvents: "none"
                     }}
+                    onClick={() => {setIsExpanded(prev => !prev)}}
                 >
                     {!stage.isSpeakerVisible(speaker) && (<VisibilityOffIcon fontSize="small" sx={{backgroundColor: "#00000033"}}/>)}
                 </IconButton>

@@ -426,7 +426,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
                     `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.`,
                 min_tokens: 50,
-                max_tokens: 150,
+                max_tokens: 130,
                 include_history: true
             });
             if (imageDescription?.result) {
