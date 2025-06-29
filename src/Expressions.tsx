@@ -550,9 +550,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const NARRATOR_LABEL = 'describes a narrator or scenario';
         try {
             const response = await this.zeroShotPipeline.predict("/predict", {data_string: JSON.stringify({
-                    sequence: this.getSpeakerDescription(speaker),
+                    sequence: `Name: ${speaker.name}\nDescription: ${this.getSpeakerDescription(speaker)}`,
                     candidate_labels: [SINGLE_CHARACTER_LABEL, MULTI_CHARACTER_LABEL, NARRATOR_LABEL],
-                    hypothesis_template: 'The description {}',
+                    hypothesis_template: 'The passage {}',
                     multi_label: true
                 })});
             const result = JSON.parse(`${response.data[0]}`);
