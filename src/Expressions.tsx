@@ -545,14 +545,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
 
     async singleSpeakerCheck(speaker: Speaker) {
-        const SINGLE_CHARACTER_LABEL = 'focuses on a single character';
-        const MULTI_CHARACTER_LABEL = 'describes multiple characters';
-        const NARRATOR_LABEL = 'describes a narrator or scenario';
+        const SINGLE_CHARACTER_LABEL = 'a single character';
+        const MULTI_CHARACTER_LABEL = 'multiple characters';
+        const NARRATOR_LABEL = 'a narrator or scenario';
         try {
             const response = await this.zeroShotPipeline.predict("/predict", {data_string: JSON.stringify({
                     sequence: `Name: ${speaker.name}\nDescription: ${this.getSpeakerDescription(speaker)}`,
                     candidate_labels: [SINGLE_CHARACTER_LABEL, MULTI_CHARACTER_LABEL, NARRATOR_LABEL],
-                    hypothesis_template: 'The passage {}',
+                    hypothesis_template: 'The focus of the passage is {}.',
                     multi_label: true
                 })});
             const result = JSON.parse(`${response.data[0]}`);
