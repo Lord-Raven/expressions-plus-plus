@@ -52,15 +52,15 @@ and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzL
 
 ### Updates
 <ul>
-<li>2025.06.28<br>
-  <ul>
-  <li>User support<br>
-  <li>Outfit management<br>
-  <li>Multi-character or narrator bots are no longer represented, to avoid confusing situations. Backgrounds and additional characters still function.<br>
-  <li>Images are now generated as-needed, which can mean a delay in initial use, but you can still manually pre-load them from character management<br>
-  <li>Visibility toggles for characters<br>
-  <li>Various prompt improvements<br>
-  </ul>
+<li>2025.06.28
+<ul>
+<li>User support
+<li>Outfit management.
+<li>Multi-character or narrator bots are no longer represented, to avoid confusing situations. Backgrounds and additional characters still function.
+<li>Images are now generated as-needed, which can mean a delay in initial use, but you can still manually pre-load them from character management.
+<li>Visibility toggles for characters.
+<li>Various prompt improvements.
+</ul>
 </ul>
 "
 
