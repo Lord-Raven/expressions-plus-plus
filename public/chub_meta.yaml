@@ -50,14 +50,20 @@ From the configuration menu, you can also alter the basic art style element of t
 This stage leverages [SamLowe/roberta-base-go_emotions](https://huggingface.co/SamLowe/roberta-base-go_emotions) for emotion inference ([my HF space for this](https://huggingface.co/spaces/Ravenok/emotions)) 
 and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0) for zero-shot classification ([my HF space for that](https://huggingface.co/spaces/Ravenok/statosphere-backend)).
 
-### Updates 
+### Updates  
 
-- 2025.06.28 
+2025.06.28:  
+
   - User persona support. 
+
   - Outfit management. 
+
   - Multi-character or narrator bots are no longer represented, to avoid confusing situations. Backgrounds and additional characters still function. 
+
   - Images are now generated as-needed, which can mean a delay in initial use, but you can still manually pre-load them from character management. 
+
   - Visibility toggles for characters. 
+
   - Various prompt improvements. 
 "
 

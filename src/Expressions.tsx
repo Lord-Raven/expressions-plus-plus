@@ -546,7 +546,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async singleSpeakerCheck(speaker: Speaker) {
         const SINGLE_CHARACTER_LABEL = `a single character named ${speaker.name}`;
-        const MULTI_CHARACTER_LABEL = 'multiple characters';
+        const MULTI_CHARACTER_LABEL = `multiple characters named ${speaker.name}`;
         const NARRATOR_LABEL = 'a narrator, setting, or scenario';
         try {
             const response = await this.zeroShotPipeline.predict("/predict", {data_string: JSON.stringify({
