@@ -42,13 +42,15 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
     }, [register]);
 
     const updateStageWardrobeMap = (newMap: {[key: string]: any}) => {
-        stage.chatState.generatedWardrobes[speaker.anonymizedId] = newMap;
-        setOutfitMap(newMap);
-        setOutfitNames(Object.keys(newMap));
-        if (!(stage.chatState.selectedOutfit[speaker.anonymizedId] in stage.chatState.generatedWardrobes[speaker.anonymizedId])) {
-            stage.chatState.selectedOutfit[speaker.anonymizedId] = DEFAULT_OUTFIT_NAME
+        if (speaker) {
+            stage.chatState.generatedWardrobes[speaker.anonymizedId] = newMap;
+            setOutfitMap(newMap);
+            setOutfitNames(Object.keys(newMap));
+            if (!(stage.chatState.selectedOutfit[speaker.anonymizedId] in stage.chatState.generatedWardrobes[speaker.anonymizedId])) {
+                stage.chatState.selectedOutfit[speaker.anonymizedId] = DEFAULT_OUTFIT_NAME
+            }
+            stage.updateChatState();
         }
-        stage.updateChatState();
     }
 
     const tabRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});

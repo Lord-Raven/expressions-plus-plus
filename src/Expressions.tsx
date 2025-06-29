@@ -9,14 +9,14 @@ import {
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Client } from "@gradio/client";
 import SpeakerImage from "./SpeakerImage.tsx";
-import React, {ReactElement} from "react";
+import {ReactElement} from "react";
 import BackgroundImage from "./BackgroundImage";
 import SpeakerButton from "./SpeakerButton.tsx";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
 import {FastAverageColor} from "fast-average-color";
 import { AnimatePresence } from "framer-motion";
-import SpeakerSettings from "./SpeakerSettings.tsx";
+import SpeakerSettings, {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
 
 type ChatStateType = {
     generatedWardrobes:{[key: string]: {[key: string]: EmotionPack}};
@@ -313,9 +313,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.info(`New emotion for ${speaker.name}: ${newEmotion}`);
         this.messageState.speakerEmotion[speaker.anonymizedId] = newEmotion;
         this.messageState.activeSpeaker = speaker.anonymizedId;
-        if (!this.chatState.generatedWardrobes[speaker.anonymizedId][this.chatState.selectedOutfit[speaker.anonymizedId]][EMOTION_MAPPING[newEmotion] ?? newEmotion]) {
+        if (!this.chatState.generatedWardrobes[speaker.anonymizedId][this.chatState.selectedOutfit[speaker.anonymizedId]][EMOTION_MAPPING[newEmotion as Emotion] ?? newEmotion]) {
             this.wrapPromise(
-                this.generateSpeakerImage(speaker, this.chatState.selectedOutfit[speaker.anonymizedId], EMOTION_MAPPING[newEmotion] ?? newEmotion),
+                this.generateSpeakerImage(speaker, this.chatState.selectedOutfit[speaker.anonymizedId], EMOTION_MAPPING[newEmotion as Emotion] ?? (newEmotion as Emotion)),
                 `Generating ${newEmotion} for ${speaker.name} (${this.chatState.selectedOutfit[speaker.anonymizedId]}).`);
         }
     }
@@ -627,7 +627,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                                 speaker={speaker}
                                 stage={this}
                                 borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
-                                onOpenSettings={(sp) => this.speakerSettingsHandle.setSpeaker(sp)}
+                                onOpenSettings={(sp) => this.speakerSettingsHandle?.setSpeaker(sp)}
                             />
                         ))}
                     </div>
