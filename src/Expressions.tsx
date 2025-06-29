@@ -480,18 +480,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         if (this.messageState.backgroundUrl) {
             const TRANSITION_LABEL = 'transitions to a new location';
-            const STAY_LABEL = 'remains in the same location';
+            const STAY_LABEL = 'does not alter the location or setting';
             try {
                 const response = await this.zeroShotPipeline.predict("/predict", {data_string: JSON.stringify({
                         sequence: content,
                         candidate_labels: [STAY_LABEL, TRANSITION_LABEL],
-                        hypothesis_template: 'This passage {}',
+                        hypothesis_template: 'This passage {}.',
                         multi_label: true
                     })});
                 const result = JSON.parse(`${response.data[0]}`);
                 console.log('Zero-shot result:');
                 console.log(result);
-                if (result.labels[0] == STAY_LABEL || result.scores[0] < 0.3) {
+                if (result.labels[0] == STAY_LABEL || result.scores[0] < 0.5) {
                     return;
                 }
             } catch (except) {
