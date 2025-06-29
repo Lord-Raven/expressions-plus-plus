@@ -1,19 +1,29 @@
-import {StageBase, StageResponse, InitialData, Message, Character, AspectRatio} from "@chub-ai/stages-ts";
+import {
+    StageBase,
+    StageResponse,
+    InitialData,
+    Message,
+    AspectRatio,
+    Speaker
+} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Client } from "@gradio/client";
-import silhouetteUrl from './assets/silhouette.png'
-import CharacterImage from "./CharacterImage";
-import {ReactElement} from "react";
+import SpeakerImage from "./SpeakerImage.tsx";
+import React, {ReactElement} from "react";
 import BackgroundImage from "./BackgroundImage";
-import CharacterButton from "./CharacterButton";
+import SpeakerButton from "./SpeakerButton.tsx";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
-import {GenerateButton} from "./GenerateButton.tsx";
 import {FastAverageColor} from "fast-average-color";
+import { AnimatePresence } from "framer-motion";
+import SpeakerSettings from "./SpeakerSettings.tsx";
 
 type ChatStateType = {
+    generatedWardrobes:{[key: string]: {[key: string]: EmotionPack}};
     generatedPacks:{[key: string]: EmotionPack};
+    selectedOutfit:{[key: string]: string};
     generatedDescriptions:{[key: string]: string};
+    speakerVisible:{[key: string]: boolean};
 }
 
 type ConfigType = {
@@ -28,8 +38,8 @@ type InitStateType = null;
 type MessageStateType = {
     backgroundUrl: string;
     borderColor: string;
-    characterEmotion: {[key: string]: string};
-    characterFocus: string;
+    speakerEmotion: {[key: string]: string};
+    activeSpeaker: string;
 };
 
 export enum Emotion {
@@ -105,14 +115,19 @@ const darkTheme = createTheme({
             default: '#121212',
             paper: '#1e1e1e',
         },
+        text: {
+            primary: '#ffffff',
+            secondary: '#aaaaaa',
+        }
     },
 });
 
-const CHARACTER_ART_PROMPT: string = 'plain flat background, standing, full body';
-const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), background elements, special effects, scene, dynamic angle, action, cut-off';
+const CHARACTER_ART_PROMPT: string = 'plain flat background, standing, full body, head-to-toe';
+const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), scenery, special effects, scene, dynamic angle, action, cut-off';
 const BACKGROUND_ART_PROMPT: string = 'unpopulated, visual novel background scenery, background only, scenery only';
 
-const DEFAULT_BORDER_COLOR: string = '#1e1e1edd'
+const DEFAULT_BORDER_COLOR: string = '#1e1e1edd';
+export const DEFAULT_OUTFIT_NAME: string = 'Default';
 
 // Replace trigger words with less triggering words, so image gen can succeed.
 export function substitute(input: string) {
@@ -153,14 +168,15 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     generateCharacters: boolean;
     generateBackgrounds: boolean;
     artStyle: string;
-    characters: {[key: string]: Character};
+    speakers: {[key: string]: Speaker};
     loadedPacks: {[key: string]: EmotionPack}
-    backgroundCooldown: number = 0;
     generating: boolean = false;
     flagBackground: boolean = false;
+    singleSpeaker:{[key: string]: boolean};
 
     readonly fac = new FastAverageColor();
     private messageHandle?: MessageQueueHandle;
+    private speakerSettingsHandle?: SpeakerSettingsHandle;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
         super(data);
@@ -168,24 +184,33 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             characters,
             config,
             messageState,
-            chatState
+            chatState,
+            users
         } = data;
 
         console.log(config);
+        console.log(characters);
+        console.log(users);
 
-        this.characters = characters;
+        this.speakers = {...characters, ...users};
+        this.singleSpeaker = {};
 
         // Set states or default them.
-        this.messageState = messageState ?? {
-            backgroundUrl: '',
-            borderColor: DEFAULT_BORDER_COLOR,
-            characterEmotion: {},
-            characterFocus: ''
+        this.messageState = {
+            backgroundUrl: messageState?.backgroundUrl ?? '',
+            borderColor: messageState?.borderColor ?? DEFAULT_BORDER_COLOR,
+            speakerEmotion: messageState?.speakerEmotion ?? {},
+            activeSpeaker: messageState?.activeSpeaker ?? ''
         }
-        this.chatState = chatState ?? {
-            generatedPacks: {},
-            generatedDescriptions: {}
+
+        this.chatState = {
+            generatedWardrobes: chatState?.generatedWardrobes ?? {},
+            generatedPacks: chatState?.generatedPacks ?? {},
+            selectedOutfit: chatState?.selectedOutfit ?? {},
+            generatedDescriptions: chatState?.generatedDescriptions ?? {},
+            speakerVisible: chatState?.speakerVisible ?? {}
         };
+
         this.loadedPacks = {};
         this.anyPack = false;
         this.generateCharacters = (config?.generateCharacters ?? "True") == "True";
@@ -193,20 +218,27 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         this.artStyle = config?.artStyle ?? 'Bold, visual novel style illustration, clean lines';
 
         // Look at characters, set up packs, and initialize values that aren't present in message/chat state
-        Object.keys(this.characters).forEach((charAnonId: string) => {
-            if(!characters[charAnonId].isRemoved) {
-                console.log(characters[charAnonId]);
-
-                if (characters[charAnonId]?.partial_extensions?.chub?.expressions?.expressions != null) {
+        Object.keys(this.speakers).forEach((charAnonId: string) => {
+            if (!this.speakers[charAnonId].isRemoved) {
+                /*if (characters[charAnonId]?.partial_extensions?.chub?.expressions?.expressions != null) {
                     this.loadedPacks[charAnonId] = characters[charAnonId].partial_extensions?.chub?.expressions?.expressions;
                     this.anyPack = true;
-                } else if (this.chatState.generatedPacks[charAnonId]) {
+                } else*/
+                if (this.chatState.generatedWardrobes[charAnonId] && this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME]) {
+                    console.log('Character has a wardrobe.');
                     this.anyPack = true;
+                } else if (this.chatState.generatedPacks[charAnonId]) {
+                    // TODO: Remove this; it is a legacy feature.
+                    console.log('Character has a legacy pack.');
+                    this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: this.chatState.generatedPacks[charAnonId]}
+                    this.chatState.selectedOutfit[charAnonId] = DEFAULT_OUTFIT_NAME;
                 } else {
-                    this.chatState.generatedPacks[charAnonId] = {};
+                    console.log('Initializing a new wardrobe.')
+                    this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: {}};
+                    this.chatState.selectedOutfit[charAnonId] = DEFAULT_OUTFIT_NAME;
                     this.anyPack = this.anyPack || this.generateCharacters;
                 }
-                if (config != null && config.selected != null
+                /*if (config != null && config.selected != null
                         && config.selected?.hasOwnProperty(charAnonId)
                         && config.selected[charAnonId] != null
                         && config.selected[charAnonId] != ''
@@ -215,14 +247,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         && config.selected[charAnonId] in characters[charAnonId]?.partial_extensions.chub.alt_expressions) {
                     this.loadedPacks[charAnonId] = characters[charAnonId].partial_extensions
                         .chub.alt_expressions[config.selected![charAnonId]].expressions;
-                }
+                }*/
             }
         });
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
-        // Kick off auto-genned stuff
-        this.updateBackground();
+        await this.updateBackground();
         
         try {
             this.emotionPipeline = await Client.connect("ravenok/emotions");
@@ -230,6 +261,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } catch (except: any) {
             console.error(`Error loading pipelines, error: ${except}`);
             return { success: false, error: except }
+        }
+
+        for (let speaker of Object.values(this.speakers)) {
+            if (!(speaker.anonymizedId in this.singleSpeaker)) {
+                this.singleSpeaker[speaker.anonymizedId] = ('chatProfile' in speaker) || (await this.singleSpeakerCheck(speaker));
+            }
         }
 
         return {
@@ -246,13 +283,49 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async setState(state: MessageStateType): Promise<void> {
         if (state != null) {
-            this.messageState = state
-            this.updateBackground();
+            this.messageState = {
+                backgroundUrl: state?.backgroundUrl ?? '',
+                borderColor: state?.borderColor ?? DEFAULT_BORDER_COLOR,
+                speakerEmotion: state?.speakerEmotion ?? {},
+                activeSpeaker: state?.activeSpeaker ?? ''
+            }
+            await this.updateBackground();
+        }
+    }
+
+    async updateEmotion(speaker: Speaker, content: string) {
+        let newEmotion = 'neutral';
+        if (this.emotionPipeline != null) {
+            try {
+                const emotionResult = (await this.emotionPipeline.predict("/predict", {
+                    param_0: content,
+                }))
+                console.log(`Emotion result: `);
+                console.log(emotionResult.data[0].confidences);
+                newEmotion = emotionResult.data[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.1)?.label ?? newEmotion;
+            } catch (except: any) {
+                console.warn(`Error classifying expression, error: ${except}`);
+                newEmotion = this.fallbackClassify(content);
+            }
+        } else {
+            newEmotion = this.fallbackClassify(content);
+        }
+        console.info(`New emotion for ${speaker.name}: ${newEmotion}`);
+        this.messageState.speakerEmotion[speaker.anonymizedId] = newEmotion;
+        this.messageState.activeSpeaker = speaker.anonymizedId;
+        if (!this.chatState.generatedWardrobes[speaker.anonymizedId][this.chatState.selectedOutfit[speaker.anonymizedId]][EMOTION_MAPPING[newEmotion] ?? newEmotion]) {
+            this.wrapPromise(
+                this.generateSpeakerImage(speaker, this.chatState.selectedOutfit[speaker.anonymizedId], EMOTION_MAPPING[newEmotion] ?? newEmotion),
+                `Generating ${newEmotion} for ${speaker.name} (${this.chatState.selectedOutfit[speaker.anonymizedId]}).`);
         }
     }
 
     async beforePrompt(userMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
-        this.backgroundCheck(this.characters[userMessage.promptForId ?? ''], userMessage.content);
+        await this.backgroundCheck(userMessage.content);
+        if (this.isSpeakerVisible(this.speakers[userMessage.anonymizedId])) {
+            await this.updateEmotion(this.speakers[userMessage.anonymizedId], userMessage.content);
+        }
+
         return {
             stageDirections: null,
             messageState: this.messageState,
@@ -275,29 +348,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async afterResponse(botMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
 
-        let newEmotion = 'neutral';
-        if(this.emotionPipeline != null) {
-            try {
-                const emotionResult = (await this.emotionPipeline.predict("/predict", {
-                    param_0: botMessage.content,
-                }))
-                console.log(`Emotion result: `);
-                console.log(emotionResult.data[0].confidences);
-                newEmotion = emotionResult.data[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.1)?.label ?? newEmotion;
-            } catch (except: any) {
-                console.warn(`Error classifying expression, error: ${except}`);
-                newEmotion = this.fallbackClassify(botMessage.content);
-            }
-        } else {
-            newEmotion = this.fallbackClassify(botMessage.content);
+        if (this.singleSpeaker[botMessage.anonymizedId]) {
+            await this.updateEmotion(this.speakers[botMessage.anonymizedId], botMessage.content);
         }
-        console.info(`New emotion for ${this.characters[botMessage.anonymizedId].name}: ${newEmotion}`);
-        this.messageState.characterEmotion[botMessage.anonymizedId] = newEmotion;
-        this.messageState.characterFocus = botMessage.anonymizedId;
-        this.backgroundCooldown--;
-        await this.backgroundCheck(this.characters[botMessage.anonymizedId], botMessage.content);
+        await this.backgroundCheck(botMessage.content);
         if (this.flagBackground) {
-            await this.wrapPromise(this.generateBackgroundImage(this.characters[botMessage.anonymizedId], botMessage.content), 'Generating new background image.');
+            await this.wrapPromise(this.generateBackgroundImage(this.speakers[botMessage.anonymizedId], botMessage.content), 'Generating new background image.');
         }
         return {
             stageDirections: null,
@@ -308,31 +364,37 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         };
     }
 
-    isUngeneratedContent(): boolean {
-        for (let character of Object.values(this.characters)) {
-            if (!character.isRemoved && Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion])) {
-                return true;
+    /*isUngeneratedContent(): boolean {
+        for (let character of Object.values(this.speakers)) {
+            if (!character.isRemoved) {
+                for (let outfit of Object.keys(this.chatState.generatedWardrobes[character.anonymizedId])) {
+                    if (Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedWardrobes[character.anonymizedId][outfit][emotion])) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
-    }
+    }*/
 
-    generateNextImage(comboBreaker: number) {
+    /*generateNextImage(comboBreaker: number) {
         this.generating = true;
         // This is a failsafe to keep this method from cycling forever if something is going wrong.
         if (comboBreaker > 200) {
             this.generating = false;
             return;
         }
-        for (let character of Object.values(this.characters)) {
-            const emotion = Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedPacks[character.anonymizedId][emotion])
-            if (emotion && !character.isRemoved) {
-                this.wrapPromise(this.generateCharacterImage(character, emotion as Emotion), `Generating ${emotion} image for ${character.name}.`).then(() => this.generateNextImage(comboBreaker + 1));
-                return;
+        for (let character of Object.values(this.speakers)) {
+            for (let outfit of Object.keys(this.chatState.generatedWardrobes[character.anonymizedId])) {
+                const emotion = Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedWardrobes[character.anonymizedId][outfit][emotion])
+                if (emotion && !character.isRemoved) {
+                    this.wrapPromise(this.generateSpeakerImage(character, outfit, emotion as Emotion), `Generating ${emotion} image for ${character.name} (${outfit}).`).then(() => this.generateNextImage(comboBreaker + 1));
+                    return;
+                }
             }
         }
         this.generating = false;
-    }
+    }*/
 
     async wrapPromise(promise: Promise<void>, message: string): Promise<void> {
         if (this.messageHandle) {
@@ -341,70 +403,82 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return promise;
     }
 
-    async generateCharacterImage(character: Character, emotion: Emotion): Promise<void> {
-        if (!this.chatState.generatedDescriptions[character.anonymizedId]) {
+    async updateChatState() {
+        await this.messenger.updateChatState(this.chatState);
+    }
+
+    async generateSpeakerImage(speaker: Speaker, outfit: string, emotion: Emotion): Promise<void> {
+        if (!this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] || emotion == Emotion.neutral) {
             // Must first build a visual description for this character:
-            console.log(`Generating a physical description of ${character.name}.`);
+            console.log(`Generating a physical description of ${speaker.name}.`);
             const imageDescription = await this.generator.textGen({
-                prompt: 
-                    `Character Information:\n${character.personality}\n\n` +
-                    `Current Instruction:\nThe goal of this task is to digest the character information and construct a comprehensive and concise visual description of this character. ` +
-                    `This system response will be fed directly into an image generator, which is unfamiliar with this character; ` +
-                    `use tags and keywords to convey all essential details about them, ` +
-                    `presenting ample character appearance notes--particularly if they seem obvious: gender, skin tone, hair style/color, physique, outfit, etc.\n\n` +
-                    `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, tanned skin, muscular, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, running shoes, white tanktop.\n\n` +
-                    `Sample Response:\nMan in a billowing cloak, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.\n\n` +
-                    `Default Instruction:`,
+                prompt:
+                    `Chat History:\n{{messages}}\n\n` +
+                    (outfit != DEFAULT_OUTFIT_NAME ? `New Outfit:\n${outfit}\n\n` : '') +
+                    `Information about ${speaker.name}:\n${this.getSpeakerDescription(speaker)}\n\n` +
+                    `Current Instruction:\nThe goal of this task is to digest the information about ${speaker.name} and construct a comprehensive and functional visual description of ${speaker.name}. ` +
+                    `The chat history may involve other characters, but this system response will fixate on ${speaker.name}; ` +
+                    `the result will be fed directly into an image generator, which is unfamiliar with this character, ` +
+                    `so use concise tags and keywords to convey all essential details about them, ` +
+                    `presenting ample and exhaustive character appearance notes--particularly if they seem obvious: gender, race, skin tone, hair do/color, physique, body shape, outfit, fashion, setting/theme, style, etc. ` +
+                    (outfit != DEFAULT_OUTFIT_NAME ?
+                        `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit (${outfit}); ` :
+                        `Chat history is provided for context on ${speaker.name}'s current outfit; `) +
+                    `focus on persistent details over fleeting ones, as this description will be applied to a variety of situations.\n\n` +
+                    `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
+                    `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.`,
                 min_tokens: 50,
                 max_tokens: 150,
-                include_history: false
+                include_history: true
             });
             if (imageDescription?.result) {
                 console.log(`Received an image description: ${imageDescription.result}`);
-                this.chatState.generatedDescriptions[character.anonymizedId] = imageDescription.result;
-                await this.messenger.updateChatState(this.chatState);
+                this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] = imageDescription.result;
+                await this.updateChatState();
             } else {
                 return;
             }
         }
         // Must do neutral first:
-        if (emotion != Emotion.neutral && !this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
+        if (emotion != Emotion.neutral && !this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][Emotion.neutral]) {
             emotion = Emotion.neutral;
         }
+        console.log(`Generating ${emotion} image for ${speaker.name} (${outfit}).`)
         if (emotion == Emotion.neutral) {
-            console.log(`Generating ${emotion} image for ${character.name}.`)
             const imageUrl = (await this.generator.makeImage({
-                prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[character.anonymizedId]}), (${CHARACTER_ART_PROMPT}), (${EMOTION_PROMPTS[emotion]})`),
+                prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`]}), ((${CHARACTER_ART_PROMPT})), (${EMOTION_PROMPTS[emotion]})`),
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true
-            }))?.url ?? silhouetteUrl;
-            if (imageUrl == silhouetteUrl) {
-                console.warn(`Failed to generate a ${emotion} image for ${character.name}; falling back to silhouette.`);
+            }))?.url ?? '';
+            if (imageUrl == '') {
+                console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
             // Clear entire pack then assign this image:
-            this.chatState.generatedPacks[character.anonymizedId] = {};
-            this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral] = imageUrl;
+            this.chatState.generatedWardrobes[speaker.anonymizedId][outfit] = {};
+            this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][Emotion.neutral] = imageUrl;
+            /*if (!this.generating) {
+                this.generateNextImage(0);
+            }*/
         } else {
-            console.log(`Generating ${emotion} image for ${character.name}.`)
             const imageUrl = (await this.generator.imageToImage({
-                image: this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral],
-                prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[character.anonymizedId]}), (${CHARACTER_ART_PROMPT}), (${EMOTION_PROMPTS[emotion]})`),
+                image: this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][Emotion.neutral],
+                prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`]}), (${CHARACTER_ART_PROMPT}), ((Strong Emotion: ${EMOTION_PROMPTS[emotion]}))`),
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true,
                 strength: 0.1
-            }))?.url ?? this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral];
-            if (imageUrl == silhouetteUrl) {
-                console.warn(`Failed to generate a ${emotion} image for ${character.name}; falling back to silhouette.`);
+            }))?.url ?? this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][Emotion.neutral] ?? '';
+            if (imageUrl == '') {
+                console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
-            this.chatState.generatedPacks[character.anonymizedId][emotion] = imageUrl;
+            this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][emotion] = imageUrl;
         }
-        await this.messenger.updateChatState(this.chatState);
+        await this.updateChatState();
     }
 
-    async backgroundCheck(character: Character, content: string): Promise<void> {
-        if (this.flagBackground || !this.generateBackgrounds || !content || this.backgroundCooldown > 0) return;
+    async backgroundCheck(content: string): Promise<void> {
+        if (this.flagBackground || !this.generateBackgrounds || !content) return;
 
         if (this.messageState.backgroundUrl) {
             const TRANSITION_LABEL = 'transitions to a new location';
@@ -431,13 +505,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         this.flagBackground = true;
     }
 
-    async generateBackgroundImage(character: Character, content: string): Promise<void> {
-        this.backgroundCooldown = 2;
+    async generateBackgroundImage(character: Speaker, content: string): Promise<void> {
         // Must first build a visual description for the background
         console.log(`Generate a description of the background.`);
         const imageDescription = await this.generator.textGen({
             prompt:
-                (character?.personality ? `Information about ${character.name}, for Flavor:\n${character.personality}` : '') +
+                ((character && 'personality' in character) ? `Information about ${character.name}, for Flavor:\n${character.personality}` : '') +
                 `Chat History:\n{{messages}}\n\n` +
                 `Current Instruction:\nThe goal of this task is to digest the flavor text and chat history to construct a comprehensive and concise visual description of the current scenery. ` +
                 `This system response will be fed directly into an image generator, which is unfamiliar with the setting; ` +
@@ -446,8 +519,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 `Sample Response:\nDesolate wasteland, sandy, oppressively bright, glare, cracked earth, forlorn crags.\n\n` +
                 `Sample Response:\nSmall-town America, charming street, quaint houses, alluring shopfronts, crisp fall foliage.\n\n` +
                 `Sample Response:\nCramped sci-fi hallway, dim emergency lighting, aboard a space station, haunting shapes, loose ducts.\n\n` +
-                `Sample Response:\nForgotten ruins, mossy worn stonework, dense forest, swampy surroundings, entrance leading deep into the unknown, pervasive mist.\n\n` +
-                `Default Instruction:`,
+                `Sample Response:\nForgotten ruins, mossy worn stonework, dense forest, swampy surroundings, entrance leading deep into the unknown, pervasive mist.`,
             min_tokens: 50,
             max_tokens: 150,
             include_history: true
@@ -463,7 +535,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }
             this.messageState.backgroundUrl = imageUrl;
             try {
-                this.messageState.borderColor = (await this.fac.getColorAsync(imageUrl)).rgba;
+                this.messageState.borderColor = (await this.fac.getColorAsync(imageUrl)).rgba ?? DEFAULT_BORDER_COLOR;
             } catch(err) {
                 this.messageState.borderColor = DEFAULT_BORDER_COLOR;
             }
@@ -471,77 +543,126 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
     }
 
-    getCharacterEmotion(anonymizedId: string): Emotion {
-        return this.messageState.characterEmotion[anonymizedId] as Emotion ?? Emotion.neutral;
+
+    async singleSpeakerCheck(speaker: Speaker) {
+        const SINGLE_CHARACTER_LABEL = 'focuses on a specific character';
+        const MULTI_CHARACTER_LABEL = 'describes multiple characters';
+        const NARRATOR_LABEL = 'describes a narrator or scenario';
+        try {
+            const response = await this.zeroShotPipeline.predict("/predict", {data_string: JSON.stringify({
+                    sequence: this.getSpeakerDescription(speaker),
+                    candidate_labels: [SINGLE_CHARACTER_LABEL, MULTI_CHARACTER_LABEL, NARRATOR_LABEL],
+                    hypothesis_template: 'This text {}',
+                    multi_label: true
+                })});
+            const result = JSON.parse(`${response.data[0]}`);
+            console.log('Zero-shot result:');
+            console.log(result);
+            if (result.labels && result.labels[0] != SINGLE_CHARACTER_LABEL) {
+                console.log(`${speaker.name} determined to be non-solo character.`);
+                return false;
+            }
+        } catch (except) {
+            console.warn(except);
+        }
+        return true;
     }
 
-    getCharacterImage(anonymizedId: string, emotion: Emotion): string {
-        return this.chatState.generatedPacks[anonymizedId][EMOTION_MAPPING[emotion] ?? emotion] ?? this.chatState.generatedPacks[anonymizedId][Emotion.neutral] ?? silhouetteUrl;
+    getSpeakerDescription(speaker: Speaker) {
+        return 'personality' in speaker ? speaker.personality : ('chatProfile' in speaker ? speaker.chatProfile : '');
+    }
+
+    getSpeakerEmotion(anonymizedId: string): Emotion {
+        return this.messageState.speakerEmotion[anonymizedId] as Emotion ?? Emotion.neutral;
+    }
+
+    getSpeakerImage(anonymizedId: string, outfit: string, emotion: Emotion, defaultUrl: string): string {
+        return this.chatState.generatedWardrobes[anonymizedId][(outfit && outfit in this.chatState.generatedWardrobes[anonymizedId]) ? outfit : DEFAULT_OUTFIT_NAME][EMOTION_MAPPING[emotion] ?? emotion] ?? this.chatState.generatedWardrobes[anonymizedId][outfit][Emotion.neutral] ?? defaultUrl;
+    }
+
+    isSpeakerInUi(speaker: Speaker) {
+        return !speaker.isRemoved && this.singleSpeaker[speaker.anonymizedId];
+    }
+    isSpeakerActive(speaker: Speaker) {
+        return speaker.anonymizedId == this.messageState.activeSpeaker
+    }
+    isSpeakerVisible(speaker: Speaker) {
+        // Characters default to true, Users to false
+        return this.chatState.speakerVisible[speaker.anonymizedId] ?? ('personality' in speaker);
+    }
+    isSpeakerDisplayed(speaker: Speaker) {
+        return this.isSpeakerActive(speaker) || (this.isSpeakerInUi(speaker) && this.isSpeakerVisible(speaker));
     }
 
     render(): ReactElement {
-        const count = Object.values(this.characters).filter(character => !character.isRemoved).length;
+        const count = Object.values(this.speakers).filter(speaker => this.isSpeakerDisplayed(speaker)).length;
         let index = 0;
 
         return(
-            <ThemeProvider theme={darkTheme}>
-                <div className="big-stacker"
-                    key={'big-over-stacker'}
-                    style={{
-                        width: '100vw',
-                        height: '100vh',
-                        position: 'relative',
-                        alignItems: 'stretch',
-                        overflow: 'visible'
-                    }
-                }>
-                    <MessageQueue register={(handle) => {this.messageHandle = handle;}}/>
-                    <GenerateButton shouldShow={() => {return !this.generating && this.isUngeneratedContent()}} onClick={() => this.generateNextImage(0)}/>
-
+            <div className="big-stacker"
+                key={'big-over-stacker'}
+                style={{
+                    width: '100vw',
+                    height: '100vh',
+                    position: 'relative',
+                    alignItems: 'stretch',
+                    overflow: 'hidden'
+                }
+            }>
+                <ThemeProvider theme={darkTheme}>
+                    <SpeakerSettings
+                        register={(handle) => {this.speakerSettingsHandle = handle;}}
+                        stage={this}
+                        borderColor={this.messageState.borderColor}
+                        onRegenerate={(char, outfit, emotion) => {
+                            this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${outfit}).`);
+                        }}
+                    />
+                    <MessageQueue register={(handle) => {this.messageHandle = handle;}} borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}/>
                     {/* Regenerate buttons for each character */}
-                    {Object.values(this.characters).filter(c => !c.isRemoved).map((character, i) => (
-                        <CharacterButton
-                            key={`character_options_${character.anonymizedId}`}
-                            character={character}
-                            stage={this}
-                            top={20 + i * 50}
-                            borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
-                            onRegenerate={(char, emotion) => {
-                                console.log('onRegenerate');
-                                this.wrapPromise(this.generateCharacterImage(char, emotion), `Regenerating ${emotion} image for ${char.name}.`);
-                            }}
-                        />
-                    ))}
-                    <BackgroundImage imageUrl={this.messageState.backgroundUrl} borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}/>
-                    {Object.values(this.characters).map(character => {
-                        // Must have at least a neutral image in order to display this character:
-                        if (this.messageState.characterEmotion[character.anonymizedId] && this.chatState.generatedPacks[character.anonymizedId][Emotion.neutral]) {
-                            index++;
-                            const xPosition = count == 1 ? 50 :
-                                ((index % 2 == 1) ?
-                                    (Math.ceil(index / 2) * (50 / (Math.ceil(count / 2) + 1))) :
-                                    (Math.floor(index / 2) * (50 / (Math.floor(count / 2) + 1)) + 50));
-                            // Farther from 50, higher up on the screen:
-                            const yPosition = Math.ceil(Math.abs(xPosition - 50) / 5);
-                            // Closer to 50, higher visual priority:
-                            const zIndex = Math.ceil((50 - Math.abs(xPosition - 50)) / 5);
-
-                            return <CharacterImage
-                                key={`character_${character.anonymizedId}`}
-                                character={character}
-                                emotion={this.getCharacterEmotion(character.anonymizedId)}
-                                xPosition={xPosition}
-                                yPosition={yPosition}
-                                zIndex={zIndex}
-                                imageUrl={this.getCharacterImage(character.anonymizedId, this.getCharacterEmotion(character.anonymizedId))}
-                                isTalking={this.messageState.characterFocus == character.anonymizedId}
+                    <div style={{display: "flex", flexDirection: "column", gap: 10, alignItems: "end"}}>
+                        {Object.values(this.speakers).filter(c => this.isSpeakerInUi(c)).map((speaker, i) => (
+                            <SpeakerButton
+                                key={`character_options_${speaker.anonymizedId}`}
+                                speaker={speaker}
+                                stage={this}
+                                borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
+                                onOpenSettings={(sp) => this.speakerSettingsHandle.setSpeaker(sp)}
                             />
-                        } else {
-                            return <></>
-                        }
-                    })}
-                </div>
-            </ThemeProvider>
+                        ))}
+                    </div>
+                    <BackgroundImage imageUrl={this.messageState.backgroundUrl} borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}/>
+                    <AnimatePresence>
+                        {Object.values(this.speakers).map(character => {
+                            if (this.isSpeakerDisplayed(character)) {
+                                index++;
+                                const xPosition = count == 1 ? 50 :
+                                    ((index % 2 == 1) ?
+                                        (Math.ceil(index / 2) * (50 / (Math.ceil(count / 2) + 1))) :
+                                        (Math.floor(index / 2) * (50 / (Math.floor(count / 2) + 1)) + 50));
+                                // Farther from 50, higher up on the screen:
+                                const yPosition = Math.ceil(Math.abs(xPosition - 50) / 5);
+                                // Closer to 50, higher visual priority:
+                                const zIndex = Math.ceil((50 - Math.abs(xPosition - 50)) / 5);
+
+                                return <SpeakerImage
+                                    key={`character_${character.anonymizedId}`}
+                                    speaker={character}
+                                    emotion={this.getSpeakerEmotion(character.anonymizedId)}
+                                    xPosition={xPosition}
+                                    yPosition={yPosition}
+                                    zIndex={zIndex}
+                                    imageUrl={this.getSpeakerImage(character.anonymizedId, this.chatState.selectedOutfit[character.anonymizedId], this.getSpeakerEmotion(character.anonymizedId), '')}
+                                    isTalking={this.messageState.activeSpeaker == character.anonymizedId}
+                                />
+                            } else {
+                                return <></>
+                            }
+                        })}
+                    </AnimatePresence>
+                </ThemeProvider>
+            </div>
+
         );
     }
 

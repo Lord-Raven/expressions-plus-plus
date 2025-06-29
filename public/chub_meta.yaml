@@ -20,14 +20,14 @@ When this changes, I'll update this stage to use the character's pack by default
 ### So, Uh, What Is This, Then? 
 
 This stage generates its own expression images by producing a visual description of each character and 
-then making lots of image generation calls.  
+then making image generation calls to produce various emotional states.  
 
-Images may initially take time to appear as they must be generated up front; they are lazy loaded, so you can continue to chat while the stage gets things ready. 
-The result is that it works with any character, but _it uses lots of image generation credits_ (unless you have a Mars subscription, which is unlimited), and your mileage may vary quality-wise. 
-You can regenerate individual images by clicking the character portraits in the corner.  
+The system works with any single-character bot or even personae, but _it uses lots of image generation credits_ (unless you have a Mars subscription, which is unlimited), and your mileage may vary quality-wise. 
+Images may initially take time to appear as they must be generated; they are lazy loaded, so they don't hold up the chat so much. 
+You can regenerate individual images and create different \"outfits\" using the characters settings in the upper-right corner.  
 
-This stage also generates background images based on the scene. These are not lazy loaded because it causes saving issues and they can become easily out of sync. 
-They can add quite a bit of load time to responses when they occur; they can be disabled from the stage's configuration menu.
+This stage also generates background images based on the scene. These are not lazy loaded because it causes saving issues and they can easily become out of sync. 
+They can add quite a bit of load time to responses when they occur, but they can be disabled from the stage's configuration menu.
 
 From the configuration menu, you can also alter the basic art style element of the stage's image prompts, to attempt to taylor the style to suit your aesthetic.  
 
@@ -36,6 +36,8 @@ From the configuration menu, you can also alter the basic art style element of t
 <li>This stage discards neutral emotion determinations when a secondary emotion is over a certain threshold, which causes characters to appear more expressive.<br>
 <li>This stage can be used with any character, without manual effort by the author.<br>
 <li>This stage has some fancy multi-character support. You will need to refresh the chat after adding a new character, though.<br>
+<li>This stage supports persona images.<br>
+<li>This stage allows you to toggle character outfits or visibility from within the stage UI itself.<br>
 <li>This stage adds backgrounds.<br>
 
 ### Disimprovements Under the Original 
@@ -47,6 +49,19 @@ From the configuration menu, you can also alter the basic art style element of t
 
 This stage leverages [SamLowe/roberta-base-go_emotions](https://huggingface.co/SamLowe/roberta-base-go_emotions) for emotion inference ([my HF space for this](https://huggingface.co/spaces/Ravenok/emotions)) 
 and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0) for zero-shot classification ([my HF space for that](https://huggingface.co/spaces/Ravenok/statosphere-backend)).
+
+### Updates
+<ul>
+<li>2025.06.28<br>
+  <ul>
+  <li>User support<br>
+  <li>Outfit management<br>
+  <li>Multi-character or narrator bots are no longer represented, to avoid confusing situations. Backgrounds and additional characters still function.<br>
+  <li>Images are now generated as-needed, which can mean a delay in initial use, but you can still manually pre-load them from character management<br>
+  <li>Visibility toggles for characters<br>
+  <li>Various prompt improvements<br>
+  </ul>
+</ul>
 "
 
 # 'PUBLIC', 'PRIVATE', or 'UNLISTED'.
