@@ -172,7 +172,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     loadedPacks: {[key: string]: EmotionPack}
     generating: boolean = false;
     flagBackground: boolean = false;
-    singleSpeaker:{[key: string]: boolean};
 
     readonly fac = new FastAverageColor();
     private messageHandle?: MessageQueueHandle;
@@ -193,7 +192,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log(users);
 
         this.speakers = {...characters, ...users};
-        this.singleSpeaker = {};
 
         // Set states or default them.
         this.messageState = {
@@ -264,8 +262,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
 
         for (let speaker of Object.values(this.speakers)) {
-            if (!(speaker.anonymizedId in this.singleSpeaker)) {
-                this.singleSpeaker[speaker.anonymizedId] = ('chatProfile' in speaker) || (await this.singleSpeakerCheck(speaker));
+            if (!(speaker.anonymizedId in this.chatState.speakerVisible)) {
+                this.chatState.speakerVisible[speaker.anonymizedId] = !('chatProfile' in speaker) && (await this.singleSpeakerCheck(speaker));
             }
         }
 
@@ -321,11 +319,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async beforePrompt(userMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
-        await this.backgroundCheck(userMessage.content);
+
         if (this.isSpeakerVisible(this.speakers[userMessage.anonymizedId])) {
             await this.updateEmotion(this.speakers[userMessage.anonymizedId], userMessage.content);
         }
-
+        await this.backgroundCheck(userMessage.content);
         return {
             stageDirections: null,
             messageState: this.messageState,
@@ -348,7 +346,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async afterResponse(botMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
 
-        if (this.singleSpeaker[botMessage.anonymizedId]) {
+        if (this.isSpeakerVisible(this.speakers[botMessage.anonymizedId])) {
             await this.updateEmotion(this.speakers[botMessage.anonymizedId], botMessage.content);
         }
         await this.backgroundCheck(botMessage.content);
@@ -582,7 +580,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     isSpeakerInUi(speaker: Speaker) {
-        return !speaker.isRemoved && this.singleSpeaker[speaker.anonymizedId];
+        return !speaker.isRemoved;
     }
     isSpeakerActive(speaker: Speaker) {
         return speaker.anonymizedId == this.messageState.activeSpeaker
