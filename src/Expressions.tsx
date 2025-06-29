@@ -551,7 +551,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             const response = await this.zeroShotPipeline.predict("/predict", {data_string: JSON.stringify({
                     sequence: `Name: ${speaker.name}\nDescription: ${this.getSpeakerDescription(speaker)}`,
                     candidate_labels: [SINGLE_CHARACTER_LABEL, MULTI_CHARACTER_LABEL, GROUP_CHARACTER_LABEL, NARRATOR_LABEL],
-                    hypothesis_template: `The focus of the passage is {}.`,
+                    hypothesis_template: `This description is primarily about {}.`,
                     multi_label: true
                 })});
             const result = JSON.parse(`${response.data[0]}`);
