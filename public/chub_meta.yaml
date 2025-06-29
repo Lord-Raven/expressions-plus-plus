@@ -58,11 +58,11 @@ and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzL
 
   - Outfit management. 
 
-  - Multi-character or narrator bots are no longer represented, to avoid confusing situations. Backgrounds and additional characters still function. 
+  - Visibility toggles for characters. 
+
+  - Users and multi-character or narrator bots are invisible by default, to avoid confusing situations. 
 
   - Images are now generated as-needed, which can mean a delay in initial use, but you can still manually pre-load them from character management. 
-
-  - Visibility toggles for characters. 
 
   - Various prompt improvements. 
 "
