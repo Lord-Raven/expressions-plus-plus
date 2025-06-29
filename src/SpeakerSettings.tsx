@@ -134,7 +134,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
             <Dialog open={true} onClose={() => setSpeaker(null)}>
                 <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Typography variant="h6" component="div">
-                        <b>Image Management - {speaker.name}</b>
+                        <b>{speaker.name} Management</b>
                     </Typography>
                     <IconButton
                         onClick={() => setSpeaker(null)}
@@ -201,7 +201,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     <Button
                                         variant="outlined"
                                         sx={{
-                                            width: 128, height: 128,
+                                            width: 120, height: 120,
                                             p: 0,
                                             display: "flex",
                                             alignItems: "flex-end",
