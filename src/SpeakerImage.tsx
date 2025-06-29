@@ -23,7 +23,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({speaker, emotion, imageUrl, xPosit
         idle: {color: '#BBBBBB', opacity: 1, x: `${xPosition}vw`, bottom: `${4 + yPosition}vh`, height: `${IDLE_HEIGHT - yPosition * 2}vh`, filter: 'brightness(0.8)', zIndex: zIndex, transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}},
     };
 
-    return (
+    return imageUrl ? (
         <motion.div
             key={`speaker_motion_div_${speaker.anonymizedId}`}
             variants={variants}
@@ -33,8 +33,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({speaker, emotion, imageUrl, xPosit
             style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', zIndex: 10, overflow: 'visible'}}>
             <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', filter: 'blur(2.5px)', pointerEvents: 'none', transform: 'translate(-50%, 0)', zIndex: 4}} alt={`${speaker.name} (${emotion})`}/>
             <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', opacity: 0.75, pointerEvents: 'none', transform: 'translate(-50%, 0)', zIndex: 5}} alt={`${speaker.name} (${emotion})`}/>
-        </motion.div>
-    );
+        </motion.div>) : <></>
 };
 
 export default SpeakerImage;
