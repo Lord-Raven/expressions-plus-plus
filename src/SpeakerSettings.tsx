@@ -131,8 +131,8 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
 
     return (<>
         {speaker && (<div>
-            <Dialog open={true} onClose={() => setSpeaker(null)}>
-                <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Dialog open={true} onClose={() => setSpeaker(null)} slotProps={{paper: {sx: {backgroundColor: "#333", border: `3px solid ${borderColor}`, borderRadius: 2}}}}>
+                <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 1, backgroundColor: "#333" }}>
                     <Typography variant="h6" component="div">
                         <b>{speaker.name} Management</b>
                     </Typography>
@@ -143,14 +143,18 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body2" sx={{mb: 2}}>
+                <DialogContent sx={{p: 1, backgroundColor: "#333"}}>
+                    <Typography variant="body2">
                         For each outfit, a physical description and neutral image are generated and all other emotions are created from the neutral base image. Rename or remove additional outfits by double-clicking their tabs; an outfit's name will help steer its generation.
                     </Typography>
                     <Tabs
                         value={selectedOutfit || outfitNames[0]}
                         variant="scrollable"
                         scrollButtons="auto"
+                        sx={{m: 0}}
+                        slotProps={{
+                            indicator: {sx: {backgroundColor: borderColor, height: "3px"}}
+                        }}
                         onChange={(_, newValue) => {
                             if (newValue === "__add_new__") {
                                 const newName = NEW_OUTFIT_NAME;
@@ -192,6 +196,8 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 silhouetteUrl
                             );
 
+                            const isDefault = (emotion != Emotion.neutral && image == stage.getSpeakerImage(speaker.anonymizedId, selectedOutfit, Emotion.neutral)) || (image == silhouetteUrl);
+
                             return (
                                 <Grid key={emotion} component={motion.div}
                                       initial={{opacity: 0, x: 50}}
@@ -210,10 +216,11 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                             backgroundImage: `url(${image})`,
                                             backgroundPosition: "center top",
                                             backgroundSize: "200% 356%",
-                                            color: (emotion != Emotion.neutral && image == stage.getSpeakerImage(speaker.anonymizedId, selectedOutfit, Emotion.neutral)) ? "#666" : "#222",
+                                            backgroundColor: isDefault ? "#222" : "#444",
+                                            color: isDefault ? "#666" : "#222",
                                             fontWeight: 600,
                                             textShadow: "0 1px 2px #fff",
-                                            border: "2px solid #888",
+                                            border: `3px solid ${borderColor}`,
                                         }}
                                         onClick={() => setConfirmEmotion(emotion as Emotion)}
                                     >
@@ -236,13 +243,14 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
             </Dialog>
             {/* Confirmation dialog */}
             <Dialog
+                sx={{border: `3px solid ${borderColor}`, borderRadius: 2}}
                 open={!!confirmEmotion}
                 onClose={() => setConfirmEmotion(null)}
             >
-                <DialogTitle>
+                <DialogTitle sx={{p: 1, backgroundColor: "#333"}}>
                     Confirm Regeneration
                 </DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{p: 1, backgroundColor: "#333"}}>
                     <Typography>
                         Generate <b>{confirmEmotion}</b> image for <b>{speaker.name}</b>?
                     </Typography>

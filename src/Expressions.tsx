@@ -426,7 +426,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
                     `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.`,
                 min_tokens: 50,
-                max_tokens: 130,
+                max_tokens: 140,
                 include_history: true
             });
             if (imageDescription?.result) {
@@ -505,6 +505,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async generateBackgroundImage(character: Speaker, content: string): Promise<void> {
         // Must first build a visual description for the background
+        this.flagBackground = false
         console.log(`Generate a description of the background.`);
         const imageDescription = await this.generator.textGen({
             prompt:
