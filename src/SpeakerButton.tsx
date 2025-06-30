@@ -55,7 +55,7 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                 border: `3px solid ${borderColor}`,
                 cursor: "pointer",
                 right: 20,
-                zIndex: 100,
+                zIndex: 1000,
             }}
             transition={{type: "spring", stiffness: 300, damping: 30}}
         >

@@ -37,7 +37,7 @@ export const MessageQueue: React.FC<MessageQueueProps> = ({ register , borderCol
                 top: 0,
                 left: 0,
                 pointerEvents: 'none',
-                zIndex: 90,
+                zIndex: 900,
             }}
         >
         <AnimatePresence>
