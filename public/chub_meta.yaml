@@ -19,17 +19,16 @@ When this changes, I'll update this stage to use the character's pack by default
 
 ### So, Uh, What Is This, Then? 
 
-This stage generates its own expression images by producing a visual description of each character and 
-then making image generation calls to produce various emotional states.  
+This stage generates its own expression images by producing a visual description of each character and making image generation calls to produce various emotional states.  
 
 The system works with any single-character bot or even personae, but _it uses lots of image generation credits_ (unless you have a Mars subscription, which is unlimited), and your mileage may vary quality-wise. 
 Images may initially take time to appear as they must be generated; they are lazy loaded, so they don't hold up the chat so much. 
-You can regenerate individual images and create different \"outfits\" using the characters settings in the upper-right corner.  
+You can regenerate individual images and create different \"outfits\" using the characters' settings in the upper-right corner.  
 
-This stage also generates background images based on the scene. These are not lazy loaded because it causes saving issues and they can easily become out of sync. 
-They can add quite a bit of load time to responses when they occur, but they can be disabled from the stage's configuration menu.
+This stage also generates background images based on the scene. These are not lazy loaded because it causes saving issues, and they can easily become out of sync. 
+They can add quite a bit of load time to responses when they occur, but they can also be disabled from the stage's configuration menu. 
 
-From the configuration menu, you can also alter the basic art style element of the stage's image prompts, to attempt to taylor the style to suit your aesthetic.  
+From the configuration menu, you can also alter the basic art style element of the stage's image prompts, to taylor the style to suit your aesthetic.  
 
 ### Improvements Over the Original 
 
@@ -54,8 +53,9 @@ and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzL
 
 2025.07.01: 
 
-- Added image prompt details and warnings to each outfit tabs in the management UI.
-- Minor prompt revisions.
+- Added image prompt details and warnings to each outfit tabs in the management UI. 
+
+- Minor prompt revisions. 
 
 2025.06.29: 
 
