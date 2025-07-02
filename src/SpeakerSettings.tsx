@@ -1,14 +1,17 @@
 import React, {useState, useRef, useEffect} from "react";
-import {DEFAULT_OUTFIT_NAME, Emotion, EMOTION_PROMPTS} from "./Expressions";
+import {DEFAULT_OUTFIT_NAME, Emotion, EMOTION_PROMPTS, substitute} from "./Expressions";
 import { Speaker } from "@chub-ai/stages-ts";
 import {motion} from "framer-motion";
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
-    Box, Button, Typography, TextField, IconButton
+    Box, Button, Typography, TextField, IconButton, Tooltip
 } from "@mui/material";
 import { Grid, Tabs, Tab } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import silhouetteUrl from './assets/silhouette.png'
 
 export interface SpeakerSettingsHandle {
@@ -20,6 +23,43 @@ type SpeakerSettingsProps = {
     stage: any;
     borderColor: string;
     onRegenerate?: (speaker: Speaker, outfit: string, emotion: Emotion) => void;
+};
+
+const OutfitInfoIcon = ({
+                            isAltered,
+                            isErrored,
+                            description,
+                        }: {
+    isAltered: boolean;
+    isErrored: boolean;
+    description: string;
+}) => {
+    let Icon = InfoOutlinedIcon;
+    let color: "primary" | "warning" | "error" = "primary";
+
+    if (isErrored) {
+        Icon = ErrorOutlineIcon;
+        color = "error";
+    } else if (isAltered) {
+        Icon = WarningAmberIcon;
+        color = "warning";
+    }
+
+    return (
+        <Tooltip title={<>Prompt used for image generation:<br/><br/>{description}
+                    {isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt failed to generate an image and may contain words that could trigger sensitive content. Regenerate the neutral image to build a new prompt and try again. Consider reporting recurring false positives to the stage developer.</>)}
+                    {isAltered && !isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt was automatically altered from its original form to avoid triggering a sensitive content failure; if the result appears fine, you may disregard this warning.</>)}
+                    </>}
+                arrow enterDelay={300} leaveDelay={150}>
+            <IconButton
+                size="small"
+                sx={{ ml: 1, p: 0.5 }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <Icon fontSize="inherit" color={color} />
+            </IconButton>
+        </Tooltip>
+    );
 };
 
 const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
@@ -73,8 +113,6 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
         const [editing, setEditing] = useState(false);
         const [value, setValue] = useState(name);
 
-        if (name === DEFAULT_OUTFIT_NAME) return <span>{name}</span>;
-
         return editing ? (
             <Box sx={{ display: "flex", alignItems: "center" }}>
                 <TextField
@@ -103,7 +141,16 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                 </IconButton>
             </Box>
         ) : (
-            <span onDoubleClick={() => setEditing(true)}>{name}</span>
+            <span onDoubleClick={() => setEditing(name != DEFAULT_OUTFIT_NAME)}>
+                {name}
+                {speaker && stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${value}`] && (
+                    <OutfitInfoIcon
+                        description={stage.buildArtPrompt(speaker, value, Emotion.neutral)}
+                        isAltered={stage.buildArtPrompt(speaker, value, Emotion.neutral) != substitute(stage.buildArtPrompt(speaker, value, Emotion.neutral))}
+                        isErrored={stage.getSpeakerImage(speaker.anonymizedId, value, Emotion.neutral, silhouetteUrl) == ''}/>
+                )}
+            </span>
+
         );
     };
 
@@ -134,7 +181,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
             <Dialog open={true} onClose={() => setSpeaker(null)} slotProps={{paper: {sx: {backgroundColor: "#333", border: `3px solid ${borderColor}`, borderRadius: 2}}}}>
                 <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 1, backgroundColor: "#333" }}>
                     <Typography variant="h6" component="div">
-                        <b>{speaker.name} Management</b>
+                        <b>Manage {speaker.name}</b>
                     </Typography>
                     <IconButton
                         onClick={() => setSpeaker(null)}
@@ -174,6 +221,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     onRename={(newName) => handleOutfitRename(name, newName)}
                                     onDelete={() => handleOutfitDelete(name)}
                                 />}
+                                sx={{p: 1}}
                                 value={name}
                                 ref={handleNewTabRef(name)}
                             />
@@ -183,7 +231,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 icon={<AddIcon />}
                                 key={`new_outfit_tab`}
                                 value="__add_new__"
-                                sx={{ minWidth: 50, pl: 1, pr: 1 }}
+                                sx={{ minWidth: 50, p: 1 }}
                             />
                         )}
                     </Tabs>

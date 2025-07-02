@@ -131,24 +131,33 @@ export const DEFAULT_OUTFIT_NAME: string = 'Default';
 
 // Replace trigger words with less triggering words, so image gen can succeed.
 export function substitute(input: string) {
-    const synonyms: {[key: string]: string} = {
-        'old-school': 'retro',
-        'old school': 'retro',
-        'oldschool': 'retro',
-        ' school': ' college',
-        'youngster': 'individual',
-        'child': 'individual',
-        'kid': 'individual',
-        'young ': 'youthful '
-    }
-    const regex = new RegExp(Object.keys(synonyms).join('|'), 'gi');
+    const synonyms: [string, string][] = [
+        ['old-school', 'retro'],
+        ['old school', 'retro'],
+        ['oldschool', 'retro'],
+        ['schoolgirl', 'college girl'],
+        ['school girl', 'college girl'],
+        ['schoolboy', 'college guy'],
+        ['school boy', 'college guy'],
+        ['schoolteacher', 'professor'],
+        ['school teacher', 'professor'],
+        ['school', 'college'],
+        ['youngster', 'individual'],
+        ['child', 'individual'],
+        ['kid', 'individual'],
+        ['young', 'youthful']
+    ];
 
-    return input.replace(regex, (match) => {
-        const synonym = synonyms[match.toLowerCase()];
-        return match[0] === match[0].toUpperCase()
-            ? synonym.charAt(0).toUpperCase() + synonym.slice(1)
-            : synonym;
-    });
+    for (const [key, replacement] of synonyms) {
+        const regex = new RegExp(key, 'gi');
+        input = input.replace(regex, (match) => {
+            return match[0] === match[0].toUpperCase()
+                ? replacement.charAt(0).toUpperCase() + replacement.slice(1)
+                : replacement;
+        });
+    }
+
+    return input;
 }
 
 type EmotionPack = {[key: string]: string};
@@ -170,7 +179,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     artStyle: string;
     speakers: {[key: string]: Speaker};
     loadedPacks: {[key: string]: EmotionPack}
-    generating: boolean = false;
     flagBackground: boolean = false;
 
     readonly fac = new FastAverageColor();
@@ -362,38 +370,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         };
     }
 
-    /*isUngeneratedContent(): boolean {
-        for (let character of Object.values(this.speakers)) {
-            if (!character.isRemoved) {
-                for (let outfit of Object.keys(this.chatState.generatedWardrobes[character.anonymizedId])) {
-                    if (Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedWardrobes[character.anonymizedId][outfit][emotion])) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }*/
-
-    /*generateNextImage(comboBreaker: number) {
-        this.generating = true;
-        // This is a failsafe to keep this method from cycling forever if something is going wrong.
-        if (comboBreaker > 200) {
-            this.generating = false;
-            return;
-        }
-        for (let character of Object.values(this.speakers)) {
-            for (let outfit of Object.keys(this.chatState.generatedWardrobes[character.anonymizedId])) {
-                const emotion = Object.keys(EMOTION_PROMPTS).find(emotion => !this.chatState.generatedWardrobes[character.anonymizedId][outfit][emotion])
-                if (emotion && !character.isRemoved) {
-                    this.wrapPromise(this.generateSpeakerImage(character, outfit, emotion as Emotion), `Generating ${emotion} image for ${character.name} (${outfit}).`).then(() => this.generateNextImage(comboBreaker + 1));
-                    return;
-                }
-            }
-        }
-        this.generating = false;
-    }*/
-
     async wrapPromise(promise: Promise<void>, message: string): Promise<void> {
         if (this.messageHandle) {
             this.messageHandle.addLoadingMessage(promise, message);
@@ -405,6 +381,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         await this.messenger.updateChatState(this.chatState);
     }
 
+    buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion): string {
+        return `(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`]}), ((${CHARACTER_ART_PROMPT})), (${EMOTION_PROMPTS[emotion]})`;
+    }
+
     async generateSpeakerImage(speaker: Speaker, outfit: string, emotion: Emotion): Promise<void> {
         if (!this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] || emotion == Emotion.neutral) {
             // Must first build a visual description for this character:
@@ -414,17 +394,17 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     `Chat History:\n{{messages}}\n\n` +
                     (outfit != DEFAULT_OUTFIT_NAME ? `New Outfit:\n${outfit}\n\n` : '') +
                     `Information about ${speaker.name}:\n${this.getSpeakerDescription(speaker)}\n\n` +
+                    `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
+                    `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.\n\n` +
                     `Current Instruction:\nThe goal of this task is to digest the information about ${speaker.name} and construct a comprehensive and functional visual description of ${speaker.name}. ` +
                     `The chat history may involve other characters, but this system response will fixate on ${speaker.name}; ` +
                     `the result will be fed directly into an image generator, which is unfamiliar with this character, ` +
                     `so use concise tags and keywords to convey all essential details about them, ` +
                     `presenting ample and exhaustive character appearance notes--particularly if they seem obvious: gender, race, skin tone, hair do/color, physique, body shape, outfit, fashion, setting/theme, style, etc. ` +
                     (outfit != DEFAULT_OUTFIT_NAME ?
-                        `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit (${outfit}); ` :
+                        `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit: ${outfit}. Develop authentic visual details for this outfit. Aside from that, ` :
                         `Chat history is provided for context on ${speaker.name}'s current outfit; `) +
-                    `focus on persistent details over fleeting ones, as this description will be applied to a variety of situations.\n\n` +
-                    `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
-                    `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.`,
+                    `focus on persistent physical details over fleeting ones as this description will be applied to a variety of situations.`,
                 min_tokens: 50,
                 max_tokens: 140,
                 include_history: true
@@ -444,7 +424,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log(`Generating ${emotion} image for ${speaker.name} (${outfit}).`)
         if (emotion == Emotion.neutral) {
             const imageUrl = (await this.generator.makeImage({
-                prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`]}), ((${CHARACTER_ART_PROMPT})), (${EMOTION_PROMPTS[emotion]})`),
+                prompt: substitute(this.buildArtPrompt(speaker, outfit, emotion)),
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true

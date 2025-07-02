@@ -52,18 +52,29 @@ and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzL
 
 ### Updates  
 
-2025.06.29:
+2025.07.01: 
 
-- UI revisions, mostly to make the stage usable on mobile.
-- Fixed background generation triggering too frequently.
+- Added image prompt details and warnings to each outfit tabs in the management UI.
+- Minor prompt revisions.
 
-2025.06.28:  
+2025.06.29: 
+
+- UI revisions, mostly to make the stage usable on mobile. 
+
+- Fixed background generation triggering too frequently. 
+
+2025.06.28: 
 
 - User persona support. 
+
 - Outfit management. 
+
 - Visibility toggles for characters. 
+
 - Users and multi-character or narrator bots are invisible by default, to avoid confusing situations. 
+
 - Images are now generated as-needed, which can mean a delay in initial use, but you can still manually pre-load them from character management. 
+
 - Various prompt improvements. 
 "
 
