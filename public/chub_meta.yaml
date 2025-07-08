@@ -53,7 +53,7 @@ and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzL
 
 2025.07.08:
 
-- Adding copy to/from clipboard functionality for outfits. These are still in testing, so maybe hold off on messing with them just yet.
+- Added a blank where you can modify the outfit description or copy/paste outfit details to effectively export and import them into new outfits, characters, or chats. 
 
 2025.07.01: 
 
