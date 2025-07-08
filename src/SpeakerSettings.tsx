@@ -315,7 +315,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                         const data = JSON.parse(text);
                                         // Expecting { outfit: ..., description: ... }
                                         if (typeof data !== 'object' || data === null || !('outfit' in data) || !('description' in data)) {
-                                            alert('Clipboard does not contain a valid outfit.');
+                                            // alert('Clipboard does not contain a valid outfit.');
                                             return;
                                         }
                                         const updatedMap = { ...outfitMap, [selectedOutfit]: data.outfit };
@@ -324,9 +324,9 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                             stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${selectedOutfit}`] = data.description;
                                             stage.updateChatState();
                                         }
-                                        alert('Outfit imported from clipboard!');
+                                        // alert('Outfit imported from clipboard!');
                                     } catch (err) {
-                                        alert('Failed to import outfit from clipboard: ' + err);
+                                        // alert('Failed to import outfit from clipboard: ' + err);
                                     }
                                 }}
                             >
@@ -356,7 +356,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     fontWeight: 600,
                                     border: `3px solid ${borderColor}`,
                                 }}
-                                onClick={async () => {
+                                onClick={stage.wrapPromise(async () => {
                                     const outfit = outfitMap[selectedOutfit];
                                     const descKey = speaker ? `${speaker.anonymizedId}_${selectedOutfit}` : '';
                                     const description = speaker ? stage.chatState.generatedDescriptions[descKey] : undefined;
@@ -364,11 +364,23 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     const json = JSON.stringify(exportObj, null, 2);
                                     try {
                                         await navigator.clipboard.writeText(json);
-                                        alert('Outfit copied to clipboard!');
+                                        stage.wrapPromise(// Timed promise
+                                            new Promise((resolve) => {
+                                                setTimeout(() => {
+                                                    resolve(void 0);
+                                                }, 1000);
+                                            }), "Copied to clipboard."
+                                        );
                                     } catch (err) {
-                                        alert('Failed to copy to clipboard: ' + err);
+                                        stage.wrapPromise(// Timed promise
+                                            new Promise((resolve) => {
+                                                setTimeout(() => {
+                                                    resolve(void 0);
+                                                }, 1000);
+                                            }), "Failed to copy to clipboard: " + err
+                                        );
                                     }
-                                }}
+                                }, "Copying outfit to clipboard...")}
                             >
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                     <ContentCopyIcon sx={{ fontSize: 48, mb: 1 }} />
