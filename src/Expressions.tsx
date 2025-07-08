@@ -370,7 +370,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         };
     }
 
-    async wrapPromise(promise: Promise<void>, message: string): Promise<void> {
+    async wrapPromise(promise: Promise<void>|null, message: string): Promise<void> {
+        if (!promise) {
+            promise = new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(void 0);
+                }, 3000);
+            });
+        }
         if (this.messageHandle) {
             this.messageHandle.addLoadingMessage(promise, message);
         }

@@ -315,7 +315,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                         const data = JSON.parse(text);
                                         // Expecting { outfit: ..., description: ... }
                                         if (typeof data !== 'object' || data === null || !('outfit' in data) || !('description' in data)) {
-                                            // alert('Clipboard does not contain a valid outfit.');
+                                            stage.wrapPromise(null, "Invalid outfit in clipboard.");
                                             return;
                                         }
                                         const updatedMap = { ...outfitMap, [selectedOutfit]: data.outfit };
@@ -324,9 +324,9 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                             stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${selectedOutfit}`] = data.description;
                                             stage.updateChatState();
                                         }
-                                        // alert('Outfit imported from clipboard!');
+                                        stage.wrapPromise(null, "Outfit read from clipboard.");
                                     } catch (err) {
-                                        // alert('Failed to import outfit from clipboard: ' + err);
+                                        stage.wrapPromise(null, "Failed to read from clipboard.");
                                     }
                                 }}
                             >
@@ -364,21 +364,10 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     const json = JSON.stringify(exportObj, null, 2);
                                     try {
                                         await navigator.clipboard.writeText(json);
-                                        stage.wrapPromise(// Timed promise
-                                            new Promise((resolve) => {
-                                                setTimeout(() => {
-                                                    resolve(void 0);
-                                                }, 1000);
-                                            }), "Copied to clipboard."
-                                        );
+                                        stage.wrapPromise(null, "Copied to clipboard.");
                                     } catch (err) {
-                                        stage.wrapPromise(// Timed promise
-                                            new Promise((resolve) => {
-                                                setTimeout(() => {
-                                                    resolve(void 0);
-                                                }, 1000);
-                                            }), "Failed to copy to clipboard: " + err
-                                        );
+                                        console.error("Failed to copy to clipboard:", err);
+                                        stage.wrapPromise(null, "Failed to copy to clipboard.");
                                     }
                                 }}
                             >
