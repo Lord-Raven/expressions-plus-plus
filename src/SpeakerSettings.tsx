@@ -12,6 +12,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import silhouetteUrl from './assets/silhouette.png'
 
 export interface SpeakerSettingsHandle {
@@ -286,6 +288,106 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 </Grid>
                             );
                         })}
+                        {/* Import/Export Buttons as Grid items with icons */}
+                        <Grid component={motion.div}
+                              initial={{opacity: 0, x: 50}}
+                              whileHover={{scale: 1.1, zIndex: 2000}}
+                              animate={{opacity: 1, x: 0}}
+                              transition={{duration: 0.3, delay: 0.3}}>
+                            <Button
+                                variant="outlined"
+                                sx={{
+                                    width: 120, height: 120,
+                                    p: 0,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    borderRadius: 2,
+                                    backgroundColor: "#222",
+                                    color: "#666",
+                                    fontWeight: 600,
+                                    border: `3px solid ${borderColor}`,
+                                }}
+                                component="label"
+                            >
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <FileUploadIcon sx={{ fontSize: 48, mb: 1 }} />
+                                    <span style={{ fontSize: 14 }}>Import</span>
+                                </Box>
+                                <input
+                                    type="file"
+                                    accept="application/json"
+                                    hidden
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        try {
+                                            const text = await file.text();
+                                            const data = JSON.parse(text);
+                                            // Expecting { outfit: ..., description: ... }
+                                            if (typeof data !== 'object' || data === null || !('outfit' in data) || !('description' in data)) {
+                                                alert('Invalid outfit file.');
+                                                return;
+                                            }
+                                            const updatedMap = { ...outfitMap, [selectedOutfit]: data.outfit };
+                                            updateStageWardrobeMap(updatedMap);
+                                            if (speaker) {
+                                                stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${selectedOutfit}`] = data.description;
+                                                stage.updateChatState();
+                                            }
+                                        } catch (err) {
+                                            alert('Failed to import outfit: ' + err);
+                                        }
+                                    }}
+                                />
+                            </Button>
+                        </Grid>
+                        <Grid component={motion.div}
+                              initial={{opacity: 0, x: 50}}
+                              whileHover={{scale: 1.1, zIndex: 2000}}
+                              animate={{opacity: 1, x: 0}}
+                              transition={{duration: 0.3, delay: 0.35}}>
+                            <Button
+                                variant="outlined"
+                                sx={{
+                                    width: 120, height: 120,
+                                    p: 0,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    borderRadius: 2,
+                                    backgroundColor: "#222",
+                                    color: "#666",
+                                    fontWeight: 600,
+                                    border: `3px solid ${borderColor}`,
+                                }}
+                                onClick={() => {
+                                    const outfit = outfitMap[selectedOutfit];
+                                    const descKey = speaker ? `${speaker.anonymizedId}_${selectedOutfit}` : '';
+                                    const description = speaker ? stage.chatState.generatedDescriptions[descKey] : undefined;
+                                    const exportObj = { outfit, description };
+                                    const json = JSON.stringify(exportObj, null, 2);
+                                    const blob = new Blob([json], { type: 'application/json' });
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `${selectedOutfit.replace(/[^a-z0-9_\-]/gi, '_')}_outfit.json`;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    setTimeout(() => {
+                                        document.body.removeChild(a);
+                                        URL.revokeObjectURL(url);
+                                    }, 100);
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <FileDownloadIcon sx={{ fontSize: 48, mb: 1 }} />
+                                    <span style={{ fontSize: 14 }}>Export</span>
+                                </Box>
+                            </Button>
+                        </Grid>
                     </Grid>
                 </DialogContent>
             </Dialog>
