@@ -53,7 +53,7 @@ and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzL
 
 2025.07.08:
 
-- Adding import/export functionality for outfits. These are still in testing, so maybe hold off on messing with them just yet.
+- Adding copy to/from clipboard functionality for outfits. These are still in testing, so maybe hold off on messing with them just yet.
 
 2025.07.01: 
 

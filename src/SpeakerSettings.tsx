@@ -12,8 +12,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import FileUploadIcon from '@mui/icons-material/FileUpload';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import silhouetteUrl from './assets/silhouette.png'
 
 export interface SpeakerSettingsHandle {
@@ -289,7 +289,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                             );
                         })}
                         {/* Import/Export Buttons as Grid items with icons */}
-                        <Grid component={motion.div}
+                        <Grid key='import' component={motion.div}
                               initial={{opacity: 0, x: 50}}
                               whileHover={{scale: 1.1, zIndex: 2000}}
                               animate={{opacity: 1, x: 0}}
@@ -309,41 +309,34 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     fontWeight: 600,
                                     border: `3px solid ${borderColor}`,
                                 }}
-                                component="label"
+                                onClick={async () => {
+                                    try {
+                                        const text = await navigator.clipboard.readText();
+                                        const data = JSON.parse(text);
+                                        // Expecting { outfit: ..., description: ... }
+                                        if (typeof data !== 'object' || data === null || !('outfit' in data) || !('description' in data)) {
+                                            alert('Clipboard does not contain a valid outfit.');
+                                            return;
+                                        }
+                                        const updatedMap = { ...outfitMap, [selectedOutfit]: data.outfit };
+                                        updateStageWardrobeMap(updatedMap);
+                                        if (speaker) {
+                                            stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${selectedOutfit}`] = data.description;
+                                            stage.updateChatState();
+                                        }
+                                        alert('Outfit imported from clipboard!');
+                                    } catch (err) {
+                                        alert('Failed to import outfit from clipboard: ' + err);
+                                    }
+                                }}
                             >
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <FileUploadIcon sx={{ fontSize: 48, mb: 1 }} />
-                                    <span style={{ fontSize: 14 }}>Import</span>
+                                    <ContentPasteIcon sx={{ fontSize: 48, mb: 1 }} />
+                                    <span style={{ fontSize: 14 }}>Paste from Clipboard</span>
                                 </Box>
-                                <input
-                                    type="file"
-                                    accept="application/json"
-                                    hidden
-                                    onChange={async (e) => {
-                                        const file = e.target.files?.[0];
-                                        if (!file) return;
-                                        try {
-                                            const text = await file.text();
-                                            const data = JSON.parse(text);
-                                            // Expecting { outfit: ..., description: ... }
-                                            if (typeof data !== 'object' || data === null || !('outfit' in data) || !('description' in data)) {
-                                                alert('Invalid outfit file.');
-                                                return;
-                                            }
-                                            const updatedMap = { ...outfitMap, [selectedOutfit]: data.outfit };
-                                            updateStageWardrobeMap(updatedMap);
-                                            if (speaker) {
-                                                stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${selectedOutfit}`] = data.description;
-                                                stage.updateChatState();
-                                            }
-                                        } catch (err) {
-                                            alert('Failed to import outfit: ' + err);
-                                        }
-                                    }}
-                                />
                             </Button>
                         </Grid>
-                        <Grid component={motion.div}
+                        <Grid key='export' component={motion.div}
                               initial={{opacity: 0, x: 50}}
                               whileHover={{scale: 1.1, zIndex: 2000}}
                               animate={{opacity: 1, x: 0}}
@@ -363,28 +356,23 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     fontWeight: 600,
                                     border: `3px solid ${borderColor}`,
                                 }}
-                                onClick={() => {
+                                onClick={async () => {
                                     const outfit = outfitMap[selectedOutfit];
                                     const descKey = speaker ? `${speaker.anonymizedId}_${selectedOutfit}` : '';
                                     const description = speaker ? stage.chatState.generatedDescriptions[descKey] : undefined;
                                     const exportObj = { outfit, description };
                                     const json = JSON.stringify(exportObj, null, 2);
-                                    const blob = new Blob([json], { type: 'application/json' });
-                                    const url = URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = url;
-                                    a.download = `${selectedOutfit.replace(/[^a-z0-9_\-]/gi, '_')}_outfit.json`;
-                                    document.body.appendChild(a);
-                                    a.click();
-                                    setTimeout(() => {
-                                        document.body.removeChild(a);
-                                        URL.revokeObjectURL(url);
-                                    }, 100);
+                                    try {
+                                        await navigator.clipboard.writeText(json);
+                                        alert('Outfit copied to clipboard!');
+                                    } catch (err) {
+                                        alert('Failed to copy to clipboard: ' + err);
+                                    }
                                 }}
                             >
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <FileDownloadIcon sx={{ fontSize: 48, mb: 1 }} />
-                                    <span style={{ fontSize: 14 }}>Export</span>
+                                    <ContentCopyIcon sx={{ fontSize: 48, mb: 1 }} />
+                                    <span style={{ fontSize: 14 }}>Copy to Clipboard</span>
                                 </Box>
                             </Button>
                         </Grid>
