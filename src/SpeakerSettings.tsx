@@ -12,8 +12,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import silhouetteUrl from './assets/silhouette.png'
 
 export interface SpeakerSettingsHandle {
@@ -288,96 +286,44 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 </Grid>
                             );
                         })}
-                        {/* Import/Export Buttons as Grid items with icons */}
-                        <Grid key='import' component={motion.div}
-                              initial={{opacity: 0, x: 50}}
-                              whileHover={{scale: 1.1, zIndex: 2000}}
-                              animate={{opacity: 1, x: 0}}
-                              transition={{duration: 0.3, delay: 0.3}}>
-                            <Button
-                                variant="outlined"
-                                sx={{
-                                    width: 120, height: 120,
-                                    p: 0,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    borderRadius: 2,
-                                    backgroundColor: "#222",
-                                    color: "#666",
-                                    fontWeight: 600,
-                                    border: `3px solid ${borderColor}`,
-                                }}
-                                onClick={async () => {
-                                    try {
-                                        const text = await navigator.clipboard.readText();
-                                        const data = JSON.parse(text);
-                                        // Expecting { outfit: ..., description: ... }
-                                        if (typeof data !== 'object' || data === null || !('outfit' in data) || !('description' in data)) {
-                                            stage.wrapPromise(null, "Invalid outfit in clipboard.");
-                                            return;
-                                        }
-                                        const updatedMap = { ...outfitMap, [selectedOutfit]: data.outfit };
-                                        updateStageWardrobeMap(updatedMap);
-                                        if (speaker) {
-                                            stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${selectedOutfit}`] = data.description;
-                                            stage.updateChatState();
-                                        }
-                                        stage.wrapPromise(null, "Outfit read from clipboard.");
-                                    } catch (err) {
-                                        stage.wrapPromise(null, "Failed to read from clipboard.");
-                                    }
-                                }}
-                            >
-                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <ContentPasteIcon sx={{ fontSize: 48, mb: 1 }} />
-                                    <span style={{ fontSize: 14 }}>Paste from Clipboard</span>
-                                </Box>
-                            </Button>
-                        </Grid>
-                        <Grid key='export' component={motion.div}
-                              initial={{opacity: 0, x: 50}}
-                              whileHover={{scale: 1.1, zIndex: 2000}}
-                              animate={{opacity: 1, x: 0}}
-                              transition={{duration: 0.3, delay: 0.35}}>
-                            <Button
-                                variant="outlined"
-                                sx={{
-                                    width: 120, height: 120,
-                                    p: 0,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    borderRadius: 2,
-                                    backgroundColor: "#222",
-                                    color: "#666",
-                                    fontWeight: 600,
-                                    border: `3px solid ${borderColor}`,
-                                }}
-                                onClick={async () => {
-                                    const outfit = outfitMap[selectedOutfit];
-                                    const descKey = speaker ? `${speaker.anonymizedId}_${selectedOutfit}` : '';
-                                    const description = speaker ? stage.chatState.generatedDescriptions[descKey] : undefined;
-                                    const exportObj = { outfit, description };
-                                    const json = JSON.stringify(exportObj, null, 2);
-                                    try {
-                                        await navigator.clipboard.writeText(json);
-                                        stage.wrapPromise(null, "Copied to clipboard.");
-                                    } catch (err) {
-                                        console.error("Failed to copy to clipboard:", err);
-                                        stage.wrapPromise(null, "Failed to copy to clipboard.");
-                                    }
-                                }}
-                            >
-                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <ContentCopyIcon sx={{ fontSize: 48, mb: 1 }} />
-                                    <span style={{ fontSize: 14 }}>Copy to Clipboard</span>
-                                </Box>
-                            </Button>
-                        </Grid>
+                        
                     </Grid>
+                    {/* JSON sync textfield for import/export */}
+                    <Box sx={{ mt: 3 }}>
+                    <TextField
+                        label="Outfit JSON (edit or paste to import)"
+                        fullWidth
+                        value={(() => {
+                            const outfit = outfitMap[selectedOutfit];
+                            const descKey = speaker ? `${speaker.anonymizedId}_${selectedOutfit}` : '';
+                            const description = speaker ? stage.chatState.generatedDescriptions[descKey] : undefined;
+                            return JSON.stringify({ outfit, description }, null, 2);
+                        })()}
+                        onChange={e => {
+                            let val = e.target.value;
+                            try {
+                                const data = JSON.parse(val);
+                                if (typeof data === 'object' && data && 'outfit' in data && 'description' in data) {
+                                    const updatedMap = { ...outfitMap, [selectedOutfit]: data.outfit };
+                                    updateStageWardrobeMap(updatedMap);
+                                    if (speaker) {
+                                        stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${selectedOutfit}`] = data.description;
+                                        stage.updateChatState();
+                                    }
+                                }
+                            } catch (err) {
+                                console.error("Invalid JSON format", err);
+                                stage.wrapPromise(null, "Invalid outfit update.");
+                            }
+                        }}
+                        sx={{ mt: 2, background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
+                        InputProps={{
+                            style: { color: '#eee', fontFamily: 'monospace' },
+                        }}
+                        InputLabelProps={{ style: { color: '#aaa' } }}
+                        variant="outlined"
+                    />
+                </Box>
                 </DialogContent>
             </Dialog>
             {/* Confirmation dialog */}
