@@ -291,13 +291,13 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                     {/* JSON sync textfield for import/export */}
                     <Box sx={{ mt: 3 }}>
                     <TextField
-                        label="Outfit JSON (edit or paste to import)"
+                        label="Outfit JSON (edit description or copy/paste to export/import)"
                         fullWidth
                         value={(() => {
                             const outfit = outfitMap[selectedOutfit];
                             const descKey = speaker ? `${speaker.anonymizedId}_${selectedOutfit}` : '';
                             const description = speaker ? stage.chatState.generatedDescriptions[descKey] : undefined;
-                            return JSON.stringify({ outfit, description }, null, 2);
+                            return JSON.stringify({ description, outfit }, null, 2);
                         })()}
                         onChange={e => {
                             let val = e.target.value;
@@ -317,10 +317,6 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                             }
                         }}
                         sx={{ mt: 2, background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
-                        InputProps={{
-                            style: { color: '#eee', fontFamily: 'monospace' },
-                        }}
-                        InputLabelProps={{ style: { color: '#aaa' } }}
                         variant="outlined"
                     />
                 </Box>
