@@ -356,7 +356,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     fontWeight: 600,
                                     border: `3px solid ${borderColor}`,
                                 }}
-                                onClick={stage.wrapPromise(async () => {
+                                onClick={async () => {
                                     const outfit = outfitMap[selectedOutfit];
                                     const descKey = speaker ? `${speaker.anonymizedId}_${selectedOutfit}` : '';
                                     const description = speaker ? stage.chatState.generatedDescriptions[descKey] : undefined;
@@ -380,7 +380,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                             }), "Failed to copy to clipboard: " + err
                                         );
                                     }
-                                }, "Copying outfit to clipboard...")}
+                                }}
                             >
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                     <ContentCopyIcon sx={{ fontSize: 48, mb: 1 }} />
