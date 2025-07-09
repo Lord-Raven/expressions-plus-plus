@@ -14,12 +14,12 @@ You can add this stage to any chat by searching for it under Stages in Chat Sett
 
 ### No Expression Pack Support 
 
-_However_, unlike that stage, this one doesn't actually support expression packs; they appear to currently be locked to the official stage. Write your congressperson. 
+_Unlike_ that stage, this one doesn't actually support expression packs; they appear to currently be locked to the official stage. Write your congressperson. 
 When this changes, I'll update this stage to use the character's pack by default.  
 
 ### So, Uh, What Is This, Then? 
 
-This stage generates its own expression images by producing a visual description of each character and making image generation calls to produce various emotional states.  
+This stage generates its own expression images by crafting a visual description of each character and making image generation calls to produce various emotional states.  
 
 The system works with any single-character bot or even personae, but _it uses lots of image generation credits_ (unless you have a Mars subscription, which is unlimited), and your mileage may vary quality-wise. 
 Images may initially take time to appear as they must be generated; they are lazy loaded, so they don't hold up the chat so much. 
@@ -48,6 +48,12 @@ From the configuration menu, you can also alter the basic art style element of t
 
 This stage leverages [SamLowe/roberta-base-go_emotions](https://huggingface.co/SamLowe/roberta-base-go_emotions) for emotion inference ([my HF space for this](https://huggingface.co/spaces/Ravenok/emotions)) 
 and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0) for zero-shot classification ([my HF space for that](https://huggingface.co/spaces/Ravenok/statosphere-backend)).
+
+### Image Generation and Sensitive Material 
+
+This stage doesn't directly contain any NSFW material and doesn't do anything to prompt NSFW images, but a lot of the content is dependent upon the nature of 
+the characters and narrative that are being depicted. Chub's image generation will outright fail on triggering words or phrases that it deems sensitive; 
+the system appears to use a rather naive test for this purpose, and because the stage relies on generated art prompts, I 
 
 ### Updates  
 

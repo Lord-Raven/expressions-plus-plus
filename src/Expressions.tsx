@@ -271,7 +271,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         for (let speaker of Object.values(this.speakers)) {
             if (!(speaker.anonymizedId in this.chatState.speakerVisible)) {
-                this.chatState.speakerVisible[speaker.anonymizedId] = !('chatProfile' in speaker) && (await this.singleSpeakerCheck(speaker));
+                this.chatState.speakerVisible[speaker.anonymizedId] = !('chatProfile' in speaker);// && (await this.singleSpeakerCheck(speaker));
             }
         }
 
