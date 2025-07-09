@@ -235,7 +235,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                             />
                         )}
                     </Tabs>
-                    <Grid container spacing={1} justifyContent="center" sx={{mt: 2}}>
+                    <Grid container spacing={1} justifyContent="center" sx={{mt: 2, overflow: "hidden"}}>
                         {Object.keys(EMOTION_PROMPTS).map((emotion, index) => {
                             const image = stage.getSpeakerImage(
                                 speaker.anonymizedId,
