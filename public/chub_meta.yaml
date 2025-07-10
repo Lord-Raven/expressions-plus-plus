@@ -59,7 +59,7 @@ the system appears to use a rather naive test for this purpose, and because the 
 
 2025.07.10: 
 
-- Messing with an initial outfit map to allow a botmaker to pre-populate outfits for their character, in lieu of expression packs. I'll document the feature after I test.
+- Started to do some outfit initialization configuration and then rolled it back; Lore confirmed that expression pack support are coming to other stages soon, so I will wait patiently for that.
 
 2025.07.08: 
 
@@ -127,11 +127,6 @@ config_schema:
       description: A brief description of the desired character art style.
       type: string
       default: "Bold, visual novel style illustration, clean lines"
-    initialOutfitMap:
-      title: Initial Outfit Map
-      description: A JSON object containing the initial outfit map for the primary character. This can be used to populate a default set of images you've pre-generated.
-      type: string
-      default: "{}"
 
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
 

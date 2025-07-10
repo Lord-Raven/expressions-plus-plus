@@ -1,5 +1,4 @@
 import {
-    Character,
     StageBase,
     StageResponse,
     InitialData,
@@ -233,7 +232,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 if (this.chatState.generatedWardrobes[charAnonId] && this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME] && Object.keys(this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME]).length > 0) {
                     console.log('Character has a wardrobe.');
                     this.anyPack = true;
-                } else if (this.generateCharacters && ('partial_extensions' in speaker) && (speaker as Character).partial_extensions?.chub?.extensions?.config?.initialOutfitMap) {
+                /*} else if (this.generateCharacters && ('partial_extensions' in speaker) && (speaker as Character).partial_extensions?.chub?.extensions?.config?.initialOutfitMap) {
                     const initialMap: any = (speaker as Character).partial_extensions.chub.extensions.config.initialOutfitMap;
                     console.log(`Character has an initial outfit map: ${initialMap}`);
                     const emotionMap = Object.entries(initialMap).map(([name, outfit]: [string, any]) => {
@@ -247,7 +246,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: {}, ...emotionMap};
                     for (let outfitName in Object.keys(emotionMap)) {
                         this.chatState.generatedDescriptions[`${charAnonId}_${outfitName}`] = initialMap[outfitName].description ?? '';
-                    }
+                    }*/
                 } else {
                     console.log('Initializing a new wardrobe.')
                     this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: {}};
