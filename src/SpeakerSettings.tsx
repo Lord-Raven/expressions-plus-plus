@@ -294,17 +294,17 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                         label="Outfit JSON (edit description or copy/paste to export/import)"
                         fullWidth
                         value={(() => {
-                            const outfit = outfitMap[selectedOutfit];
+                            const images = outfitMap[selectedOutfit];
                             const descKey = speaker ? `${speaker.anonymizedId}_${selectedOutfit}` : '';
                             const description = speaker ? stage.chatState.generatedDescriptions[descKey] : undefined;
-                            return JSON.stringify({ description, outfit }, null, 2);
+                            return JSON.stringify({ description, images }, null, 2);
                         })()}
                         onChange={e => {
                             let val = e.target.value;
                             try {
                                 const data = JSON.parse(val);
-                                if (typeof data === 'object' && data && 'outfit' in data && 'description' in data) {
-                                    const updatedMap = { ...outfitMap, [selectedOutfit]: data.outfit };
+                                if (typeof data === 'object' && data && 'images' in data && 'description' in data) {
+                                    const updatedMap = { ...outfitMap, [selectedOutfit]: data.images };
                                     updateStageWardrobeMap(updatedMap);
                                     if (speaker) {
                                         stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${selectedOutfit}`] = data.description;

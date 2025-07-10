@@ -1,4 +1,5 @@
 import {
+    Character,
     StageBase,
     StageResponse,
     InitialData,
@@ -20,7 +21,6 @@ import SpeakerSettings, {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
 
 type ChatStateType = {
     generatedWardrobes:{[key: string]: {[key: string]: EmotionPack}};
-    generatedPacks:{[key: string]: EmotionPack};
     selectedOutfit:{[key: string]: string};
     generatedDescriptions:{[key: string]: string};
     speakerVisible:{[key: string]: boolean};
@@ -87,7 +87,7 @@ export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     neutral: 'calm expression',
-    amusement: 'subtle smirk, bemused expression',
+    amusement: 'subtle smirk, amused expression',
     anger: 'enraged, angry expression',
     annoyance: 'annoyed, dismayed expression',
     confusion: 'stunned, baffled, confused expression',
@@ -211,7 +211,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         this.chatState = {
             generatedWardrobes: chatState?.generatedWardrobes ?? {},
-            generatedPacks: chatState?.generatedPacks ?? {},
             selectedOutfit: chatState?.selectedOutfit ?? {},
             generatedDescriptions: chatState?.generatedDescriptions ?? {},
             speakerVisible: chatState?.speakerVisible ?? {}
@@ -225,19 +224,30 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Look at characters, set up packs, and initialize values that aren't present in message/chat state
         Object.keys(this.speakers).forEach((charAnonId: string) => {
-            if (!this.speakers[charAnonId].isRemoved) {
+            const speaker = this.speakers[charAnonId];
+            if (!speaker.isRemoved) {
                 /*if (characters[charAnonId]?.partial_extensions?.chub?.expressions?.expressions != null) {
                     this.loadedPacks[charAnonId] = characters[charAnonId].partial_extensions?.chub?.expressions?.expressions;
                     this.anyPack = true;
                 } else*/
-                if (this.chatState.generatedWardrobes[charAnonId] && this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME]) {
+                if (this.chatState.generatedWardrobes[charAnonId] && this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME] && Object.keys(this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME]).length > 0) {
                     console.log('Character has a wardrobe.');
                     this.anyPack = true;
-                } else if (this.chatState.generatedPacks[charAnonId]) {
-                    // TODO: Remove this; it is a legacy feature.
-                    console.log('Character has a legacy pack.');
-                    this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: this.chatState.generatedPacks[charAnonId]}
-                    this.chatState.selectedOutfit[charAnonId] = DEFAULT_OUTFIT_NAME;
+                } else if (this.generateCharacters && ('partial_extensions' in speaker) && (speaker as Character).partial_extensions?.chub?.extensions?.config?.initialOutfitMap) {
+                    const initialMap: any = (speaker as Character).partial_extensions.chub.extensions.config.initialOutfitMap;
+                    console.log(`Character has an initial outfit map: ${initialMap}`);
+                    const emotionMap = Object.entries(initialMap).map(([name, outfit]: [string, any]) => {
+                        if (outfit.images && Object.keys(outfit.images).length > 0) {
+                            return {[name]: outfit.images};
+                        } else {
+                            console.warn(`Outfit ${name} for character ${charAnonId} has no images.`);
+                            return {[name]: {}};
+                        }
+                    }).filter((item) => Object.keys(item).length > 0).reduce((acc, curr) => ({...acc, ...curr}), {});
+                    this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: {}, ...emotionMap};
+                    for (let outfitName in Object.keys(emotionMap)) {
+                        this.chatState.generatedDescriptions[`${charAnonId}_${outfitName}`] = initialMap[outfitName].description ?? '';
+                    }
                 } else {
                     console.log('Initializing a new wardrobe.')
                     this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: {}};

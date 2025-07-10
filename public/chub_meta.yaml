@@ -57,6 +57,10 @@ the system appears to use a rather naive test for this purpose, and because the 
 
 ### Updates  
 
+2025.07.10: 
+
+- Messing with an initial outfit map to allow a botmaker to pre-populate outfits for their character, in lieu of expression packs. I'll document the feature after I test.
+
 2025.07.08: 
 
 - Added a blank where you can modify the outfit description or copy/paste outfit details to effectively export and import them into new outfits, characters, or chats. 
@@ -109,7 +113,7 @@ config_schema:
     generateCharacters:
       title: Generate Character Art
       description: Automatically generate an expression pack for characters (will expend daily credits); this is basically all the stage currently does, so maybe leave this one on.
-      type: boolean
+      type: string
       default: "True"
       enum: ["True", "False"]
     generateBackgrounds:
@@ -123,6 +127,11 @@ config_schema:
       description: A brief description of the desired character art style.
       type: string
       default: "Bold, visual novel style illustration, clean lines"
+    initialOutfitMap:
+      title: Initial Outfit Map
+      description: A JSON object containing the initial outfit map for the primary character. This can be used to populate a default set of images you've pre-generated.<br>{"Outfit Name": {"description": "Image prompt for this outfit",  "images": {"neutral": "imageUrl"}}}
+      type: string
+      default: '{}'
 
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
 
