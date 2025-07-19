@@ -191,12 +191,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     // Not saved:
     emotionPipeline: any = null;
     zeroShotPipeline: any = null;
-    anyPack: boolean;
     generateCharacters: boolean;
     generateBackgrounds: boolean;
     artStyle: string;
     speakers: {[key: string]: Speaker};
-    loadedPacks: {[key: string]: EmotionPack}
     flagBackground: boolean = false;
     wardrobes: {[key: string]: WardrobeType} = {};
     alphaMode: boolean;
@@ -236,8 +234,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             speakerVisible: chatState?.speakerVisible ?? {}
         };
 
-        this.loadedPacks = {};
-        this.anyPack = false;
         this.generateCharacters = (config?.generateCharacters ?? "True") == "True";
         this.generateBackgrounds = (config?.generateBackgrounds ?? "True") == "True";
         this.alphaMode = (config?.alphaMode ?? "False") == "True";
@@ -264,6 +260,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     return acc;
                 }, {});
             }
+            // Initialize wardrobes for unloaded characters
+            for (let speakerId in Object.keys(this.speakers)) {
+                this.wardrobes[speakerId] = this.wardrobes[speakerId] ?? {
+                    speakerId: speakerId,
+                    outfits: {}
+                } as WardrobeType;
+            }
             console.log(this.wardrobes);
         }
 
@@ -271,44 +274,28 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         Object.keys(this.speakers).forEach((charAnonId: string) => {
             const speaker = this.speakers[charAnonId];
             if (!speaker.isRemoved) {
-                /*if (characters[charAnonId]?.partial_extensions?.chub?.expressions?.expressions != null) {
-                    this.loadedPacks[charAnonId] = characters[charAnonId].partial_extensions?.chub?.expressions?.expressions;
-                    this.anyPack = true;
-                } else*/
-                if (this.chatState.generatedWardrobes[charAnonId] && this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME] && Object.keys(this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME]).length > 0) {
+                if (this.alphaMode && characters[charAnonId]?.partial_extensions?.chub?.expressions?.expressions != null) {
+                    console.log('Character has an expressions pack.');
+                    // Generate outfit entries for each expressions pack, marked non-generated.
+                    for (let expressionPack of Object.values([characters[charAnonId].partial_extensions.chub.expressions])) {
+                        this.wardrobes[charAnonId].outfits[expressionPack.version] = {
+                            outfitName: expressionPack.version,
+                            images: expressionPack.expressions,
+                            manualDescription: expressionPack.version,
+                            generatedDescription: '',
+                            generated: false,
+                            triggerWords: expressionPack.version,
+                        } as OutfitType;
+                    }
+                    console.log('Loaded an expression pack');
+                    console.log(this.wardrobes);
+                } else if (this.chatState.generatedWardrobes[charAnonId] && this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME] && Object.keys(this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME]).length > 0) {
                     console.log('Character has a wardrobe.');
-                    this.anyPack = true;
-                /*} else if (this.generateCharacters && ('partial_extensions' in speaker) && (speaker as Character).partial_extensions?.chub?.extensions?.config?.initialOutfitMap) {
-                    const initialMap: any = (speaker as Character).partial_extensions.chub.extensions.config.initialOutfitMap;
-                    console.log(`Character has an initial outfit map: ${initialMap}`);
-                    const emotionMap = Object.entries(initialMap).map(([name, outfit]: [string, any]) => {
-                        if (outfit.images && Object.keys(outfit.images).length > 0) {
-                            return {[name]: outfit.images};
-                        } else {
-                            console.warn(`Outfit ${name} for character ${charAnonId} has no images.`);
-                            return {[name]: {}};
-                        }
-                    }).filter((item) => Object.keys(item).length > 0).reduce((acc, curr) => ({...acc, ...curr}), {});
-                    this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: {}, ...emotionMap};
-                    for (let outfitName in Object.keys(emotionMap)) {
-                        this.chatState.generatedDescriptions[`${charAnonId}_${outfitName}`] = initialMap[outfitName].description ?? '';
-                    }*/
                 } else {
                     console.log('Initializing a new wardrobe.')
                     this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: {}};
                     this.chatState.selectedOutfit[charAnonId] = DEFAULT_OUTFIT_NAME;
-                    this.anyPack = this.anyPack || this.generateCharacters;
                 }
-                /*if (config != null && config.selected != null
-                        && config.selected?.hasOwnProperty(charAnonId)
-                        && config.selected[charAnonId] != null
-                        && config.selected[charAnonId] != ''
-                        && config.selected[charAnonId].toLowerCase() != 'default'
-                        && characters[charAnonId]?.partial_extensions.chub.alt_expressions != null
-                        && config.selected[charAnonId] in characters[charAnonId]?.partial_extensions.chub.alt_expressions) {
-                    this.loadedPacks[charAnonId] = characters[charAnonId].partial_extensions
-                        .chub.alt_expressions[config.selected![charAnonId]].expressions;
-                }*/
             }
         });
     }
@@ -332,7 +319,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
 
         return {
-            success: this.anyPack,
+            success: true,
             chatState: this.chatState,
             messageState: this.messageState,
             error: null
