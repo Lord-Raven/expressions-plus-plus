@@ -17,6 +17,7 @@ import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
 import {FastAverageColor} from "fast-average-color";
 import { AnimatePresence } from "framer-motion";
 import SpeakerSettings, {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
+import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
 
 type ChatStateType = {
     generatedWardrobes:{[key: string]: {[key: string]: EmotionPack}};
@@ -648,14 +649,24 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }
             }>
                 <ThemeProvider theme={darkTheme}>
-                    <SpeakerSettings
-                        register={(handle) => {this.speakerSettingsHandle = handle;}}
-                        stage={this}
-                        borderColor={this.messageState.borderColor}
-                        onRegenerate={(char, outfit, emotion) => {
-                            this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${outfit}).`);
-                        }}
-                    />
+                    {this.alphaMode ? (
+                        <NewSpeakerSettings
+                            register={(handle) => {this.speakerSettingsHandle = handle;}}
+                            stage={this}
+                            borderColor={this.messageState.borderColor}
+                            onRegenerate={(char, outfit, emotion) => {
+                                this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${outfit}).`);
+                            }}
+                            />) : (
+                        <SpeakerSettings
+                            register={(handle) => {this.speakerSettingsHandle = handle;}}
+                            stage={this}
+                            borderColor={this.messageState.borderColor}
+                            onRegenerate={(char, outfit, emotion) => {
+                                this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${outfit}).`);
+                            }}
+                        />)
+                    }
                     <MessageQueue register={(handle) => {this.messageHandle = handle;}} borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}/>
                     {/* Regenerate buttons for each character */}
                     <div style={{display: "flex", flexDirection: "column", gap: 10, alignItems: "end"}}>

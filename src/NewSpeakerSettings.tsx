@@ -7,18 +7,16 @@ import {
     Box, Button, Typography, TextField, IconButton, Tooltip
 } from "@mui/material";
 import { Grid, Tabs, Tab } from "@mui/material";
+import LockIcon from "@mui/icons-material/Lock";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import silhouetteUrl from './assets/silhouette.png'
+import { SpeakerSettingsHandle } from "./SpeakerSettings";
 
-export interface SpeakerSettingsHandle {
-    setSpeaker: (speaker: Speaker|null) => void;
-}
-
-type SpeakerSettingsProps = {
+type NewSpeakerSettingsProps = {
     register?: (handle: SpeakerSettingsHandle) => void;
     stage: any;
     borderColor: string;
@@ -39,7 +37,11 @@ const OutfitInfoIcon = ({
     let Icon = InfoOutlinedIcon;
     let color: "primary" | "warning" | "error" = "primary";
 
-    if (isErrored) {
+    if (isLocked) {
+        Icon = LockIcon;
+        color = "primary"; // Locked outfits are not considered errors or warnings, just informational.
+        description = "This outfit was built by an expression pack and cannot be altered.";
+    } else if (isErrored) {
         Icon = ErrorOutlineIcon;
         color = "error";
     } else if (isAltered) {
@@ -64,7 +66,7 @@ const OutfitInfoIcon = ({
     );
 };
 
-const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
+const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
     const [speaker, setSpeaker] = useState<Speaker|null>(null);
     const [selectedOutfit, setSelectedOutfit] = useState<string>(DEFAULT_OUTFIT_NAME);
     const [confirmEmotion, setConfirmEmotion] = useState<Emotion | null>(null);
@@ -74,8 +76,8 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
 
     useEffect(() => {
         setSelectedOutfit((speaker ? stage.chatState.selectedOutfit[speaker.anonymizedId] : null) ?? DEFAULT_OUTFIT_NAME);
-        setOutfitMap((speaker ? stage.chatState.generatedWardrobes[speaker.anonymizedId] : {}) ?? {[DEFAULT_OUTFIT_NAME]: {}});
-        setOutfitNames(Object.keys(speaker ? stage.chatState.generatedWardrobes[speaker.anonymizedId] : {[DEFAULT_OUTFIT_NAME]: {}}) ?? {[DEFAULT_OUTFIT_NAME]: {}});
+        setOutfitMap((speaker ? stage.wardrobes[speaker.anonymizedId] : {}) ?? {[DEFAULT_OUTFIT_NAME]: {}});
+        setOutfitNames(Object.keys(speaker ? stage.wardrobes[speaker.anonymizedId] : {[DEFAULT_OUTFIT_NAME]: {}}) ?? {[DEFAULT_OUTFIT_NAME]: {}});
     }, [speaker]);
 
     useEffect(() => {
@@ -85,10 +87,10 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
 
     const updateStageWardrobeMap = (newMap: {[key: string]: any}) => {
         if (speaker) {
-            stage.chatState.generatedWardrobes[speaker.anonymizedId] = newMap;
+            stage.wardrobes[speaker.anonymizedId] = newMap;
             setOutfitMap(newMap);
             setOutfitNames(Object.keys(newMap));
-            if (!(stage.chatState.selectedOutfit[speaker.anonymizedId] in stage.chatState.generatedWardrobes[speaker.anonymizedId])) {
+            if (!(stage.chatState.selectedOutfit[speaker.anonymizedId] in stage.wardrobes[speaker.anonymizedId])) {
                 stage.chatState.selectedOutfit[speaker.anonymizedId] = DEFAULT_OUTFIT_NAME
             }
             stage.updateChatState();
@@ -114,6 +116,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
     }) => {
         const [editing, setEditing] = useState(false);
         const [value, setValue] = useState(name);
+        const generated = stage.wardrobes[speaker?.anonymizedId || '']?.[name]?.generated || false;
 
         return editing ? (
             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -143,12 +146,12 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                 </IconButton>
             </Box>
         ) : (
-            <span onDoubleClick={() => setEditing(name != DEFAULT_OUTFIT_NAME)}>
+            <span onDoubleClick={() => setEditing(generated)}>
                 {name}
                 {speaker && stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${value}`] && (
                     <OutfitInfoIcon
                         description={stage.buildArtPrompt(speaker, value, Emotion.neutral)}
-                        isLocked={false}
+                        isLocked={!generated}
                         isAltered={stage.buildArtPrompt(speaker, value, Emotion.neutral) != substitute(stage.buildArtPrompt(speaker, value, Emotion.neutral))}
                         isErrored={stage.getSpeakerImage(speaker.anonymizedId, value, Emotion.neutral, silhouetteUrl) == ''}/>
                 )}
@@ -240,6 +243,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                     </Tabs>
                     <Grid container spacing={1} justifyContent="center" sx={{mt: 2, overflow: "hidden"}}>
                         {Object.keys(EMOTION_PROMPTS).map((emotion, index) => {
+                            const generated: boolean = stage.wardrobes[speaker.anonymizedId]?.[selectedOutfit]?.generated || false;
                             const image = stage.getSpeakerImage(
                                 speaker.anonymizedId,
                                 selectedOutfit ?? DEFAULT_OUTFIT_NAME,
@@ -250,6 +254,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                             const isDefault = (emotion != Emotion.neutral && image == stage.getSpeakerImage(speaker.anonymizedId, selectedOutfit, Emotion.neutral)) || (image == silhouetteUrl);
 
                             return (
+                                (isDefault && !generated ? (
                                 <Grid key={emotion} component={motion.div}
                                       initial={{opacity: 0, x: 50}}
                                       whileHover={{scale: 1.1, zIndex: 2000}}
@@ -273,7 +278,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                             textShadow: "0 1px 2px #fff",
                                             border: `3px solid ${borderColor}`,
                                         }}
-                                        onClick={() => setConfirmEmotion(emotion as Emotion)}
+                                        onClick={() => !generated && setConfirmEmotion(emotion as Emotion)}
                                     >
                                       <span style={{
                                           background: "rgba(255,255,255,0.7)",
@@ -286,7 +291,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                         {emotion}
                                       </span>
                                     </Button>
-                                </Grid>
+                                </Grid>) : (<></>))
                             );
                         })}
                         
@@ -364,4 +369,4 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
     </>);
 };
 
-export default SpeakerSettings;
+export default NewSpeakerSettings;
