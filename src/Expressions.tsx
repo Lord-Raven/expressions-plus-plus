@@ -616,6 +616,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getSpeakerImage(anonymizedId: string, outfit: string, emotion: Emotion, defaultUrl: string): string {
+        if (this.alphaMode) {
+            return this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[EMOTION_MAPPING[emotion] ?? emotion] ?? this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[Emotion.neutral] ?? defaultUrl;
+        }
         return this.chatState.generatedWardrobes[anonymizedId][(outfit && outfit in this.chatState.generatedWardrobes[anonymizedId]) ? outfit : DEFAULT_OUTFIT_NAME][EMOTION_MAPPING[emotion] ?? emotion] ?? this.chatState.generatedWardrobes[anonymizedId][outfit][Emotion.neutral] ?? defaultUrl;
     }
 

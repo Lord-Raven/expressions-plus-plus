@@ -40,7 +40,6 @@ const OutfitInfoIcon = ({
     if (isLocked) {
         Icon = LockIcon;
         color = "primary"; // Locked outfits are not considered errors or warnings, just informational.
-        description = "This outfit was built by an expression pack and cannot be altered.";
     } else if (isErrored) {
         Icon = ErrorOutlineIcon;
         color = "error";
@@ -51,6 +50,7 @@ const OutfitInfoIcon = ({
 
     return (
         <Tooltip title={<>Prompt used for image generation:<br/><br/>{description}
+                    {isLocked && (<><br/><br/><Icon fontSize="inherit" color={color} />This outfit was built by an expression pack and cannot be altered.</>)}
                     {isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt failed to generate an image and may contain words that could trigger sensitive content. Regenerate the neutral image to build a new prompt and try again. Consider reporting recurring false positives to the stage developer.</>)}
                     {isAltered && !isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt was automatically altered from its original form to avoid triggering a sensitive content failure; if the result appears fine, you may disregard this warning.</>)}
                     </>}
