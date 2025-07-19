@@ -9,6 +9,10 @@ tagline: "Shows character emotions based on a set of images.++"
 
 # A longer explanation. Supports Markdown format.
 creator_notes: "
+_Hey, can you all just ignore it if this randomly breaks while I work on it? I'm developing from my phone, 
+and I'm too lazy to properly spin up a fork to experiment with new stuff. 
+I'm putting some safeguards in place but no promises. Sorry for the inconvenience._  
+  
 This is a shameless knock-off of the [official Expression Packs stage](https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d). 
 You can add this stage to any chat by searching for it under Stages in Chat Settings, but you may want to read some of this beforehand.  
 
@@ -56,6 +60,11 @@ the characters and narrative that are being depicted. Chub's image generation wi
 the system appears to use a rather naive test for this purpose, and because the stage relies on generated art prompts, I 
 
 ### Updates  
+
+2025.07.18:
+
+- Please ignore what is bound to be a series of potentially breaking updates as I experiment with the new storage API. 
+I am attempting to gate this off so it doesn't break the entire stage, but I'm playing real loose with it. 
 
 2025.07.10: 
 
@@ -127,6 +136,12 @@ config_schema:
       description: A brief description of the desired character art style.
       type: string
       default: "Bold, visual novel style illustration, clean lines"
+    alphaMode:
+      title: Alpha Mode
+      description: Enable experimental stuff. Maybe don't use this if your username isn't Ravenok.
+      type: string
+      default: "False"
+      enum: ["True", "False"]
 
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
 
