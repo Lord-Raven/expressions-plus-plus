@@ -145,7 +145,7 @@ const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), scenery, specia
 const BACKGROUND_ART_PROMPT: string = 'unpopulated, visual novel background scenery, background only, scenery only';
 
 const DEFAULT_BORDER_COLOR: string = '#1e1e1edd';
-export const DEFAULT_OUTFIT_NAME: string = 'Default';
+export const DEFAULT_OUTFIT_NAME: string = 'Starter Outfit';
 
 // Replace trigger words with less triggering words, so image gen can succeed.
 export function substitute(input: string) {
@@ -279,7 +279,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     // Generate outfit entries for each expressions pack, marked non-generated.
                     for (let expressionPack of Object.values([characters[charAnonId].partial_extensions.chub.expressions])) {
                         this.wardrobes[charAnonId].outfits[expressionPack.version] = {
-                            outfitName: expressionPack.version,
                             images: expressionPack.expressions,
                             manualDescription: expressionPack.version,
                             generatedDescription: '',
