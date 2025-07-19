@@ -144,23 +144,6 @@ config_schema:
       type: string
       default: "False"
       enum: ["True", "False"]
-    selected:
-      # The beginning of non-standard JSON Schema behavior.
-      # JSchema isn't great with the concept of dynamic
-      # schema generation. This is our little addition
-      # to make it easy to define "I need this setting for each character".
-      type: "character_map"
-      # Could also be an object, etc.
-      value_type:
-        type: string
-        enum: 'character.extensions.chub.alt_expressions.keys()'
-        default: 'default'
-      # For the type "character_map",
-      # this is a boolean instead of the normal list.
-      # If true, required for each character.
-      required: false
-      # Information shown beside this part of the form.
-      description: "Which expression pack to use, if there are multiple."
 
 github_path: 'https://github.com/Lord-Raven/expressions-plus-plus'
 
