@@ -116,7 +116,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     }) => {
         const [editing, setEditing] = useState(false);
         const [value, setValue] = useState(name);
-        const generated = stage.wardrobes[speaker?.anonymizedId || '']?.outfits[name]?.generated || false;
+        const generated = outfitMap[name]?.generated || false;
 
         return editing ? (
             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -148,7 +148,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
         ) : (
             <span onDoubleClick={() => setEditing(generated)}>
                 {name}
-                {speaker && stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${value}`] && (
+                {speaker && outfitMap[value].generatedDescription && (
                     <OutfitInfoIcon
                         description={stage.buildArtPrompt(speaker, value, Emotion.neutral)}
                         isLocked={!generated}
@@ -243,7 +243,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                     </Tabs>
                     <Grid container spacing={1} justifyContent="center" sx={{mt: 2, overflow: "hidden"}}>
                         {Object.keys(EMOTION_PROMPTS).map((emotion, index) => {
-                            const generated: boolean = stage.wardrobes[speaker.anonymizedId]?.outfits[selectedOutfit]?.generated || false;
+                            const generated: boolean = outfitMap[selectedOutfit]?.generated || false;
                             const image = stage.getSpeakerImage(
                                 speaker.anonymizedId,
                                 selectedOutfit ?? DEFAULT_OUTFIT_NAME,
@@ -300,24 +300,19 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                     <Box sx={{ mt: 3 }}>
                     <TextField
                         label="Outfit JSON (edit description or copy/paste to export/import)"
+                        disabled={!outfitMap[selectedOutfit]?.generated}
                         fullWidth
                         value={(() => {
-                            const images = outfitMap[selectedOutfit];
-                            const descKey = speaker ? `${speaker.anonymizedId}_${selectedOutfit}` : '';
-                            const description = speaker ? stage.chatState.generatedDescriptions[descKey] : undefined;
-                            return JSON.stringify({ description, images }, null, 2);
+                            return JSON.stringify(outfitMap[selectedOutfit], null, 2);
                         })()}
                         onChange={e => {
                             let val = e.target.value;
                             try {
                                 const data = JSON.parse(val);
                                 if (typeof data === 'object' && data && 'images' in data && 'description' in data) {
-                                    const updatedMap = { ...outfitMap, [selectedOutfit]: data.images };
+                                    const updatedMap = { ...outfitMap, [selectedOutfit]: data };
                                     updateStageWardrobeMap(updatedMap);
-                                    if (speaker) {
-                                        stage.chatState.generatedDescriptions[`${speaker.anonymizedId}_${selectedOutfit}`] = data.description;
-                                        stage.updateChatState();
-                                    }
+                                    stage.updateChatState();
                                 }
                             } catch (err) {
                                 console.error("Invalid JSON format", err);
