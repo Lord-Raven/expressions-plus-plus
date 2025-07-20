@@ -76,8 +76,8 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
 
     useEffect(() => {
         setSelectedOutfit((speaker ? stage.chatState.selectedOutfit[speaker.anonymizedId] : null) ?? DEFAULT_OUTFIT_NAME);
-        setOutfitMap((speaker ? stage.wardrobes[speaker.anonymizedId] : {}) ?? {[DEFAULT_OUTFIT_NAME]: {}});
-        setOutfitNames(Object.keys(speaker ? stage.wardrobes[speaker.anonymizedId] : {[DEFAULT_OUTFIT_NAME]: {}}) ?? {[DEFAULT_OUTFIT_NAME]: {}});
+        setOutfitMap((speaker ? stage.wardrobes[speaker.anonymizedId].outfits : {}) ?? {[DEFAULT_OUTFIT_NAME]: {}});
+        setOutfitNames(Object.keys(speaker ? stage.wardrobes[speaker.anonymizedId].outfits : {[DEFAULT_OUTFIT_NAME]: {}}) ?? {[DEFAULT_OUTFIT_NAME]: {}});
     }, [speaker]);
 
     useEffect(() => {
@@ -87,10 +87,10 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
 
     const updateStageWardrobeMap = (newMap: {[key: string]: any}) => {
         if (speaker) {
-            stage.wardrobes[speaker.anonymizedId] = newMap;
+            stage.wardrobes[speaker.anonymizedId].outfits = newMap;
             setOutfitMap(newMap);
             setOutfitNames(Object.keys(newMap));
-            if (!(stage.chatState.selectedOutfit[speaker.anonymizedId] in stage.wardrobes[speaker.anonymizedId])) {
+            if (!(stage.chatState.selectedOutfit[speaker.anonymizedId] in stage.wardrobes[speaker.anonymizedId].outfits)) {
                 stage.chatState.selectedOutfit[speaker.anonymizedId] = DEFAULT_OUTFIT_NAME
             }
             stage.updateChatState();
@@ -116,7 +116,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     }) => {
         const [editing, setEditing] = useState(false);
         const [value, setValue] = useState(name);
-        const generated = stage.wardrobes[speaker?.anonymizedId || '']?.[name]?.generated || false;
+        const generated = stage.wardrobes[speaker?.anonymizedId || '']?.outfits[name]?.generated || false;
 
         return editing ? (
             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -243,7 +243,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                     </Tabs>
                     <Grid container spacing={1} justifyContent="center" sx={{mt: 2, overflow: "hidden"}}>
                         {Object.keys(EMOTION_PROMPTS).map((emotion, index) => {
-                            const generated: boolean = stage.wardrobes[speaker.anonymizedId]?.[selectedOutfit]?.generated || false;
+                            const generated: boolean = stage.wardrobes[speaker.anonymizedId]?.outfits[selectedOutfit]?.generated || false;
                             const image = stage.getSpeakerImage(
                                 speaker.anonymizedId,
                                 selectedOutfit ?? DEFAULT_OUTFIT_NAME,
