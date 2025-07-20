@@ -39,7 +39,7 @@ const OutfitInfoIcon = ({
 
     if (isLocked) {
         Icon = LockIcon;
-        color = "primary"; // Locked outfits are not considered errors or warnings, just informational.
+        color = "primary";
     } else if (isErrored) {
         Icon = ErrorOutlineIcon;
         color = "error";
@@ -116,7 +116,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     }) => {
         const [editing, setEditing] = useState(false);
         const [value, setValue] = useState(name);
-        const generated = outfitMap[name]?.generated || false;
+        const generated = outfitMap[name]?.generated ?? false;
 
         return editing ? (
             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -254,7 +254,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             const isDefault = (emotion != Emotion.neutral && image == stage.getSpeakerImage(speaker.anonymizedId, selectedOutfit, Emotion.neutral)) || (image == silhouetteUrl);
 
                             return (
-                                (isDefault && !generated ? (
+                                (!isDefault || generated ? (
                                 <Grid key={emotion} component={motion.div}
                                       initial={{opacity: 0, x: 50}}
                                       whileHover={{scale: 1.1, zIndex: 2000}}
