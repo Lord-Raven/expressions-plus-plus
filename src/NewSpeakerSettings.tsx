@@ -69,6 +69,7 @@ const OutfitInfoIcon = ({
 const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
     const [speaker, setSpeaker] = useState<Speaker|null>(null);
     const [selectedOutfit, setSelectedOutfit] = useState<string>(DEFAULT_OUTFIT_NAME);
+    const [editMode, setEditMode] = useState('json');
     const [confirmEmotion, setConfirmEmotion] = useState<Emotion | null>(null);
     const [outfitMap, setOutfitMap] = useState<{[key: string]: any}>({[DEFAULT_OUTFIT_NAME]: {}});
     const [outfitNames, setOutfitNames] = useState<string[]>([DEFAULT_OUTFIT_NAME]);
@@ -296,112 +297,96 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         })}
                         
                     </Grid>
-                    {/* Collapsible horizontal fields for generated outfits */}
-                    {(() => {
-                        const generated = outfitMap[selectedOutfit]?.generated;
-                        const [expanded, setExpanded] = useState('json');
-                        // Use useState inside a component
-                        const PromptField = (
-                            <Box sx={{ minWidth: 0, flex: 1 }}>
-                                <Button
-                                    fullWidth
-                                    variant={expanded === 'prompt' ? 'contained' : 'outlined'}
-                                    sx={{ mb: 1 }}
-                                    onClick={() => setExpanded(expanded === 'prompt' ? '' : 'prompt')}
-                                >Prompt</Button>
-                                <Box sx={{ display: expanded === 'prompt' ? 'block' : 'none' }}>
-                                    <TextField
-                                        label="Edit Generated Description"
-                                        fullWidth
-                                        multiline
-                                        minRows={2}
-                                        value={outfitMap[selectedOutfit]?.generatedDescription ?? ''}
-                                        onChange={e => {
-                                            const updatedMap = { ...outfitMap };
-                                            updatedMap[selectedOutfit] = {
-                                                ...updatedMap[selectedOutfit],
-                                                generatedDescription: e.target.value
-                                            };
-                                            updateStageWardrobeMap(updatedMap);
-                                        }}
-                                        sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', mt: 1 }}
-                                        variant="outlined"
-                                    />
-                                </Box>
-                            </Box>
-                        );
-                        const KeywordsField = (
-                            <Box sx={{ minWidth: 0, flex: 1 }}>
-                                <Button
-                                    fullWidth
-                                    variant={expanded === 'keywords' ? 'contained' : 'outlined'}
-                                    sx={{ mb: 1 }}
-                                    onClick={() => setExpanded(expanded === 'keywords' ? '' : 'keywords')}
-                                >Keywords</Button>
-                                <Box sx={{ display: expanded === 'keywords' ? 'block' : 'none' }}>
-                                    <TextField
-                                        label="Edit Keywords (comma separated)"
-                                        fullWidth
-                                        value={outfitMap[selectedOutfit]?.keywords?.join(', ') ?? ''}
-                                        onChange={e => {
-                                            const updatedMap = { ...outfitMap };
-                                            updatedMap[selectedOutfit] = {
-                                                ...updatedMap[selectedOutfit],
-                                                keywords: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                                            };
-                                            updateStageWardrobeMap(updatedMap);
-                                        }}
-                                        sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', mt: 1 }}
-                                        variant="outlined"
-                                    />
-                                </Box>
-                            </Box>
-                        );
-                        const JsonField = (
-                            <Box sx={{ minWidth: 0, flex: 1 }}>
-                                <Button
-                                    fullWidth
-                                    variant={expanded === 'json' ? 'contained' : 'outlined'}
-                                    sx={{ mb: 1 }}
-                                    onClick={() => setExpanded(expanded === 'json' ? '' : 'json')}
-                                >Outfit JSON</Button>
-                                <Box sx={{ display: expanded === 'json' ? 'block' : 'none' }}>
-                                    <TextField
-                                        label="Outfit JSON (edit description or copy/paste to export/import)"
-                                        disabled={!generated}
-                                        fullWidth
-                                        value={(() => {
-                                            return JSON.stringify(outfitMap[selectedOutfit], null, 2);
-                                        })()}
-                                        onChange={e => {
-                                            let val = e.target.value;
-                                            try {
-                                                const data = JSON.parse(val);
-                                                if (typeof data === 'object' && data && 'images' in data && 'description' in data) {
-                                                    const updatedMap = { ...outfitMap, [selectedOutfit]: data };
-                                                    updateStageWardrobeMap(updatedMap);
-                                                    stage.updateChatState();
-                                                }
-                                            } catch (err) {
-                                                console.error("Invalid JSON format", err);
-                                                stage.wrapPromise(null, "Invalid outfit update.");
-                                            }
-                                        }}
-                                        sx={{ mt: 2, background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
-                                        variant="outlined"
-                                    />
-                                </Box>
-                            </Box>
-                        );
-                        // Only show prompt/keywords for generated outfits
-                        return (
-                            <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-                                {generated && PromptField}
-                                {generated && KeywordsField}
-                                {JsonField}
-                            </Box>
-                        );
-                    })()}
+                    {/* Multiple collapsible fields side-by-side (only one section is visible at a time):  
+                    A prompt editing field for the selected outfits generatedDescription (if it is generated),
+                    a keyword editing field for the selected outfits keywords (if it is generated),
+                    and a JSON synced textfield for import/export (disabled but visible for non-generated) */}
+                    
+                    <Box sx={{ mt: 3 }}>
+                        {editMode === 'generatedDescription' ? (
+                        <TextField
+                            label="Generated Description (edit to regenerate)"
+                            disabled={!outfitMap[selectedOutfit]?.generated}
+                            fullWidth
+                            value={outfitMap[selectedOutfit]?.generatedDescription || ""}
+                            onChange={e => {
+                                const val = e.target.value;
+                                const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], generatedDescription: val } };
+                                updateStageWardrobeMap(updatedMap);
+                                stage.updateChatState();
+                            }}
+                            sx={{ mb: 2, background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
+                            variant="outlined"
+                        />) : (outfitMap[selectedOutfit]?.generated && (
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={() => {
+                                setEditMode('generatedDescription');
+                            }}
+                            disabled={!outfitMap[selectedOutfit]?.generated}
+                            sx={{ mb: 2, background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
+                        /> ))}
+                        {editMode === 'keywords' ? (
+                        <TextField
+                            label="Keywords (edit to regenerate)"
+                            disabled={!outfitMap[selectedOutfit]?.generated}
+                            fullWidth
+                            value={outfitMap[selectedOutfit]?.keywords || ""}
+                            onChange={e => {
+                                const val = e.target.value;
+                                const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], keywords: val } };
+                                updateStageWardrobeMap(updatedMap);
+                                stage.updateChatState();
+                            }}
+                            sx={{ mb: 2, background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
+                            variant="outlined"
+                        />) : ( outfitMap[selectedOutfit]?.generated && (
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={() => {
+                                setEditMode('keywords');
+                            }}
+                            disabled={!outfitMap[selectedOutfit]?.generated}
+                            sx={{ mb: 2, background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
+                        />
+                        ))}
+                        {editMode === 'json' ? (
+                        <TextField
+                            label="Outfit JSON (edit description or copy/paste to export/import)"
+                            disabled={!outfitMap[selectedOutfit]?.generated}
+                            fullWidth
+                            value={(() => {
+                                return JSON.stringify(outfitMap[selectedOutfit], null, 2);
+                            })()}
+                            onChange={e => {
+                                let val = e.target.value;
+                                try {
+                                    const data = JSON.parse(val);
+                                    if (typeof data === 'object' && data && 'images' in data && 'description' in data) {
+                                        const updatedMap = { ...outfitMap, [selectedOutfit]: data };
+                                        updateStageWardrobeMap(updatedMap);
+                                        stage.updateChatState();
+                                    }
+                                } catch (err) {
+                                    console.error("Invalid JSON format", err);
+                                    stage.wrapPromise(null, "Invalid outfit update.");
+                                }
+                            }}
+                            sx={{ mt: 2, background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
+                            variant="outlined"
+                        />) : (
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={() => {
+                                setEditMode('json');
+                            }}
+                            sx={{ mt: 2, background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
+                        />
+                        )}
+                    </Box>
                 </DialogContent>
             </Dialog>
             {/* Confirmation dialog */}
