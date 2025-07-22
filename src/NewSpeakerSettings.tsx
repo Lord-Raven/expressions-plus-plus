@@ -7,7 +7,7 @@ import {
     Box, Button, Typography, TextField, IconButton, Tooltip
 } from "@mui/material";
 import { Grid, Tabs, Tab } from "@mui/material";
-import LockIcon from "@mui/icons-material/Lock";
+import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -38,7 +38,7 @@ const OutfitInfoIcon = ({
     let color: "primary" | "warning" | "error" = "primary";
 
     if (isLocked) {
-        Icon = LockIcon;
+        Icon = LockOutlineIcon;
         color = "primary";
     } else if (isErrored) {
         Icon = ErrorOutlineIcon;
@@ -49,11 +49,11 @@ const OutfitInfoIcon = ({
     }
 
     return (
-        <Tooltip title={<>Prompt used for image generation:<br/><br/>{description}
-                    {isLocked && (<><br/><br/><Icon fontSize="inherit" color={color} />This outfit was built by an expression pack and cannot be altered.</>)}
+        <Tooltip title={isLocked ? (<><Icon fontSize="inherit" color={color} />This outfit was built by an expression pack and cannot be altered.</>) :
+                (<>Prompt used for image generation:<br/><br/>{description}
                     {isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt failed to generate an image and may contain words that could trigger sensitive content. Regenerate the neutral image to build a new prompt and try again. Consider reporting recurring false positives to the stage developer.</>)}
                     {isAltered && !isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt was automatically altered from its original form to avoid triggering a sensitive content failure; if the result appears fine, you may disregard this warning.</>)}
-                    </>}
+                    </>)}
                 arrow enterDelay={300} leaveDelay={150}>
             <IconButton
                 size="small"
