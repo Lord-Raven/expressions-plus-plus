@@ -307,8 +307,8 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                     
                     <Box sx={{ mt: 3 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                                {editMode === 'generatedDescription' ? (
+                            {editMode === 'generatedDescription' ? (
+                                <Box sx={{ flex: 20, minWidth: 0 }}>
                                     <TextField
                                         label="Generated Description"
                                         disabled={!outfitMap[selectedOutfit]?.generated}
@@ -324,7 +324,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36 }}
                                         variant="outlined"
                                     />
-                                ) : (outfitMap[selectedOutfit]?.generated && (
+                                </Box>
+                            ) : (outfitMap[selectedOutfit]?.generated && (
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <Button
                                         variant="outlined"
                                         color="primary"
@@ -334,10 +336,10 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         disabled={!outfitMap[selectedOutfit]?.generated}
                                         sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, p: 0.5, width: '100%' }}
                                     ><ChatBubbleOutlineIcon fontSize="small" /></Button>
-                                ))}
-                            </Box>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                                {editMode === 'keywords' ? (
+                                </Box>
+                            ))}
+                            {editMode === 'keywords' ? (
+                                <Box sx={{ flex: 20, minWidth: 0 }}>
                                     <TextField
                                         label="Keywords"
                                         disabled={!outfitMap[selectedOutfit]?.generated}
@@ -353,7 +355,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36 }}
                                         variant="outlined"
                                     />
-                                ) : (outfitMap[selectedOutfit]?.generated && (
+                                </Box>
+                            ) : (outfitMap[selectedOutfit]?.generated && (
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <Button
                                         variant="outlined"
                                         color="primary"
@@ -363,10 +367,10 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         disabled={!outfitMap[selectedOutfit]?.generated}
                                         sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, p: 0.5, width: '100%' }}
                                     ><LocalOfferOutlinedIcon fontSize="small" /></Button>
-                                ))}
-                            </Box>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                                {editMode === 'json' ? (
+                                </Box>
+                            ))}
+                            {editMode === 'json' ? (
+                                <Box sx={{ flex: 20, minWidth: 0 }}>
                                     <TextField
                                         label="Outfit JSON"
                                         disabled={!outfitMap[selectedOutfit]?.generated}
@@ -392,7 +396,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36 }}
                                         variant="outlined"
                                     />
-                                ) : (
+                                </Box>
+                            ) : (
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <Button
                                         variant="outlined"
                                         color="primary"
@@ -401,8 +407,8 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         }}
                                         sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, p: 0.5, width: '100%' }}
                                     ><CodeIcon fontSize="small" /></Button>
-                                )}
-                            </Box>
+                                </Box>
+                            )}
                         </Box>
                     </Box>
                 </DialogContent>
