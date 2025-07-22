@@ -13,6 +13,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
+import CodeIcon from '@mui/icons-material/Code';
 import silhouetteUrl from './assets/silhouette.png'
 import { SpeakerSettingsHandle } from "./SpeakerSettings";
 
@@ -303,13 +306,14 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                     and a JSON synced textfield for import/export (disabled but visible for non-generated) */}
                     
                     <Box sx={{ mt: 3 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-                            <Box sx={{ flex: 1 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
                                 {editMode === 'generatedDescription' ? (
                                     <TextField
-                                        label="Generated Description (edit to regenerate)"
+                                        label="Generated Description"
                                         disabled={!outfitMap[selectedOutfit]?.generated}
                                         fullWidth
+                                        size="small"
                                         value={outfitMap[selectedOutfit]?.generatedDescription || ""}
                                         onChange={e => {
                                             const val = e.target.value;
@@ -317,7 +321,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             updateStageWardrobeMap(updatedMap);
                                             stage.updateChatState();
                                         }}
-                                        sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
+                                        sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36 }}
                                         variant="outlined"
                                     />
                                 ) : (outfitMap[selectedOutfit]?.generated && (
@@ -328,16 +332,17 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             setEditMode('generatedDescription');
                                         }}
                                         disabled={!outfitMap[selectedOutfit]?.generated}
-                                        sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', height: '56px', width: '100%' }}
-                                    >Prompt</Button>
+                                        sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, p: 0.5, width: '100%' }}
+                                    ><ChatBubbleOutlineIcon fontSize="small" /></Button>
                                 ))}
                             </Box>
-                            <Box sx={{ flex: 1 }}>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
                                 {editMode === 'keywords' ? (
                                     <TextField
-                                        label="Keywords (edit to regenerate)"
+                                        label="Keywords"
                                         disabled={!outfitMap[selectedOutfit]?.generated}
                                         fullWidth
+                                        size="small"
                                         value={outfitMap[selectedOutfit]?.keywords || ""}
                                         onChange={e => {
                                             const val = e.target.value;
@@ -345,7 +350,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             updateStageWardrobeMap(updatedMap);
                                             stage.updateChatState();
                                         }}
-                                        sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
+                                        sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36 }}
                                         variant="outlined"
                                     />
                                 ) : (outfitMap[selectedOutfit]?.generated && (
@@ -356,16 +361,17 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             setEditMode('keywords');
                                         }}
                                         disabled={!outfitMap[selectedOutfit]?.generated}
-                                        sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', height: '56px', width: '100%' }}
-                                    >Keywords</Button>
+                                        sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, p: 0.5, width: '100%' }}
+                                    ><LocalOfferOutlinedIcon fontSize="small" /></Button>
                                 ))}
                             </Box>
-                            <Box sx={{ flex: 1 }}>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
                                 {editMode === 'json' ? (
                                     <TextField
-                                        label="Outfit JSON (edit description or copy/paste to export/import)"
+                                        label="Outfit JSON"
                                         disabled={!outfitMap[selectedOutfit]?.generated}
                                         fullWidth
+                                        size="small"
                                         value={(() => {
                                             return JSON.stringify(outfitMap[selectedOutfit], null, 2);
                                         })()}
@@ -383,7 +389,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                                 stage.wrapPromise(null, "Invalid outfit update.");
                                             }
                                         }}
-                                        sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace' }}
+                                        sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36 }}
                                         variant="outlined"
                                     />
                                 ) : (
@@ -393,8 +399,8 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         onClick={() => {
                                             setEditMode('json');
                                         }}
-                                        sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', height: '56px', width: '100%' }}
-                                    >JSON</Button>
+                                        sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, p: 0.5, width: '100%' }}
+                                    ><CodeIcon fontSize="small" /></Button>
                                 )}
                             </Box>
                         </Box>
