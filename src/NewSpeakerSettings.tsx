@@ -278,7 +278,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             textShadow: "0 1px 2px #fff",
                                             border: `3px solid ${borderColor}`,
                                         }}
-                                        onClick={() => !generated && setConfirmEmotion(emotion as Emotion)}
+                                        onClick={() => generated && setConfirmEmotion(emotion as Emotion)}
                                     >
                                       <span style={{
                                           background: "rgba(255,255,255,0.7)",
@@ -352,6 +352,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         variant="contained"
                         color="primary"
                         onClick={() => {
+
                             setConfirmEmotion(null);
                             if (onRegenerate && confirmEmotion) {
                                 onRegenerate(speaker, selectedOutfit ?? DEFAULT_OUTFIT_NAME, confirmEmotion);
