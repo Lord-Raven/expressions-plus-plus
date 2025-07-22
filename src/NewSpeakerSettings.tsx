@@ -148,7 +148,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
         ) : (
             <span onDoubleClick={() => setEditing(generated)}>
                 {name}
-                {speaker && outfitMap[value].generatedDescription && (
+                {speaker && outfitMap[value] && (
                     <OutfitInfoIcon
                         description={stage.buildArtPrompt(speaker, value, Emotion.neutral)}
                         isLocked={!generated}
