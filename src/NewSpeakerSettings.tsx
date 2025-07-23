@@ -70,6 +70,9 @@ const OutfitInfoIcon = ({
 };
 
 const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
+    // Ref for dialog content scroll
+    const dialogContentRef = useRef<HTMLDivElement>(null);
+    let lastScrollTop = 0;
     // Refs for edit fields
     const promptRef = useRef<HTMLInputElement>(null);
     const keywordsRef = useRef<HTMLInputElement>(null);
@@ -212,7 +215,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
-                <DialogContent sx={{p: 1, backgroundColor: "#333"}}>
+                <DialogContent sx={{p: 1, backgroundColor: "#333"}} ref={dialogContentRef}>
                     <Typography variant="body2">
                         For each outfit, a physical description and neutral image are generated and all other emotions are created from the neutral base image. Rename or remove additional outfits by double-clicking their tabs; an outfit's name will help steer its generation.
                     </Typography>
@@ -342,10 +345,18 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     variant="outlined"
                                     color="primary"
                                     onClick={() => {
+                                        // Save scroll position
+                                        if (dialogContentRef.current) {
+                                            lastScrollTop = dialogContentRef.current.scrollTop;
+                                        }
                                         setEditMode('generatedDescription');
                                         setTimeout(() => {
                                             if (promptRef.current) {
                                                 promptRef.current.focus({ preventScroll: true });
+                                            }
+                                            // Restore scroll position
+                                            if (dialogContentRef.current) {
+                                                dialogContentRef.current.scrollTop = lastScrollTop;
                                             }
                                         }, 0);
                                     }}
@@ -378,10 +389,16 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     variant="outlined"
                                     color="primary"
                                     onClick={() => {
+                                        if (dialogContentRef.current) {
+                                            lastScrollTop = dialogContentRef.current.scrollTop;
+                                        }
                                         setEditMode('keywords');
                                         setTimeout(() => {
                                             if (keywordsRef.current) {
                                                 keywordsRef.current.focus({ preventScroll: true });
+                                            }
+                                            if (dialogContentRef.current) {
+                                                dialogContentRef.current.scrollTop = lastScrollTop;
                                             }
                                         }, 0);
                                     }}
@@ -424,10 +441,16 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     variant="outlined"
                                     color="primary"
                                     onClick={() => {
+                                        if (dialogContentRef.current) {
+                                            lastScrollTop = dialogContentRef.current.scrollTop;
+                                        }
                                         setEditMode('json');
                                         setTimeout(() => {
                                             if (jsonRef.current) {
                                                 jsonRef.current.focus({ preventScroll: true });
+                                            }
+                                            if (dialogContentRef.current) {
+                                                dialogContentRef.current.scrollTop = lastScrollTop;
                                             }
                                         }, 0);
                                     }}
