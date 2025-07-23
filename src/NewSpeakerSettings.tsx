@@ -344,7 +344,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     onClick={() => {
                                         setEditMode('generatedDescription');
                                         setTimeout(() => {
-                                            promptRef.current?.focus();
+                                            if (promptRef.current) {
+                                                promptRef.current.focus({ preventScroll: true });
+                                            }
                                         }, 0);
                                     }}
                                     disabled={!outfitMap[selectedOutfit]?.generated}
@@ -378,7 +380,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     onClick={() => {
                                         setEditMode('keywords');
                                         setTimeout(() => {
-                                            keywordsRef.current?.focus();
+                                            if (keywordsRef.current) {
+                                                keywordsRef.current.focus({ preventScroll: true });
+                                            }
                                         }, 0);
                                     }}
                                     disabled={!outfitMap[selectedOutfit]?.generated}
@@ -422,7 +426,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     onClick={() => {
                                         setEditMode('json');
                                         setTimeout(() => {
-                                            jsonRef.current?.focus();
+                                            if (jsonRef.current) {
+                                                jsonRef.current.focus({ preventScroll: true });
+                                            }
                                         }, 0);
                                     }}
                                     sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
