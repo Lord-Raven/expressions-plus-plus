@@ -198,6 +198,8 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                 slotProps={{paper: {sx: {backgroundColor: "#333", border: `3px solid ${borderColor}`, borderRadius: 2}}}}
                 disableEnforceFocus
                 disableAutoFocus
+                disableScrollLock
+                disableRestoreFocus
             >
                 <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 1, backgroundColor: "#333" }}>
                     <Typography variant="h6" component="div">
