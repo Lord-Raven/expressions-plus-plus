@@ -70,6 +70,10 @@ const OutfitInfoIcon = ({
 };
 
 const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
+    // Refs for edit fields
+    const promptRef = useRef<HTMLInputElement>(null);
+    const keywordsRef = useRef<HTMLInputElement>(null);
+    const jsonRef = useRef<HTMLInputElement>(null);
     const [speaker, setSpeaker] = useState<Speaker|null>(null);
     const [selectedOutfit, setSelectedOutfit] = useState<string>(DEFAULT_OUTFIT_NAME);
     const [editMode, setEditMode] = useState('json');
@@ -316,7 +320,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             {/* Prompt (generatedDescription) */}
                             {editMode === 'generatedDescription' ? (
                                 <TextField
-                                    label="Generated Description"
+                                    label="Art Prompt"
                                     disabled={!outfitMap[selectedOutfit]?.generated}
                                     fullWidth
                                     size="small"
@@ -327,6 +331,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         updateStageWardrobeMap(updatedMap);
                                         stage.updateChatState();
                                     }}
+                                    inputRef={promptRef}
                                     sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
                                     variant="outlined"
                                 />
@@ -336,6 +341,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     color="primary"
                                     onClick={() => {
                                         setEditMode('generatedDescription');
+                                        setTimeout(() => {
+                                            promptRef.current?.focus();
+                                        }, 0);
                                     }}
                                     disabled={!outfitMap[selectedOutfit]?.generated}
                                     sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -346,7 +354,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             {/* Keywords */}
                             {editMode === 'keywords' ? (
                                 <TextField
-                                    label="Keywords"
+                                    label="Comma-delimitted Keywords"
                                     disabled={!outfitMap[selectedOutfit]?.generated}
                                     fullWidth
                                     size="small"
@@ -357,6 +365,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         updateStageWardrobeMap(updatedMap);
                                         stage.updateChatState();
                                     }}
+                                    inputRef={keywordsRef}
                                     sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
                                     variant="outlined"
                                 />
@@ -366,6 +375,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     color="primary"
                                     onClick={() => {
                                         setEditMode('keywords');
+                                        setTimeout(() => {
+                                            keywordsRef.current?.focus();
+                                        }, 0);
                                     }}
                                     disabled={!outfitMap[selectedOutfit]?.generated}
                                     sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -376,7 +388,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             {/* JSON */}
                             {editMode === 'json' ? (
                                 <TextField
-                                    label="Outfit JSON"
+                                    label="JSON for Import/Export"
                                     disabled={!outfitMap[selectedOutfit]?.generated}
                                     fullWidth
                                     size="small"
@@ -397,6 +409,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             stage.wrapPromise(null, "Invalid outfit update.");
                                         }
                                     }}
+                                    inputRef={jsonRef}
                                     sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
                                     variant="outlined"
                                 />
@@ -406,6 +419,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     color="primary"
                                     onClick={() => {
                                         setEditMode('json');
+                                        setTimeout(() => {
+                                            jsonRef.current?.focus();
+                                        }, 0);
                                     }}
                                     sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
