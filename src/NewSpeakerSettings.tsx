@@ -74,6 +74,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     const dialogContentRef = useRef<HTMLDivElement>(null);
     let lastScrollTop = 0;
     // Refs for edit fields
+    const MAX_OUTFIT_COUNT = 20;
     const promptRef = useRef<HTMLInputElement>(null);
     const keywordsRef = useRef<HTMLInputElement>(null);
     const jsonRef = useRef<HTMLInputElement>(null);
@@ -252,7 +253,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                 ref={handleNewTabRef(name)}
                             />
                         ))}
-                        {outfitNames.length < 6 && !outfitNames.includes(NEW_OUTFIT_NAME) && (
+                        {outfitNames.length < MAX_OUTFIT_COUNT && !outfitNames.includes(NEW_OUTFIT_NAME) && (
                             <Tab
                                 icon={<AddIcon />}
                                 key={`new_outfit_tab`}

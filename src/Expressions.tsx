@@ -451,7 +451,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (generatedDescription) {
             return `(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`]}), ((${CHARACTER_ART_PROMPT})), (${EMOTION_PROMPTS[emotion]})`;
         }
-        return `No art description yet available for ${speaker.name} (${outfit}). Generate an emotion or enter a custom prompt below.`;
+        return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
     }
 
     async generateSpeakerImagePrompt(speaker: Speaker, outfit: string): Promise<void> {

@@ -16,6 +16,12 @@ html, body, #root {
   padding: 0;
 }
 
+img {
+  -webkit-user-drag: none; /* Disable dragging in WebKit browsers */
+  user-select: none;        /* Prevent text selection */
+  pointer-events: auto;     /* Ensure right-click works */
+}
+
 // Stack emotions horizontally if screen is wider
 @media (min-aspect-ratio: 3/4) {
   .big-stacker {
