@@ -235,6 +235,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
 
                             } else {
                                 setSelectedOutfit(newValue);
+                                setEditMode(outfitMap[newValue]?.generated ? editMode : 'json');
                             }
                         }}
                     >
@@ -326,7 +327,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             {editMode === 'generatedDescription' ? (
                                 <TextField
                                     label="Art Prompt"
-                                    disabled={!outfitMap[selectedOutfit]?.generated}
                                     fullWidth
                                     size="small"
                                     value={outfitMap[selectedOutfit]?.generatedDescription || ""}
@@ -360,7 +360,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             }
                                         }, 0);
                                     }}
-                                    disabled={!outfitMap[selectedOutfit]?.generated}
                                     sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
                                     <ChatBubbleOutlineIcon fontSize="small" />
@@ -369,8 +368,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             {/* Keywords */}
                             {editMode === 'keywords' ? (
                                 <TextField
-                                    label="Comma-delimitted Keywords"
-                                    disabled={!outfitMap[selectedOutfit]?.generated}
+                                    label="Comma-Delimitted Keywords"
                                     fullWidth
                                     size="small"
                                     value={outfitMap[selectedOutfit]?.keywords || ""}
@@ -402,7 +400,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             }
                                         }, 0);
                                     }}
-                                    disabled={!outfitMap[selectedOutfit]?.generated}
                                     sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
                                     <LocalOfferOutlinedIcon fontSize="small" />
