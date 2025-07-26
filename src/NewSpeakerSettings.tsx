@@ -340,7 +340,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
                                     variant="outlined"
                                 />
-                            ) : outfitMap[selectedOutfit]?.generatedDescription && (
+                            ) : outfitMap[selectedOutfit]?.generated && (
                                 <Button
                                     variant="outlined"
                                     color="primary"
@@ -382,7 +382,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
                                     variant="outlined"
                                 />
-                            ) : outfitMap[selectedOutfit]?.generatedDescription && (
+                            ) : outfitMap[selectedOutfit]?.generated && (
                                 <Button
                                     variant="outlined"
                                     color="primary"

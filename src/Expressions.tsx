@@ -18,6 +18,7 @@ import {FastAverageColor} from "fast-average-color";
 import { AnimatePresence } from "framer-motion";
 import SpeakerSettings, {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
 import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
+import { i } from "framer-motion/client";
 
 type ChatStateType = {
     generatedWardrobes:{[key: string]: {[key: string]: EmotionPack}};
@@ -442,41 +443,58 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion): string {
-        return `(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`]}), ((${CHARACTER_ART_PROMPT})), (${EMOTION_PROMPTS[emotion]})`;
+        let generatedDescription = '';
+        if (this.alphaMode) {
+            generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.generatedDescription ?? '';
+        } else {
+            generatedDescription = this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] ?? '';
+        }
+        if (generatedDescription) {
+            return `(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`]}), ((${CHARACTER_ART_PROMPT})), (${EMOTION_PROMPTS[emotion]})`;
+        }
+        return `No art description yet available for ${speaker.name} (${outfit}). Generate an emotion or enter a custom prompt below.`;
+    }
+
+    async generateSpeakerImagePrompt(speaker: Speaker, outfit: string): Promise<void> {
+        // Must first build a visual description for this character:
+        console.log(`Generating a physical description of ${speaker.name}.`);
+        const imageDescription = await this.generator.textGen({
+            prompt:
+                `Chat History:\n{{messages}}\n\n` +
+                (outfit != DEFAULT_OUTFIT_NAME ? `New Outfit:\n${outfit}\n\n` : '') +
+                `Information about ${speaker.name}:\n${this.getSpeakerDescription(speaker)}\n\n` +
+                `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
+                `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.\n\n` +
+                `Current Instruction:\nThe goal of this task is to digest the information about ${speaker.name} and construct a comprehensive and functional visual description of ${speaker.name}. ` +
+                `The chat history may involve other characters, but this system response will fixate on ${speaker.name}; ` +
+                `the result will be fed directly into an image generator, which is unfamiliar with this character, ` +
+                `so use concise tags and keywords to convey all essential details about them, ` +
+                `presenting ample and exhaustive character appearance notes--particularly if they seem obvious: gender, race, skin tone, hair do/color, physique, body shape, outfit, fashion, setting/theme, style, etc. ` +
+                (outfit != DEFAULT_OUTFIT_NAME ?
+                    `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit: ${outfit}. Develop authentic visual details for this outfit. Aside from that, ` :
+                    `Chat history is provided for context on ${speaker.name}'s current outfit; `) +
+                `focus on persistent physical details over fleeting ones as this description will be applied to a variety of situations.`,
+            min_tokens: 50,
+            max_tokens: 140,
+            include_history: true
+        });
+        if (imageDescription?.result) {
+            console.log(`Received an image description: ${imageDescription.result}`);
+            this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] = imageDescription.result;
+            if (this.alphaMode && this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]) {
+                this.wardrobes[speaker.anonymizedId].outfits[outfit].generatedDescription = imageDescription.result;
+            }
+            await this.updateChatState();
+        } else {
+            return;
+        }
     }
 
     async generateSpeakerImage(speaker: Speaker, outfit: string, emotion: Emotion): Promise<void> {
-        if (!this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] || emotion == Emotion.neutral) {
-            // Must first build a visual description for this character:
-            console.log(`Generating a physical description of ${speaker.name}.`);
-            const imageDescription = await this.generator.textGen({
-                prompt:
-                    `Chat History:\n{{messages}}\n\n` +
-                    (outfit != DEFAULT_OUTFIT_NAME ? `New Outfit:\n${outfit}\n\n` : '') +
-                    `Information about ${speaker.name}:\n${this.getSpeakerDescription(speaker)}\n\n` +
-                    `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
-                    `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.\n\n` +
-                    `Current Instruction:\nThe goal of this task is to digest the information about ${speaker.name} and construct a comprehensive and functional visual description of ${speaker.name}. ` +
-                    `The chat history may involve other characters, but this system response will fixate on ${speaker.name}; ` +
-                    `the result will be fed directly into an image generator, which is unfamiliar with this character, ` +
-                    `so use concise tags and keywords to convey all essential details about them, ` +
-                    `presenting ample and exhaustive character appearance notes--particularly if they seem obvious: gender, race, skin tone, hair do/color, physique, body shape, outfit, fashion, setting/theme, style, etc. ` +
-                    (outfit != DEFAULT_OUTFIT_NAME ?
-                        `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit: ${outfit}. Develop authentic visual details for this outfit. Aside from that, ` :
-                        `Chat history is provided for context on ${speaker.name}'s current outfit; `) +
-                    `focus on persistent physical details over fleeting ones as this description will be applied to a variety of situations.`,
-                min_tokens: 50,
-                max_tokens: 140,
-                include_history: true
-            });
-            if (imageDescription?.result) {
-                console.log(`Received an image description: ${imageDescription.result}`);
-                this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] = imageDescription.result;
-                await this.updateChatState();
-            } else {
-                return;
-            }
+        if (!this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] || (this.alphaMode && !this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.generatedDescription)) {
+            await this.generateSpeakerImagePrompt(speaker, outfit);
         }
+
         // Must do neutral first:
         if (emotion != Emotion.neutral && !this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][Emotion.neutral]) {
             emotion = Emotion.neutral;
