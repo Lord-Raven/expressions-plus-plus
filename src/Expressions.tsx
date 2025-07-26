@@ -18,7 +18,6 @@ import {FastAverageColor} from "fast-average-color";
 import { AnimatePresence } from "framer-motion";
 import SpeakerSettings, {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
 import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
-import { i } from "framer-motion/client";
 
 type ChatStateType = {
     generatedWardrobes:{[key: string]: {[key: string]: EmotionPack}};
