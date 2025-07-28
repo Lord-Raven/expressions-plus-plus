@@ -444,6 +444,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return promise;
     }
 
+    stripNonGeneratedOutfits(wardrobe: WardrobeType): WardrobeType {
+        return {
+            speakerId: wardrobe.speakerId,
+            outfits: Object.keys(wardrobe.outfits).reduce((acc: {[key: string]: OutfitType}, outfitName: string) => {
+                if (wardrobe.outfits[outfitName].generated) {
+                    acc[outfitName] = wardrobe.outfits[outfitName];
+                }
+                return acc;
+            }, {})
+        };
+    }
+
     async updateChatState() {
         // This function is temporarily doing double duty to set/reconcile wardrobes:
         if (this.alphaMode) {
@@ -459,23 +471,24 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 return acc;
             }, {} as {[key: string]: WardrobeType});
             // Should check for differences in wardrobes between existingWardrobes and this.backupWardrobes, then apply non-conflicting changes to this.wardrobes before saving.
+            // Bear in mind that this.backupWardrobes will have non-generated outfits, while we expect existingWardrobes to have only generated outfits.
             console.log('Existing wardrobes from storage:');
             console.log(existingWardrobes);
 
             // Push current wardrobes
             console.log('Pushing wardrobe updates to storage.');
-            for (let speakerId of Object.keys(this.wardrobes)) {
+            await Promise.all(Object.keys(this.wardrobes).map(async (speakerId) => {
                 console.log(`Pushing wardrobe update for ${speakerId}`);
                 if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
                     if (this.isSpeakerIdCharacterId(speakerId)) {
-                        const response = await this.storage.set('wardrobe', this.wardrobes[speakerId]).forCharacter(speakerId);
+                        const response = await this.storage.set('wardrobe', this.stripNonGeneratedOutfits(this.wardrobes[speakerId])).forCharacter(speakerId);
                         console.log(response);
                     } else {
                         // Store for user/persona--not sure exactly what this will look like.
                         // this.storage.set('wardrobe', this.wardrobes[speakerId]).forPersona(speakerId);
                     }
                 }
-            }
+            }));
 
             // With everything reconciled and updated, set backup to current wardrobes.
             console.log('update backupWardrobes');
@@ -556,6 +569,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             // Clear entire pack then assign this image:
             this.chatState.generatedWardrobes[speaker.anonymizedId][outfit] = {};
             this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][Emotion.neutral] = imageUrl;
+            if (this.alphaMode) {
+                this.wardrobes[speaker.anonymizedId].outfits[outfit].images = {};
+                this.wardrobes[speaker.anonymizedId].outfits[outfit].images[Emotion.neutral] = imageUrl;
+            }
             /*if (!this.generating) {
                 this.generateNextImage(0);
             }*/
@@ -572,6 +589,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
             this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][emotion] = imageUrl;
+            if (this.alphaMode) {
+                this.wardrobes[speaker.anonymizedId].outfits[outfit].images[emotion] = imageUrl;
+            }
         }
         await this.updateChatState();
     }

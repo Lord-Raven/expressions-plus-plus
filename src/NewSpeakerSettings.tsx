@@ -372,10 +372,10 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     label="Comma-Delimitted Keywords"
                                     fullWidth
                                     size="small"
-                                    value={outfitMap[selectedOutfit]?.keywords || ""}
+                                    value={outfitMap[selectedOutfit]?.triggerWords || ""}
                                     onChange={e => {
                                         const val = e.target.value;
-                                        const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], keywords: val } };
+                                        const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], triggerWords: val } };
                                         updateStageWardrobeMap(updatedMap);
                                         stage.updateChatState();
                                     }}
