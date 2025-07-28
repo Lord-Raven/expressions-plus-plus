@@ -189,6 +189,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     // Message state:
     messageState: MessageStateType;
 
+    // Saved to storage
+    wardrobes: {[key: string]: WardrobeType} = {};
+    // This is used for comparison versus storage wardrobes to determine if storage has changed outside this instance of the stage,
+    // so that those changes can be reconciled against a potentially modified wardrobes above.
+    // Should be set after a successful load/reconciliation.
+    backupWardrobes: {[key: string]: WardrobeType} = {};
+
+
     // Not saved:
     emotionPipeline: any = null;
     zeroShotPipeline: any = null;
@@ -197,7 +205,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     artStyle: string;
     speakers: {[key: string]: Speaker};
     flagBackground: boolean = false;
-    wardrobes: {[key: string]: WardrobeType} = {};
     alphaMode: boolean;
 
     readonly fac = new FastAverageColor();
@@ -438,6 +445,30 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async updateChatState() {
+        // This function is temporarily doing double duty to set/reconcile wardrobes:
+        if (this.alphaMode) {
+
+            const existingWardrobes: {[key: string]: WardrobeType} = (await Promise.all(Object.keys(this.wardrobes).map(speakerId => this.storage.get('wardrobe').forCharacter(speakerId)))).reduce((acc, storageData) => {
+                if (storageData) {
+                    console.log('Retrieved wardrobe data from storage:');
+                    console.log(storageData);
+                    acc[storageData.data[0].character_id ?? storageData.data[0].persona_id ?? storageData.data[0].user_id ?? '-1'] = storageData.data[0].value as WardrobeType;
+                }
+                return acc;
+            }, {} as {[key: string]: WardrobeType});
+            // Should check for differences in wardrobes between existingWardrobes and this.backupWardrobes, then apply non-conflicting changes to this.wardrobes before saving.
+            console.log('Existing wardrobes from storage:');
+            console.log(existingWardrobes);
+
+            // Push current wardrobes
+            console.log('Pushing wardrobe updates to storage.');
+            // TODO: this is treating speakerId as a character ID, which is not correct; I will need to change this later.
+            await Promise.all(Object.keys(this.wardrobes).map(speakerId => this.storage.set('wardrobe', this.wardrobes[speakerId]).forCharacter(speakerId)));
+            // With everything reconciled and updated, set backup to current wardrobes.
+            console.log('update backupWardrobes');
+            this.backupWardrobes = {...this.wardrobes};
+        }
+
         await this.messenger.updateChatState(this.chatState);
     }
 
