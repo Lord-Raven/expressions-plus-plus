@@ -464,8 +464,19 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
             // Push current wardrobes
             console.log('Pushing wardrobe updates to storage.');
-            // TODO: this is treating speakerId as a character ID, which is not correct; I will need to change this later.
-            await Promise.all(Object.keys(this.wardrobes).map(speakerId => this.storage.set('wardrobe', this.wardrobes[speakerId]).forCharacter(speakerId)));
+            for (let speakerId in this.wardrobes) {
+                console.log(`Pushing wardrobe update for ${speakerId}`);
+                if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
+                    if (this.isSpeakerIdCharacterId(speakerId)) {
+                        const response = await this.storage.set('wardrobe', this.wardrobes[speakerId]).forCharacter(speakerId);
+                        console.log(response);
+                    } else {
+                        // Store for user/persona--not sure exactly what this will look like.
+                        // this.storage.set('wardrobe', this.wardrobes[speakerId]).forPersona(speakerId);
+                    }
+                }
+            }
+
             // With everything reconciled and updated, set backup to current wardrobes.
             console.log('update backupWardrobes');
             this.backupWardrobes = {...this.wardrobes};
@@ -657,6 +668,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return true;
     }
 
+    isSpeakerIdCharacterId(speakerId: string): boolean {
+        return this.isSpeakerCharacter(this.speakers[speakerId]);
+    }
+
+    isSpeakerCharacter(speaker: Speaker): boolean {
+        return 'personality' in speaker;
+    }
+
     getSpeakerDescription(speaker: Speaker) {
         return 'personality' in speaker ? speaker.personality : ('chatProfile' in speaker ? speaker.chatProfile : '');
     }
@@ -667,9 +686,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     getSpeakerImage(anonymizedId: string, outfit: string, emotion: Emotion, defaultUrl: string): string {
         if (this.alphaMode) {
-            console.log(`Getting image for ${anonymizedId} (${outfit}) with emotion ${emotion}.`);
-            console.log(this.wardrobes[anonymizedId]?.outfits?.[outfit]);
-            console.log(this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[EMOTION_MAPPING[emotion] ?? emotion] ?? this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[Emotion.neutral] ?? defaultUrl);
             return this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[EMOTION_MAPPING[emotion] ?? emotion] ?? this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[Emotion.neutral] ?? defaultUrl;
         }
         return this.chatState.generatedWardrobes[anonymizedId][(outfit && outfit in this.chatState.generatedWardrobes[anonymizedId]) ? outfit : DEFAULT_OUTFIT_NAME][EMOTION_MAPPING[emotion] ?? emotion] ?? this.chatState.generatedWardrobes[anonymizedId][outfit][Emotion.neutral] ?? defaultUrl;
