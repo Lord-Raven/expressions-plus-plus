@@ -452,7 +452,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 if (storageData) {
                     console.log('Retrieved wardrobe data from storage:');
                     console.log(storageData);
-                    acc[storageData.data[0].character_id ?? storageData.data[0].persona_id ?? storageData.data[0].user_id ?? '-1'] = storageData.data[0].value as WardrobeType;
+                    if (storageData.data.length > 0 && storageData.data[0].value) {
+                        acc[storageData.data[0].character_id ?? storageData.data[0].persona_id ?? storageData.data[0].user_id ?? '-1'] = storageData.data[0].value as WardrobeType;
+                    }
                 }
                 return acc;
             }, {} as {[key: string]: WardrobeType});
