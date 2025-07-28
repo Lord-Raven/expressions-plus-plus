@@ -464,7 +464,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
             // Push current wardrobes
             console.log('Pushing wardrobe updates to storage.');
-            for (let speakerId in this.wardrobes) {
+            for (let speakerId of Object.keys(this.wardrobes)) {
                 console.log(`Pushing wardrobe update for ${speakerId}`);
                 if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
                     if (this.isSpeakerIdCharacterId(speakerId)) {
@@ -673,7 +673,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     isSpeakerCharacter(speaker: Speaker): boolean {
-        return 'personality' in speaker;
+        return speaker && 'personality' in speaker;
     }
 
     getSpeakerDescription(speaker: Speaker) {
