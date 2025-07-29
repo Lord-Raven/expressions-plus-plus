@@ -289,7 +289,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.warn('Alpha mode enabled. This is experimental and may break things.');
             // Load wardrobes from storage API:
             this.wardrobes = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
-            this.backupWardrobes = {...this.wardrobes};
+            this.backupWardrobes = JSON.parse(JSON.stringify(this.wardrobes));
 
             // Load expression pack wardrobes:
             for (let charAnonId of Object.keys(this.speakers)) {
