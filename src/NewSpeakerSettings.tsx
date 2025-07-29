@@ -120,17 +120,17 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     };
 
     const EditableTabLabel = ({
-                                  name,
+                                  key,
                                   onRename,
                                   onDelete
                               }: {
-        name: string;
+        key: string;
         onRename: (newName: string) => void;
         onDelete: () => void;
     }) => {
         const [editing, setEditing] = useState(false);
-        const [value, setValue] = useState(name);
-        const generated = outfitMap[name]?.generated ?? false;
+        const [value, setValue] = useState(outfitMap[key]?.name || key);
+        const generated = outfitMap[key]?.generated ?? false;
 
         return editing ? (
             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -161,7 +161,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
             </Box>
         ) : (
             <span onDoubleClick={() => setEditing(generated)}>
-                {name}
+                {value}
                 {speaker && outfitMap[value] && (
                     <OutfitInfoIcon
                         description={stage.buildArtPrompt(speaker, value, Emotion.neutral)}
@@ -245,7 +245,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             <Tab
                                 key={`outfit_tab_${outfitKey}`}
                                 label={<EditableTabLabel
-                                    name={outfitMap[outfitKey]?.name || outfitKey}
+                                    key={outfitMap[outfitKey]?.name || outfitKey}
                                     onRename={(newName) => handleOutfitRename(outfitKey, newName)}
                                     onDelete={() => handleOutfitDelete(outfitKey)}
                                 />}
