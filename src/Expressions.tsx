@@ -626,6 +626,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async generateSpeakerImage(speaker: Speaker, outfit: string, emotion: Emotion): Promise<void> {
+        console.log(`Current generated descriptions: ${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`]} and ${this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.generatedDescription}`);
         if (!this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] || (this.alphaMode && !this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.generatedDescription)) {
             await this.generateSpeakerImagePrompt(speaker, outfit);
         }
