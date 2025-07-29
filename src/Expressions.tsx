@@ -343,10 +343,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         };
     }
 
-    async storeWardrobe(speakerId: string, wardrobe: WardrobeType): Promise<void> {
-        await this.storage.set('wardrobe', wardrobe).forCharacter(speakerId);
-    }
-
     async retrieveWardrobe(speakerId: string): Promise<WardrobeType|null> {
         const wardrobeData = (await this.storage.get('wardrobe').forCharacter(speakerId)).data[0].value;
         console.log(wardrobeData);
