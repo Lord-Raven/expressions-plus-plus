@@ -457,9 +457,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     stripNonGeneratedOutfits(wardrobe: WardrobeType): WardrobeType {
         return {
             speakerId: wardrobe.speakerId,
-            outfits: Object.keys(wardrobe.outfits).reduce((acc: {[key: string]: OutfitType}, outfitName: string) => {
-                if (wardrobe.outfits[outfitName].generated) {
-                    acc[outfitName] = wardrobe.outfits[outfitName];
+            outfits: Object.keys(wardrobe.outfits).reduce((acc: {[key: string]: OutfitType}, outfitKey: string) => {
+                if (wardrobe.outfits[outfitKey] && wardrobe.outfits[outfitKey].generated) {
+                    acc[outfitKey] = wardrobe.outfits[outfitKey];
                 }
                 return acc;
             }, {})
