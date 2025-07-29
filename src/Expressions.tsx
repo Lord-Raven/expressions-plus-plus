@@ -292,7 +292,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             this.backupWardrobes = {...this.wardrobes};
 
             // Load expression pack wardrobes:
-            for (let charAnonId in Object.keys(this.speakers)) {
+            for (let charAnonId of Object.keys(this.speakers)) {
                 if ('partial_extensions' in this.speakers[charAnonId]) {
                     const character: Character = this.speakers[charAnonId] as Character;
                     if (character.partial_extensions?.chub?.expressions?.expressions != null) {
