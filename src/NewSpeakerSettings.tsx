@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from "react";
-import {DEFAULT_OUTFIT_NAME, Emotion, EMOTION_PROMPTS, substitute} from "./Expressions";
+import {Emotion, EMOTION_PROMPTS, substitute, generateGuid} from "./Expressions";
 import { Speaker } from "@chub-ai/stages-ts";
 import {motion} from "framer-motion";
 import {
@@ -79,17 +79,17 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     const keywordsRef = useRef<HTMLInputElement>(null);
     const jsonRef = useRef<HTMLInputElement>(null);
     const [speaker, setSpeaker] = useState<Speaker|null>(null);
-    const [selectedOutfit, setSelectedOutfit] = useState<string>(DEFAULT_OUTFIT_NAME);
+    const [selectedOutfit, setSelectedOutfit] = useState<string>("");
     const [editMode, setEditMode] = useState('json');
     const [confirmEmotion, setConfirmEmotion] = useState<Emotion | null>(null);
-    const [outfitMap, setOutfitMap] = useState<{[key: string]: any}>({[DEFAULT_OUTFIT_NAME]: {}});
-    const [outfitNames, setOutfitNames] = useState<string[]>([DEFAULT_OUTFIT_NAME]);
+    const [outfitMap, setOutfitMap] = useState<{[key: string]: any}>({});
+    const [outfitKeys, setOutfitKeys] = useState<string[]>([]);
     const NEW_OUTFIT_NAME = 'Unnamed Outfit';
 
     useEffect(() => {
-        setSelectedOutfit((speaker ? stage.chatState.selectedOutfit[speaker.anonymizedId] : null) ?? DEFAULT_OUTFIT_NAME);
-        setOutfitMap((speaker ? stage.wardrobes[speaker.anonymizedId].outfits : {}) ?? {[DEFAULT_OUTFIT_NAME]: {}});
-        setOutfitNames(Object.keys(speaker ? stage.wardrobes[speaker.anonymizedId].outfits : {[DEFAULT_OUTFIT_NAME]: {}}) ?? {[DEFAULT_OUTFIT_NAME]: {}});
+        setSelectedOutfit((speaker ? stage.chatState.selectedOutfit[speaker.anonymizedId] : null) ?? "");
+        setOutfitMap((speaker ? stage.wardrobes[speaker.anonymizedId].outfits : {}) ?? {});
+        setOutfitKeys(Object.keys(speaker ? stage.wardrobes[speaker.anonymizedId].outfits : null) ?? []);
     }, [speaker]);
 
     useEffect(() => {
@@ -101,9 +101,11 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
         if (speaker) {
             stage.wardrobes[speaker.anonymizedId].outfits = newMap;
             setOutfitMap(newMap);
-            setOutfitNames(Object.keys(newMap));
+            setOutfitKeys(Object.keys(newMap));
             if (!(stage.chatState.selectedOutfit[speaker.anonymizedId] in stage.wardrobes[speaker.anonymizedId].outfits)) {
-                stage.chatState.selectedOutfit[speaker.anonymizedId] = DEFAULT_OUTFIT_NAME
+                stage.chatState.selectedOutfit[speaker.anonymizedId] = Object.keys(stage.wardrobes[speaker.anonymizedId].outfits).length > 0 ? 
+                        Object.keys(stage.wardrobes[speaker.anonymizedId].outfits)[0] : 
+                        "";
             }
             stage.updateChatState();
         }
@@ -172,23 +174,21 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
         );
     };
 
-    const handleOutfitRename = (oldName: string, newName: string) => {
-        if (newName === DEFAULT_OUTFIT_NAME || outfitMap[newName] || newName.trim() == '') return; // reject reserved or duplicate
-        const updatedMap = { ...outfitMap };
-        updatedMap[newName] = updatedMap[oldName];
-        delete updatedMap[oldName];
+    const handleOutfitRename = (key: string, newName: string) => {
+        if (newName.trim() == '') return; // reject empty names
+        outfitMap[key].name = newName.trim();
 
-        if (selectedOutfit === oldName) setSelectedOutfit(newName);
-        updateStageWardrobeMap(updatedMap);
+        updateStageWardrobeMap(outfitMap);
     };
 
-    const handleOutfitDelete = (name: string) => {
-        if (name === DEFAULT_OUTFIT_NAME) return;
+    const handleOutfitDelete = (key: string) => {
+        // Can't delete the last outfit
+        if (outfitKeys.length < 2) return;
 
-        const {[name]: removed, ...rest} = outfitMap;
+        const {[key]: removed, ...rest} = outfitMap;
 
-        if (selectedOutfit === name) {
-            const fallback = Object.keys(rest)[0] ?? DEFAULT_OUTFIT_NAME;
+        if (selectedOutfit === key) {
+            const fallback = Object.keys(rest)[0];
             setSelectedOutfit(fallback);
         }
         updateStageWardrobeMap(rest);
@@ -221,7 +221,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         For each outfit, a physical description and neutral image are generated and all other emotions are created from the neutral base image. Rename or remove additional outfits by double-clicking their tabs; an outfit's name will help steer its generation.
                     </Typography>
                     <Tabs
-                        value={selectedOutfit || outfitNames[0]}
+                        value={selectedOutfit || outfitKeys[0]}
                         variant="scrollable"
                         scrollButtons="auto"
                         sx={{m: 0}}
@@ -231,8 +231,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         onChange={(_, newValue) => {
                             if (newValue === "__add_new__") {
                                 const newName = NEW_OUTFIT_NAME;
-                                updateStageWardrobeMap({...outfitMap, [newName]: {}});
-                                setSelectedOutfit(newName);
+                                const newGuid = generateGuid();
+                                updateStageWardrobeMap({...outfitMap, [newGuid]: {name: newName, generated: true, images: {}, generatedDescription: "", triggerWords: ""}});
+                                setSelectedOutfit(newGuid);
 
                             } else {
                                 setSelectedOutfit(newValue);
@@ -240,20 +241,20 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             }
                         }}
                     >
-                        {outfitNames.map((name) => (
+                        {outfitKeys.map((outfitKey) => (
                             <Tab
-                                key={`outfit_tab_${name}`}
+                                key={`outfit_tab_${outfitKey}`}
                                 label={<EditableTabLabel
-                                    name={name}
-                                    onRename={(newName) => handleOutfitRename(name, newName)}
-                                    onDelete={() => handleOutfitDelete(name)}
+                                    name={outfitMap[outfitKey]?.name || outfitKey}
+                                    onRename={(newName) => handleOutfitRename(outfitKey, newName)}
+                                    onDelete={() => handleOutfitDelete(outfitKey)}
                                 />}
                                 sx={{p: 1}}
-                                value={name}
-                                ref={handleNewTabRef(name)}
+                                value={outfitKey}
+                                ref={handleNewTabRef(outfitKey)}
                             />
                         ))}
-                        {outfitNames.length < MAX_OUTFIT_COUNT && !outfitNames.includes(NEW_OUTFIT_NAME) && (
+                        {outfitKeys.length < MAX_OUTFIT_COUNT && !outfitKeys.includes(NEW_OUTFIT_NAME) && (
                             <Tab
                                 icon={<AddIcon />}
                                 key={`new_outfit_tab`}
@@ -267,7 +268,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             const generated: boolean = outfitMap[selectedOutfit]?.generated || false;
                             const image = stage.getSpeakerImage(
                                 speaker.anonymizedId,
-                                selectedOutfit ?? DEFAULT_OUTFIT_NAME,
+                                selectedOutfit ?? "",
                                 emotion as Emotion,
                                 silhouetteUrl
                             );
@@ -488,10 +489,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         variant="contained"
                         color="primary"
                         onClick={() => {
-
                             setConfirmEmotion(null);
                             if (onRegenerate && confirmEmotion) {
-                                onRegenerate(speaker, selectedOutfit ?? DEFAULT_OUTFIT_NAME, confirmEmotion);
+                                onRegenerate(speaker, selectedOutfit ?? "", confirmEmotion);
                             }
                         }}
                     >Yes</Button>
