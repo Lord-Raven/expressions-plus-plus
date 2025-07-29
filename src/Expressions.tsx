@@ -256,26 +256,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         this.artStyle = config?.artStyle ?? 'Bold, visual novel style illustration, clean lines';
 
         if (this.alphaMode) {
-            console.warn('Alpha mode enabled. This is experimental and may break things.');
-            // If the old generatedWardrobes were loaded, populate wardrobes
-            if (this.chatState.generatedWardrobes) {
-                this.wardrobes = Object.keys(this.chatState.generatedWardrobes).reduce((acc: {[key: string]: WardrobeType}, charAnonId) => {
-                    acc[charAnonId] = {
-                        speakerId: charAnonId,
-                        outfits: Object.keys(this.chatState.generatedWardrobes[charAnonId] ?? {}).reduce((outfitAcc: {[key: string]: OutfitType}, outfitName) => {
-                            outfitAcc[outfitName] = {
-                                images: this.chatState.generatedWardrobes[charAnonId][outfitName],
-                                name: outfitName,
-                                generatedDescription: this.chatState.generatedDescriptions[`${charAnonId}_${outfitName}`] ?? '',
-                                triggerWords: outfitName,
-                                generated: true
-                            } as OutfitType;
-                            return outfitAcc;
-                        }, {})
-                    } as WardrobeType;
-                    return acc;
-                }, {});
-            }
             // Initialize wardrobes for unloaded characters
             for (let speakerId in Object.keys(this.speakers)) {
                 this.wardrobes[speakerId] = this.wardrobes[speakerId] ?? {
@@ -283,7 +263,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     outfits: {}
                 } as WardrobeType;
             }
-            console.log(this.wardrobes);
         }
 
         // Look at characters, set up packs, and initialize values that aren't present in message/chat state
@@ -324,6 +303,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } catch (except: any) {
             console.error(`Error loading pipelines, error: ${except}`);
             return { success: false, error: except }
+        }
+
+        if (this.alphaMode) {
+            console.warn('Alpha mode enabled. This is experimental and may break things.');
+            // Load wardrobes from storage API:
+            this.wardrobes = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
+            this.backupWardrobes = {...this.wardrobes};
         }
 
         for (let speaker of Object.values(this.speakers)) {
@@ -464,26 +450,22 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         };
     }
 
-    async readWardrobeFromStorage(speakerId: string): Promise<WardrobeType|null> {
-        const wardrobeData = (await this.storage.get('wardrobe').forCharacter(speakerId)).data[0];
-        if (wardrobeData && wardrobeData.value) {
-            console.log(`Retrieved wardrobe for ${speakerId} from storage:`);
-            console.log(wardrobeData.value);
-            return wardrobeData.value as WardrobeType;
-        }
-        return null;
+    async readCharacterWardrobesFromStorage(speakerIds: string[]): Promise<{[key: string]: WardrobeType}> {
+        return this.storage.get('wardrobe').forCharacters(speakerIds.filter(speakerId => this.isSpeakerIdCharacterId(speakerId))).then((data) => {
+            console.log('Retrieved wardrobes from storage:');
+            console.log(data);
+            return data.data.reduce((acc: {[key: string]: WardrobeType}, item) => {
+                acc[item.character_id ?? ""] = item.value as WardrobeType;
+                return acc;
+            }, {});
+        });
     }
 
     async updateChatState() {
         // This function is temporarily doing double duty to set/reconcile wardrobes and update chat state:
         if (this.alphaMode) {
 
-            const existingWardrobes: {[key: string]: WardrobeType} = (await Promise.all(Object.keys(this.wardrobes).map(speakerId => this.readWardrobeFromStorage(speakerId)))).reduce((acc, wardrobe) => {
-                if (wardrobe) {
-                    acc[wardrobe.speakerId] = wardrobe;
-                }
-                return acc;
-            }, {} as {[key: string]: WardrobeType});
+            const existingWardrobes: {[key: string]: WardrobeType} = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
             // Should check for differences in wardrobes between existingWardrobes and this.backupWardrobes, then apply non-conflicting changes to this.wardrobes before saving.
             // Bear in mind that this.backupWardrobes will have non-generated outfits, while we expect existingWardrobes to have only generated outfits.
             console.log('Existing wardrobes from storage:');
