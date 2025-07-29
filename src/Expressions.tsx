@@ -477,20 +477,20 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // This function is temporarily doing double duty to set/reconcile wardrobes and update chat state:
         if (this.alphaMode) {
 
-            const existingWardrobes: {[key: string]: WardrobeType} = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
+            const remoteWardrobes: {[key: string]: WardrobeType} = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
             // Should check for differences in wardrobes between existingWardrobes and this.backupWardrobes, then apply non-conflicting changes to this.wardrobes before saving.
             // Bear in mind that this.backupWardrobes will have non-generated outfits, while we expect existingWardrobes to have only generated outfits.
             console.log('Existing wardrobes from storage:');
-            console.log(existingWardrobes);
+            console.log(remoteWardrobes);
             // Compare existingWardrobes against this.backupWardrobes to find differences in generated outfits:
-            Object.keys(existingWardrobes).forEach((speakerId) => {
+            Object.keys(remoteWardrobes).forEach((speakerId) => {
                 if (this.backupWardrobes[speakerId]) {
-                    for (let outfitKey of Object.keys(existingWardrobes[speakerId].outfits)) {
+                    for (let outfitKey of Object.keys(remoteWardrobes[speakerId].outfits)) {
                         // If the outfit exists in existingWardrobes but not in backup, it means it was added by another user
                         // We need to add it to this.wardrobes.
-                        if (!this.backupWardrobes[speakerId].outfits[outfitKey] && Object.keys(existingWardrobes[speakerId].outfits[outfitKey].images).length > 0) {
+                        if (!this.backupWardrobes[speakerId].outfits[outfitKey] && Object.keys(remoteWardrobes[speakerId].outfits[outfitKey].images).length > 0) {
                             console.log(`Outfit ${outfitKey} was added for ${speakerId}`);
-                            this.wardrobes[speakerId].outfits[outfitKey] = existingWardrobes[speakerId].outfits[outfitKey];
+                            this.wardrobes[speakerId].outfits[outfitKey] = remoteWardrobes[speakerId].outfits[outfitKey];
                         } else if (this.backupWardrobes[speakerId].outfits[outfitKey] && !this.wardrobes[speakerId].outfits[outfitKey]) {
                             // If the outfit exists in backup but not in this.wardrobes, it means it was removed locally.
                             console.log(`Outfit ${outfitKey} was removed for ${speakerId}`);
@@ -500,7 +500,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             // Be smart about this; some images may have been updated in this.wardrobes. We only want to apply differences and not all images.
                             console.log(`Outfit ${outfitKey} exists in both existing and backup wardrobes for ${speakerId}. Checking images...`);
 
-                            const existingImages = existingWardrobes[speakerId].outfits[outfitKey].images || {};
+                            const existingImages = remoteWardrobes[speakerId].outfits[outfitKey].images || {};
                             const backupImages = this.backupWardrobes[speakerId].outfits[outfitKey].images || {};
                             const currentImages = this.wardrobes[speakerId].outfits[outfitKey].images || {};
                             
@@ -540,29 +540,29 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             });
 
                             // Check for outfit name, generatedDescription, and triggerWords:
-                            if (existingWardrobes[speakerId].outfits[outfitKey].name && 
-                                this.wardrobes[speakerId].outfits[outfitKey].name !== existingWardrobes[speakerId].outfits[outfitKey].name && 
+                            if (remoteWardrobes[speakerId].outfits[outfitKey].name && 
+                                this.wardrobes[speakerId].outfits[outfitKey].name !== remoteWardrobes[speakerId].outfits[outfitKey].name && 
                                 this.wardrobes[speakerId].outfits[outfitKey].name == this.backupWardrobes[speakerId].outfits[outfitKey].name) {
-                                console.log(`Outfit name changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].name}' to '${existingWardrobes[speakerId].outfits[outfitKey].name}'`);
-                                this.wardrobes[speakerId].outfits[outfitKey].name = existingWardrobes[speakerId].outfits[outfitKey].name;
+                                console.log(`Outfit name changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].name}' to '${remoteWardrobes[speakerId].outfits[outfitKey].name}'`);
+                                this.wardrobes[speakerId].outfits[outfitKey].name = remoteWardrobes[speakerId].outfits[outfitKey].name;
                             }
-                            if (existingWardrobes[speakerId].outfits[outfitKey].artPrompt && 
-                                this.wardrobes[speakerId].outfits[outfitKey].artPrompt !== existingWardrobes[speakerId].outfits[outfitKey].artPrompt &&
+                            if (remoteWardrobes[speakerId].outfits[outfitKey].artPrompt && 
+                                this.wardrobes[speakerId].outfits[outfitKey].artPrompt !== remoteWardrobes[speakerId].outfits[outfitKey].artPrompt &&
                                 this.wardrobes[speakerId].outfits[outfitKey].artPrompt == this.backupWardrobes[speakerId].outfits[outfitKey].artPrompt) {
-                                console.log(`Outfit description changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].artPrompt}' to '${existingWardrobes[speakerId].outfits[outfitKey].artPrompt}'`);
-                                this.wardrobes[speakerId].outfits[outfitKey].artPrompt = existingWardrobes[speakerId].outfits[outfitKey].artPrompt;
+                                console.log(`Outfit description changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].artPrompt}' to '${remoteWardrobes[speakerId].outfits[outfitKey].artPrompt}'`);
+                                this.wardrobes[speakerId].outfits[outfitKey].artPrompt = remoteWardrobes[speakerId].outfits[outfitKey].artPrompt;
                             }
-                            if (existingWardrobes[speakerId].outfits[outfitKey].triggerWords && 
-                                this.wardrobes[speakerId].outfits[outfitKey].triggerWords !== existingWardrobes[speakerId].outfits[outfitKey].triggerWords &&
+                            if (remoteWardrobes[speakerId].outfits[outfitKey].triggerWords && 
+                                this.wardrobes[speakerId].outfits[outfitKey].triggerWords !== remoteWardrobes[speakerId].outfits[outfitKey].triggerWords &&
                                 this.wardrobes[speakerId].outfits[outfitKey].triggerWords == this.backupWardrobes[speakerId].outfits[outfitKey].triggerWords) {
-                                console.log(`Outfit trigger words changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].triggerWords}' to '${existingWardrobes[speakerId].outfits[outfitKey].triggerWords}'`);
-                                this.wardrobes[speakerId].outfits[outfitKey].triggerWords = existingWardrobes[speakerId].outfits[outfitKey].triggerWords;
+                                console.log(`Outfit trigger words changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].triggerWords}' to '${remoteWardrobes[speakerId].outfits[outfitKey].triggerWords}'`);
+                                this.wardrobes[speakerId].outfits[outfitKey].triggerWords = remoteWardrobes[speakerId].outfits[outfitKey].triggerWords;
                             }
                         }
                     }
                     // Compare outfits:
                     Object.keys(this.backupWardrobes[speakerId].outfits).forEach((outfitName) => {
-                        if (this.backupWardrobes[speakerId].outfits[outfitName] && !existingWardrobes[speakerId].outfits[outfitName]) {
+                        if (this.backupWardrobes[speakerId].outfits[outfitName] && !remoteWardrobes[speakerId].outfits[outfitName]) {
                             // If the outfit exists in backup but not in existing, it means it was removed
                             console.log(`Outfit ${outfitName} was removed for ${speakerId}`);
                         }
@@ -585,9 +585,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }
             }));
 
-            // With everything reconciled and updated, set backup to current wardrobes.
+            // With everything reconciled and updated, set backup to a copy of wardrobes.
             console.log('update backupWardrobes');
-            this.backupWardrobes = {...this.wardrobes};
+            this.backupWardrobes = JSON.parse(JSON.stringify(this.wardrobes));
         }
 
         await this.messenger.updateChatState(this.chatState);
