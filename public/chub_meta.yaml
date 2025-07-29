@@ -9,9 +9,7 @@ tagline: "Shows character emotions based on a set of images.++"
 
 # A longer explanation. Supports Markdown format.
 creator_notes: "
-_Hey, can you all just ignore it if this randomly breaks while I work on it? I'm developing from my phone, 
-and I'm too lazy to properly spin up a fork to experiment with new stuff. 
-I'm putting some safeguards in place but no promises. Sorry for the inconvenience._  
+_Hey, can you all just ignore it if this randomly breaks while I work on it? I'm trying out the new storage API and trying to gate off the impact but I could easily make a mistake. Don't turn on alpha mode._  
   
 This is a shameless knock-off of the [official Expression Packs stage](https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d). 
 You can add this stage to any chat by searching for it under Stages in Chat Settings, but you may want to read some of this beforehand.  
@@ -63,10 +61,10 @@ undoubtedly situations that will still fail. The character management UI will in
 
 ### Updates  
 
-2025.07.19:
+2025.07.28:
 
 - Please ignore what is bound to be a series of potentially breaking updates as I experiment with the new storage API. 
-I am attempting to gate this off so it doesn't break the entire stage, but I'm playing real loose with it. 
+I am attempting to gate this off so it doesn't break the entire stage, but I'm playing real loose with it. Sorry!
 
 2025.07.10: 
 

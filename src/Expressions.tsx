@@ -4,7 +4,8 @@ import {
     InitialData,
     Message,
     AspectRatio,
-    Speaker
+    Speaker,
+    Character
 } from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Client } from "@gradio/client";
@@ -255,43 +256,22 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         this.alphaMode = (config?.alphaMode ?? "False") == "True";
         this.artStyle = config?.artStyle ?? 'Bold, visual novel style illustration, clean lines';
 
-        if (this.alphaMode) {
-            // Initialize wardrobes for unloaded characters
-            for (let speakerId in Object.keys(this.speakers)) {
-                this.wardrobes[speakerId] = this.wardrobes[speakerId] ?? {
-                    speakerId: speakerId,
-                    outfits: {}
-                } as WardrobeType;
-            }
-        }
 
-        // Look at characters, set up packs, and initialize values that aren't present in message/chat state
-        Object.keys(this.speakers).forEach((charAnonId: string) => {
-            const speaker = this.speakers[charAnonId];
-            if (!speaker.isRemoved) {
-                if (this.alphaMode && characters[charAnonId]?.partial_extensions?.chub?.expressions?.expressions != null) {
-                    console.log('Character has an expressions pack.');
-                    // Generate outfit entries for each expressions pack, marked non-generated.
-                    for (let expressionPack of Object.values([characters[charAnonId].partial_extensions.chub.expressions])) {
-                        this.wardrobes[charAnonId].outfits[expressionPack.version] = {
-                            images: expressionPack.expressions,
-                            name: expressionPack.version,
-                            generatedDescription: '',
-                            generated: false,
-                            triggerWords: expressionPack.version,
-                        } as OutfitType;
+        if (!this.alphaMode) {
+            // Look at characters, set up packs, and initialize values that aren't present in message/chat state
+            Object.keys(this.speakers).forEach((charAnonId: string) => {
+                const speaker = this.speakers[charAnonId];
+                if (!speaker.isRemoved) {
+                    if (this.chatState.generatedWardrobes[charAnonId] && this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME] && Object.keys(this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME]).length > 0) {
+                        console.log('Character has a wardrobe.');
+                    } else {
+                        console.log('Initializing a new wardrobe.')
+                        this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: {}};
+                        this.chatState.selectedOutfit[charAnonId] = DEFAULT_OUTFIT_NAME;
                     }
-                    console.log('Loaded an expression pack');
-                    console.log(this.wardrobes);
-                } else if (this.chatState.generatedWardrobes[charAnonId] && this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME] && Object.keys(this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME]).length > 0) {
-                    console.log('Character has a wardrobe.');
-                } else {
-                    console.log('Initializing a new wardrobe.')
-                    this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: {}};
-                    this.chatState.selectedOutfit[charAnonId] = DEFAULT_OUTFIT_NAME;
                 }
-            }
-        });
+            });
+        }
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
@@ -310,6 +290,42 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             // Load wardrobes from storage API:
             this.wardrobes = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
             this.backupWardrobes = {...this.wardrobes};
+
+            // Load expression pack wardrobes:
+            for (let charAnonId in Object.keys(this.speakers)) {
+                if ('partial_extensions' in this.speakers[charAnonId]) {
+                    const character: Character = this.speakers[charAnonId] as Character;
+                    if (character.partial_extensions?.chub?.expressions?.expressions != null) {
+                        console.log(`Character ${charAnonId} has an expressions pack.`);
+                        // Generate outfit entries for each expressions pack, marked non-generated.
+                        for (let expressionPack of Object.values([character.partial_extensions.chub.expressions])) {
+                            this.wardrobes[charAnonId].outfits[expressionPack.version] = {
+                                images: expressionPack.expressions,
+                                name: expressionPack.version,
+                                triggerWords: '',
+                                generated: false,
+                                generatedDescription: '',
+                            };
+                        }
+                    }
+                }
+            }
+
+            // Initialize wardrobes for characters with no loaded wardrobes
+            for (let speakerId in Object.keys(this.speakers)) {
+                this.wardrobes[speakerId] = this.wardrobes[speakerId] ?? {
+                    speakerId: speakerId,
+                    outfits: {
+                        [generateGuid()]: {
+                            name: DEFAULT_OUTFIT_NAME,
+                            generatedDescription: '',
+                            images: {},
+                            triggerWords: '',
+                            generated: true
+                        }
+                    }
+                } as WardrobeType;
+            }
         }
 
         for (let speaker of Object.values(this.speakers)) {
@@ -473,24 +489,24 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             // Compare existingWardrobes against this.backupWardrobes to find differences in generated outfits:
             Object.keys(existingWardrobes).forEach((speakerId) => {
                 if (this.backupWardrobes[speakerId]) {
-                    for (let outfitName in Object.keys(existingWardrobes[speakerId].outfits)) {
+                    for (let outfitKey in Object.keys(existingWardrobes[speakerId].outfits)) {
                         // If the outfit exists in existingWardrobes but not in backup, it means it was added by another user
                         // We need to add it to this.wardrobes.
-                        if (!this.backupWardrobes[speakerId].outfits[outfitName]) {
-                            console.log(`Outfit ${outfitName} was added for ${speakerId}`);
-                            this.wardrobes[speakerId].outfits[outfitName] = existingWardrobes[speakerId].outfits[outfitName];
-                        } else if (this.backupWardrobes[speakerId].outfits[outfitName] && !this.wardrobes[speakerId].outfits[outfitName]) {
+                        if (!this.backupWardrobes[speakerId].outfits[outfitKey]) {
+                            console.log(`Outfit ${outfitKey} was added for ${speakerId}`);
+                            this.wardrobes[speakerId].outfits[outfitKey] = existingWardrobes[speakerId].outfits[outfitKey];
+                        } else if (this.backupWardrobes[speakerId].outfits[outfitKey] && !this.wardrobes[speakerId].outfits[outfitKey]) {
                             // If the outfit exists in backup but not in this.wardrobes, it means it was removed locally.
-                            console.log(`Outfit ${outfitName} was removed for ${speakerId}`);
+                            console.log(`Outfit ${outfitKey} was removed for ${speakerId}`);
                             // No action is taken; the deletion will be pushed below.
                         } else {
                             // If the outfit exists in both existingWardrobes and backup, we need to compare images to see if any need to be updated.
                             // Be smart about this; some images may have been updated in this.wardrobes. We only want to apply differences and not all images.
-                            console.log(`Outfit ${outfitName} exists in both existing and backup wardrobes for ${speakerId}. Checking images...`);
+                            console.log(`Outfit ${outfitKey} exists in both existing and backup wardrobes for ${speakerId}. Checking images...`);
 
-                            const existingImages = existingWardrobes[speakerId].outfits[outfitName].images || {};
-                            const backupImages = this.backupWardrobes[speakerId].outfits[outfitName].images || {};
-                            const currentImages = this.wardrobes[speakerId].outfits[outfitName].images || {};
+                            const existingImages = existingWardrobes[speakerId].outfits[outfitKey].images || {};
+                            const backupImages = this.backupWardrobes[speakerId].outfits[outfitKey].images || {};
+                            const currentImages = this.wardrobes[speakerId].outfits[outfitKey].images || {};
                             
                             // Compare each emotion/image key
                             Object.keys(existingImages).forEach((emotionKey) => {
@@ -499,17 +515,17 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                                 
                                 // If the image exists in existing but not in backup, it was added externally
                                 if (existingImageUrl && !backupImageUrl) {
-                                    console.log(`Image for emotion '${emotionKey}' was added externally for ${speakerId}/${outfitName}`);
-                                    this.wardrobes[speakerId].outfits[outfitName].images[emotionKey] = existingImageUrl;
+                                    console.log(`Image for emotion '${emotionKey}' was added externally for ${speakerId}/${outfitKey}`);
+                                    this.wardrobes[speakerId].outfits[outfitKey].images[emotionKey] = existingImageUrl;
                                 }
                                 // If the image exists in both but has different URLs, it was updated externally
                                 else if (existingImageUrl && backupImageUrl && existingImageUrl !== backupImageUrl) {
                                     // Only apply if we haven't locally modified this image since backup
                                     if (!currentImages[emotionKey] || currentImages[emotionKey] === backupImageUrl) {
-                                        console.log(`Image for emotion '${emotionKey}' was updated externally for ${speakerId}/${outfitName}`);
-                                        this.wardrobes[speakerId].outfits[outfitName].images[emotionKey] = existingImageUrl;
+                                        console.log(`Image for emotion '${emotionKey}' was updated externally for ${speakerId}/${outfitKey}`);
+                                        this.wardrobes[speakerId].outfits[outfitKey].images[emotionKey] = existingImageUrl;
                                     } else {
-                                        console.log(`Image for emotion '${emotionKey}' has conflicting changes - keeping local version for ${speakerId}/${outfitName}`);
+                                        console.log(`Image for emotion '${emotionKey}' has conflicting changes - keeping local version for ${speakerId}/${outfitKey}`);
                                     }
                                 }
                             });
@@ -519,10 +535,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                                 if (backupImages[emotionKey] && !existingImages[emotionKey]) {
                                     // Only remove if we haven't locally modified this image since backup
                                     if (!currentImages[emotionKey] || currentImages[emotionKey] === backupImages[emotionKey]) {
-                                        console.log(`Image for emotion '${emotionKey}' was removed externally for ${speakerId}/${outfitName}`);
-                                        delete this.wardrobes[speakerId].outfits[outfitName].images[emotionKey];
+                                        console.log(`Image for emotion '${emotionKey}' was removed externally for ${speakerId}/${outfitKey}`);
+                                        delete this.wardrobes[speakerId].outfits[outfitKey].images[emotionKey];
                                     } else {
-                                        console.log(`Image for emotion '${emotionKey}' was removed externally but has local changes - keeping local version for ${speakerId}/${outfitName}`);
+                                        console.log(`Image for emotion '${emotionKey}' was removed externally but has local changes - keeping local version for ${speakerId}/${outfitKey}`);
                                     }
                                 }
                             });
