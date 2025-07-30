@@ -606,13 +606,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
     }
 
-    async generateSpeakerImagePrompt(speaker: Speaker, outfit: string): Promise<void> {
+    async generateSpeakerImagePrompt(speaker: Speaker, outfitKey: string): Promise<void> {
         // Must first build a visual description for this character:
         console.log(`Generating a physical description of ${speaker.name}.`);
+        const outfitName = this.alphaMode ? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].name : outfitKey;
         const imageDescription = await this.generator.textGen({
             prompt:
                 `Chat History:\n{{messages}}\n\n` +
-                (outfit != DEFAULT_OUTFIT_NAME ? `New Outfit:\n${outfit}\n\n` : '') +
+                (outfitName != DEFAULT_OUTFIT_NAME ? `New Outfit:\n${outfitName}\n\n` : '') +
                 `Information about ${speaker.name}:\n${this.getSpeakerDescription(speaker)}\n\n` +
                 `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
                 `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.\n\n` +
@@ -621,8 +622,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 `the result will be fed directly into an image generator, which is unfamiliar with this character, ` +
                 `so use concise tags and keywords to convey all essential details about them, ` +
                 `presenting ample and exhaustive character appearance notes--particularly if they seem obvious: gender, race, skin tone, hair do/color, physique, body shape, outfit, fashion, setting/theme, style, etc. ` +
-                (outfit != DEFAULT_OUTFIT_NAME ?
-                    `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit: ${outfit}. Develop authentic visual details for this outfit. Aside from that, ` :
+                (outfitName != DEFAULT_OUTFIT_NAME ?
+                    `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit: ${outfitName}. Develop authentic visual details for this outfit. Aside from that, ` :
                     `Chat history is provided for context on ${speaker.name}'s current outfit; `) +
                 `focus on persistent physical details over fleeting ones as this description will be applied to a variety of situations.`,
             min_tokens: 50,
@@ -631,9 +632,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         });
         if (imageDescription?.result) {
             console.log(`Received an image description: ${imageDescription.result}`);
-            this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] = imageDescription.result;
-            if (this.alphaMode && this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]) {
-                this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt = imageDescription.result;
+            this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfitKey}`] = imageDescription.result;
+            if (this.alphaMode && this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]) {
+                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt = imageDescription.result;
             }
             await this.updateChatState();
         } else {
@@ -641,20 +642,22 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
     }
 
-    async generateSpeakerImage(speaker: Speaker, outfit: string, emotion: Emotion): Promise<void> {
-        console.log(`Current generated descriptions: ${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`]} and ${this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt}`);
-        if (!this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] || (this.alphaMode && !this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt)) {
-            await this.generateSpeakerImagePrompt(speaker, outfit);
+    async generateSpeakerImage(speaker: Speaker, outfitKey: string, emotion: Emotion): Promise<void> {
+        console.log(`Current generated descriptions: ${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfitKey}`]} and ${this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt}`);
+        const outfitName = this.alphaMode ? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].name : outfitKey;
+
+        if (!this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfitKey}`] || (this.alphaMode && !this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt)) {
+            await this.generateSpeakerImagePrompt(speaker, outfitName);
         }
 
         // Must do neutral first:
-        if (emotion != Emotion.neutral && !this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][Emotion.neutral]) {
+        if (emotion != Emotion.neutral && !this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey][Emotion.neutral]) {
             emotion = Emotion.neutral;
         }
-        console.log(`Generating ${emotion} image for ${speaker.name} (${outfit}).`)
+        console.log(`Generating ${emotion} image for ${speaker.name} (${outfitName}).`)
         if (emotion == Emotion.neutral) {
             const imageUrl = (await this.generator.makeImage({
-                prompt: substitute(this.buildArtPrompt(speaker, outfit, emotion)),
+                prompt: substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true
@@ -663,30 +666,30 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
             // Clear entire pack then assign this image:
-            this.chatState.generatedWardrobes[speaker.anonymizedId][outfit] = {};
-            this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][Emotion.neutral] = imageUrl;
+            this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey] = {};
+            this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey][Emotion.neutral] = imageUrl;
             if (this.alphaMode) {
-                this.wardrobes[speaker.anonymizedId].outfits[outfit].images = {};
-                this.wardrobes[speaker.anonymizedId].outfits[outfit].images[Emotion.neutral] = imageUrl;
+                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images = {};
+                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] = imageUrl;
             }
             /*if (!this.generating) {
                 this.generateNextImage(0);
             }*/
         } else {
             const imageUrl = (await this.generator.imageToImage({
-                image: this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][Emotion.neutral],
-                prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`]}), (${CHARACTER_ART_PROMPT}), ((Strong Emotion: ${EMOTION_PROMPTS[emotion]}))`),
+                image: this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey][Emotion.neutral],
+                prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfitKey}`]}), (${CHARACTER_ART_PROMPT}), ((Strong Emotion: ${EMOTION_PROMPTS[emotion]}))`),
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true,
                 strength: 0.1
-            }))?.url ?? this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][Emotion.neutral] ?? '';
+            }))?.url ?? this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey][Emotion.neutral] ?? '';
             if (imageUrl == '') {
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
-            this.chatState.generatedWardrobes[speaker.anonymizedId][outfit][emotion] = imageUrl;
+            this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey][emotion] = imageUrl;
             if (this.alphaMode) {
-                this.wardrobes[speaker.anonymizedId].outfits[outfit].images[emotion] = imageUrl;
+                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] = imageUrl;
             }
         }
         await this.updateChatState();
