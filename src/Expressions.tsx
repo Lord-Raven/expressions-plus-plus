@@ -647,7 +647,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const outfitName = this.alphaMode ? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].name : outfitKey;
 
         if (!this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfitKey}`] || (this.alphaMode && !this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt)) {
-            await this.generateSpeakerImagePrompt(speaker, outfitName);
+            await this.generateSpeakerImagePrompt(speaker, outfitKey);
         }
 
         // Must do neutral first:
