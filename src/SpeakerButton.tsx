@@ -152,7 +152,7 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                                         }}
                                     />
                                     <Typography color="text.primary" sx={{ fontWeight: 600, textTransform: "capitalize" }}>
-                                        {outfit}
+                                        {stage.alphaMode ? stage.wardrobes[speaker.anonymizedId].outfits[outfit].name : outfit}
                                     </Typography>
                                 </ButtonBase>
                             ))}

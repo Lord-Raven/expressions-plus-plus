@@ -846,7 +846,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             stage={this}
                             borderColor={this.messageState.borderColor}
                             onRegenerate={(char, outfit, emotion) => {
-                                this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${outfit}).`);
+                                this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${this.wardrobes[char.anonymizedId].outfits[outfit].name}).`);
                             }}
                             />) : (
                         <SpeakerSettings
