@@ -232,7 +232,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             if (newValue === "__add_new__") {
                                 const newName = NEW_OUTFIT_NAME;
                                 const newGuid = generateGuid();
-                                updateStageWardrobeMap({...outfitMap, [newGuid]: {name: newName, generated: true, images: {}, generatedDescription: "", triggerWords: ""}});
+                                updateStageWardrobeMap({...outfitMap, [newGuid]: {name: newName, generated: true, images: {}, artPrompt: "", triggerWords: ""}});
                                 setSelectedOutfit(newGuid);
 
                             } else {
@@ -319,22 +319,22 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         
                     </Grid>
                     {/* Multiple collapsible fields side-by-side (only one section is visible at a time):  
-                    A prompt editing field for the selected outfits generatedDescription (if it is generated),
+                    A prompt editing field for the selected outfits art prompt (if it is generated),
                     a keyword editing field for the selected outfits keywords (if it is generated),
                     and a JSON synced textfield for import/export (disabled but visible for non-generated) */}
                     
                     <Box sx={{ mt: 3 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center' }}>
-                            {/* Prompt (generatedDescription) */}
-                            {editMode === 'generatedDescription' ? (
+                            {/* Prompt (artPrompt) */}
+                            {editMode === 'artPrompt' ? (
                                 <TextField
                                     label="Art Prompt"
                                     fullWidth
                                     size="small"
-                                    value={outfitMap[selectedOutfit]?.generatedDescription || ""}
+                                    value={outfitMap[selectedOutfit]?.artPrompt || ""}
                                     onChange={e => {
                                         const val = e.target.value;
-                                        const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], generatedDescription: val } };
+                                        const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], artPrompt: val } };
                                         updateStageWardrobeMap(updatedMap);
                                         stage.updateChatState();
                                     }}
@@ -351,7 +351,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         if (dialogContentRef.current) {
                                             lastScrollTop = dialogContentRef.current.scrollTop;
                                         }
-                                        setEditMode('generatedDescription');
+                                        setEditMode('artPrompt');
                                         setTimeout(() => {
                                             if (promptRef.current) {
                                                 promptRef.current.focus({ preventScroll: true });
