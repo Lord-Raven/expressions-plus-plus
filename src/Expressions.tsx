@@ -616,17 +616,20 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 `Chat History:\n{{messages}}\n\n` +
                 (outfitName != DEFAULT_OUTFIT_NAME ? `New Outfit:\n${outfitName}\n\n` : '') +
                 `Information about ${speaker.name}:\n${this.getSpeakerDescription(speaker)}\n\n` +
-                `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
-                `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.\n\n` +
-                `Current Instruction:\nThe goal of this request is to digest the information about ${speaker.name} and construct a comprehensive and functional visual description of ${speaker.name}. ` +
-                `The chat history may involve other characters, but this system response will fixate on ${speaker.name}; ` +
-                `the result will be fed directly into an image generator, which is unfamiliar with this character, ` +
-                `so use concise tags and keywords to convey all essential details about them, ` +
+                `Instruction:\nThe goal of this request is to digest the information about ${speaker.name} and construct a simple, comprehensive, and functional visual description of ${speaker.name}. ` +
+                `The chat history may involve other characters, but this system response will fixate on ${speaker.name}, forsaking other characters or background details. ` +
+                `The result will be fed directly into an image generator, which is unfamiliar with this character, ` +
+                `so use concise tags and keywords to convey all essential visual details about them, ` +
                 `presenting ample and exhaustive character appearance notes--particularly if they seem obvious: gender, race, skin tone, hair do/color, physique, body shape, outfit, fashion, setting/theme, style, etc. ` +
                 (outfitName != DEFAULT_OUTFIT_NAME ?
-                    `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit: ${outfitName}. Develop authentic visual details for this outfit. Aside from that, ` :
-                    `Chat history is provided for context on ${speaker.name}'s current outfit; `) +
-                `focus on persistent physical details over fleeting ones as this description will be applied to a variety of situations. Output the final visual description below.`,
+                    `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit or vibe: ${outfitName}. Develop authentic visual details for the outfit. Aside from that, ` :
+                    `Chat history is provided for potential context on ${speaker.name}'s current look; `) +
+                `focus on persistent physical details over fleeting ones as this description will be applied to a variety of situations. Output the final visual description below.\n\n` +
+
+                `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
+                `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.\n\n` +
+                `Sample Response:\nA willowy androgynous figure, short spiky hair, pale skin, wearing a sleek black bodysuit with silver accents, futuristic cyberpunk style, glowing blue tattoos on arms, piercing blue eyes.\n\n` +
+                '',
             min_tokens: 50,
             max_tokens: 140,
             include_history: true
