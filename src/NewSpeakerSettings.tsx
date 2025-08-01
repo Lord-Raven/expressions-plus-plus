@@ -54,7 +54,7 @@ const OutfitInfoIcon = ({
     return (
         <Tooltip title={isLocked ? (<><Icon fontSize="inherit" color={color} />This outfit was built by an expression pack and cannot be altered.</>) :
                 (<>Prompt used for image generation:<br/><br/>{description}
-                    {isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt failed to generate an image and may contain words that could trigger sensitive content. Regenerate the neutral image to build a new prompt and try again. Consider reporting recurring false positives to the stage developer.</>)}
+                    {isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt failed to generate an image. This could be due to exhausted daily credits or sensitive content in the prompt; consider reporting false positives to the stage developer.</>)}
                     {isAltered && !isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt was automatically altered from its original form to avoid triggering a sensitive content failure; if the result appears fine, you may disregard this warning.</>)}
                     </>)}
                 arrow enterDelay={300} leaveDelay={150}>
@@ -224,7 +224,16 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         value={selectedOutfit || outfitKeys[0]}
                         variant="scrollable"
                         scrollButtons="auto"
-                        sx={{m: 0}}
+                        allowScrollButtonsMobile
+                        sx={{
+                            m: 0,
+                            maxWidth: '100%',
+                            '& .MuiTabs-scrollButtons': {
+                                '&.Mui-disabled': {
+                                    opacity: 0.3,
+                                },
+                            },
+                        }}
                         slotProps={{
                             indicator: {sx: {backgroundColor: borderColor, height: "3px"}}
                         }}
