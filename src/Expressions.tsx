@@ -618,7 +618,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 `Information about ${speaker.name}:\n${this.getSpeakerDescription(speaker)}\n\n` +
                 `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
                 `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.\n\n` +
-                `Current Instruction:\nThe goal of this task is to digest the information about ${speaker.name} and construct a comprehensive and functional visual description of ${speaker.name}. ` +
+                `Current Instruction:\nThe goal of this request is to digest the information about ${speaker.name} and construct a comprehensive and functional visual description of ${speaker.name}. ` +
                 `The chat history may involve other characters, but this system response will fixate on ${speaker.name}; ` +
                 `the result will be fed directly into an image generator, which is unfamiliar with this character, ` +
                 `so use concise tags and keywords to convey all essential details about them, ` +
@@ -626,7 +626,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 (outfitName != DEFAULT_OUTFIT_NAME ?
                     `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit: ${outfitName}. Develop authentic visual details for this outfit. Aside from that, ` :
                     `Chat history is provided for context on ${speaker.name}'s current outfit; `) +
-                `focus on persistent physical details over fleeting ones as this description will be applied to a variety of situations.`,
+                `focus on persistent physical details over fleeting ones as this description will be applied to a variety of situations. Output the final visual description at the "System:" prompt. `,
             min_tokens: 50,
             max_tokens: 140,
             include_history: true
