@@ -385,7 +385,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.info(`New emotion for ${speaker.name}: ${newEmotion}`);
         this.messageState.speakerEmotion[speaker.anonymizedId] = newEmotion;
         this.messageState.activeSpeaker = speaker.anonymizedId;
-        if (!this.chatState.generatedWardrobes[speaker.anonymizedId][this.chatState.selectedOutfit[speaker.anonymizedId]][EMOTION_MAPPING[newEmotion as Emotion] ?? newEmotion]) {
+        if ((this.alphaMode && !this.wardrobes[speaker.anonymizedId].outfits[this.chatState.selectedOutfit[speaker.anonymizedId]].images[EMOTION_MAPPING[newEmotion as Emotion] ?? newEmotion]) ||
+            (!this.alphaMode && !this.chatState.generatedWardrobes[speaker.anonymizedId][this.chatState.selectedOutfit[speaker.anonymizedId]][EMOTION_MAPPING[newEmotion as Emotion] ?? newEmotion])) {
             this.wrapPromise(
                 this.generateSpeakerImage(speaker, this.chatState.selectedOutfit[speaker.anonymizedId], EMOTION_MAPPING[newEmotion as Emotion] ?? (newEmotion as Emotion)),
                 `Generating ${newEmotion} for ${speaker.name} (${this.chatState.selectedOutfit[speaker.anonymizedId]}).`);
