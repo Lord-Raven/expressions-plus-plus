@@ -626,7 +626,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 (outfitName != DEFAULT_OUTFIT_NAME ?
                     `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit: ${outfitName}. Develop authentic visual details for this outfit. Aside from that, ` :
                     `Chat history is provided for context on ${speaker.name}'s current outfit; `) +
-                `focus on persistent physical details over fleeting ones as this description will be applied to a variety of situations. Output the final visual description at the "System:" prompt. `,
+                `focus on persistent physical details over fleeting ones as this description will be applied to a variety of situations. Output the final visual description below.`,
             min_tokens: 50,
             max_tokens: 140,
             include_history: true
