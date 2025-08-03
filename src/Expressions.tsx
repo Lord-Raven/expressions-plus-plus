@@ -763,7 +763,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     const response = await fetch(imageUrl);
                     const imageBlob = await response.blob();
                     const image = URL.createObjectURL(imageBlob);
-                    const depthResponse = await this.depthPipeline.submit("/on_submit", {image: image});
+                    const depthResponse = await this.depthPipeline.predict("/on_submit", {image: image});
                     console.log(depthResponse);
                 }
             }
