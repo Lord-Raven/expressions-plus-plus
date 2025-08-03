@@ -56,9 +56,8 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
         uniforms: {
           uColorMap: { value: colorMap },
           uDepthMap: { value: depthMap },
-          uTime: { value: 0 },
           uMouse: { value: new THREE.Vector2(0, 0) },
-          uParallaxStrength: { value: 0.02 },
+          uParallaxStrength: { value: 0.05 },
         },
         vertexShader: `
       varying vec2 vUv;
@@ -94,9 +93,8 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
     [colorMap, depthMap]
   );
 
-  useFrame(({ clock }) => {
+  useFrame(() => {
     if (shaderMaterial) {
-      shaderMaterial.uniforms.uTime.value = clock.elapsedTime;
       shaderMaterial.uniforms.uMouse.value.set(mousePosition.x, mousePosition.y);
     }
   });
