@@ -57,6 +57,7 @@ type InitStateType = null;
 
 type MessageStateType = {
     backgroundUrl: string;
+    depthUrl: string;
     borderColor: string;
     speakerEmotion: {[key: string]: string};
     activeSpeaker: string;
@@ -240,6 +241,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // Set states or default them.
         this.messageState = {
             backgroundUrl: messageState?.backgroundUrl ?? '',
+            depthUrl: messageState?.depthUrl ?? '',
             borderColor: messageState?.borderColor ?? DEFAULT_BORDER_COLOR,
             speakerEmotion: messageState?.speakerEmotion ?? {},
             activeSpeaker: messageState?.activeSpeaker ?? ''
@@ -359,6 +361,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (state != null) {
             this.messageState = {
                 backgroundUrl: state?.backgroundUrl ?? '',
+                depthUrl: state?.depthUrl ?? '',
                 borderColor: state?.borderColor ?? DEFAULT_BORDER_COLOR,
                 speakerEmotion: state?.speakerEmotion ?? {},
                 activeSpeaker: state?.activeSpeaker ?? ''
@@ -762,9 +765,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     // This endpoint takes actual image data and not a URL; need to load data from imageUrl
                     const response = await fetch(imageUrl);
                     const imageBlob = await response.blob();
+                    this.messageState.depthUrl = '';
                     try {
                         const depthResponse = await this.depthPipeline.predict("/on_submit", {image: imageBlob});
                         console.log(depthResponse);
+                        this.messageState.depthUrl = depthResponse.data[1].url;
                     } catch (err) {
                         console.warn(`Failed to generate depth map for background image: ${err}`);
                     }
@@ -855,8 +860,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     position: 'relative',
                     alignItems: 'stretch',
                     overflow: 'hidden'
-                }
-            }>
+                }}
+            >
                 <ThemeProvider theme={darkTheme}>
                     {this.alphaMode ? (
                         <NewSpeakerSettings
@@ -889,7 +894,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             />
                         ))}
                     </div>
-                    <BackgroundImage imageUrl={this.messageState.backgroundUrl} borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}/>
+                    <BackgroundImage imageUrl={this.messageState.backgroundUrl} depthUrl={this.messageState.depthUrl} borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}/>
                     <AnimatePresence>
                         {Object.values(this.speakers).map(character => {
                             if (this.isSpeakerDisplayed(character)) {

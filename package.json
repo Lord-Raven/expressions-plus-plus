@@ -29,7 +29,8 @@
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.0",
     "@types/parse-json": "7.0.0",
-    "@types/react-transition-group": "4.4.12"
+    "@types/react-transition-group": "4.4.12",
+    "react-depth-map": "^1.0.0"
   },
   "engines": {
     "node": "21.7.1"

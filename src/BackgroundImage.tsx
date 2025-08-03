@@ -1,8 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FC } from "react";
+import ImageDepthMap from 'react-depth-map';
 
 interface BackgroundImageProps {
     imageUrl: string;
+    depthUrl: string;
     children?: React.ReactNode;
     borderColor: string;
 }
@@ -10,7 +12,7 @@ interface BackgroundImageProps {
 const FRAME_START_LEFT = "100vw";
 const FRAME_END_LEFT = "6vw";
 
-const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, children, borderColor }) => {
+const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, depthUrl, children, borderColor }) => {
 
     return (
         <AnimatePresence>
@@ -69,22 +71,31 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, children, borderC
                                 height: "100vh",
                             }}
                         >
-                            <img
-                                src={imageUrl}
-                                alt="Background"
-                                crossOrigin="anonymous"
-                                style={{
-                                    position: "absolute",
-                                    left: 0,
-                                    bottom: "8vh",
-                                    width: "100vw",
-                                    height: "90vh",
-                                    objectFit: "cover",
-                                    objectPosition: "center bottom",
-                                    filter: "blur(1px)",
-                                    zIndex: 1,
-                                }}
-                            />
+                            {depthUrl ? (
+                                <ImageDepthMap
+                                    originalImg={imageUrl}
+                                    depthImg={depthUrl}
+                                    verticalThreshold={25}
+                                    horizontalThreshold={15}
+                                />
+                            ) : (
+                                <img
+                                    src={imageUrl}
+                                    alt="Background"
+                                    crossOrigin="anonymous"
+                                    style={{
+                                        position: "absolute",
+                                        left: 0,
+                                        bottom: "8vh",
+                                        width: "100vw",
+                                        height: "90vh",
+                                        objectFit: "cover",
+                                        objectPosition: "center bottom",
+                                        filter: "blur(1px)",
+                                        zIndex: 1,
+                                    }}
+                                />
+                            )}
                             <div style={{position: "relative", zIndex: 2}}>
                                 {children}
                             </div>
