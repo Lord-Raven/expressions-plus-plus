@@ -762,9 +762,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     // This endpoint takes actual image data and not a URL; need to load data from imageUrl
                     const response = await fetch(imageUrl);
                     const imageBlob = await response.blob();
-                    const image = URL.createObjectURL(imageBlob);
-                    const depthResponse = await this.depthPipeline.predict("/on_submit", {image: image});
-                    console.log(depthResponse);
+                    try {
+                        const depthResponse = await this.depthPipeline.predict("/on_submit", {image: imageBlob});
+                        console.log(depthResponse);
+                    } catch (err) {
+                        console.warn(`Failed to generate depth map for background image: ${err}`);
+                    }
                 }
             }
             this.messageState.backgroundUrl = imageUrl;
