@@ -77,6 +77,17 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, depthUrl, childre
                                     depthImg={depthUrl}
                                     verticalThreshold={25}
                                     horizontalThreshold={15}
+                                    style={{
+                                        position: "absolute",
+                                        left: 0,
+                                        bottom: "8vh",
+                                        width: "100vw",
+                                        height: "90vh",
+                                        objectFit: "cover",
+                                        objectPosition: "center bottom",
+                                        filter: "blur(1px)",
+                                        zIndex: 1,
+                                    }}
                                 />
                             ) : (
                                 <img
