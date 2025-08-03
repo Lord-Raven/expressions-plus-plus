@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FC } from "react";
 import { DepthPlane } from "./DepthPlane";
+import { Canvas } from "@react-three/fiber";
 
 interface BackgroundImageProps {
     imageUrl: string;
@@ -72,10 +73,12 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, depthUrl, childre
                             }}
                         >
                             {depthUrl ? (
-                                <DepthPlane
-                                    imageUrl={imageUrl}
-                                    depthUrl={depthUrl}
-                                />
+                                <Canvas>
+                                    <DepthPlane
+                                        imageUrl={imageUrl}
+                                        depthUrl={depthUrl}
+                                    />
+                                </Canvas>
                             ) : (
                                 <img
                                     src={imageUrl}
