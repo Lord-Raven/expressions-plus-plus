@@ -8,7 +8,7 @@ interface DepthPlaneProps {
   depthUrl: string;
 }
 
-export const DepthPlane = ({ imageUrl, depthUrl }: DepthPlaneProps) => {
+const DepthPlane = ({ imageUrl, depthUrl }: DepthPlaneProps) => {
   const meshRef = useRef();
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
@@ -45,7 +45,7 @@ export const DepthPlane = ({ imageUrl, depthUrl }: DepthPlaneProps) => {
   });
 
   return (
-    <mesh ref={meshRef} scale={[1, 1, 1]} position={[0, -8, 0]}>
+    <mesh ref={meshRef} scale={[4, 4, 1]} position={[0, 0, 0]}>
       <planeGeometry args={[2, 2]} />
       <primitive object={shaderMaterial} attach="material" />
     </mesh>
@@ -57,6 +57,7 @@ export default function DepthScene({ imageUrl, depthUrl }: DepthPlaneProps) {
     <Canvas
       style={{
         position: 'absolute',
+        left: '0',
         bottom: '8vh',
         width: '100vw',
         height: '90vh',
