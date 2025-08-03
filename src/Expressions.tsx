@@ -209,6 +209,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     // Not saved:
     emotionPipeline: any = null;
     zeroShotPipeline: any = null;
+    depthPipeline: any = null;
     generateCharacters: boolean;
     generateBackgrounds: boolean;
     artStyle: string;
@@ -280,6 +281,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         try {
             this.emotionPipeline = await Client.connect("ravenok/emotions");
             this.zeroShotPipeline = await Client.connect("ravenok/statosphere-backend");
+            this.depthPipeline = await Client.connect("depth-anything/Depth-Anything-V2");
         } catch (except: any) {
             console.error(`Error loading pipelines, error: ${except}`);
             return { success: false, error: except }
@@ -755,6 +757,15 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }))?.url ?? '';
             if (imageUrl == '') {
                 console.warn(`Failed to generate a background image.`);
+            } else {
+                if (this.alphaMode) {
+                    // This endpoint takes actual image data and not a URL; need to load data from imageUrl
+                    const response = await fetch(imageUrl);
+                    const imageBlob = await response.blob();
+                    const image = URL.createObjectURL(imageBlob);
+                    const depthResponse = await this.depthPipeline.predict("/predict_depth", {image: image});
+                    console.log(depthResponse);
+                }
             }
             this.messageState.backgroundUrl = imageUrl;
             try {
