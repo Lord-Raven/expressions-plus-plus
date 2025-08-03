@@ -1,14 +1,15 @@
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { TextureLoader } from 'three';
 
 interface DepthPlaneProps {
   imageUrl: string;
   depthUrl: string;
+  mousePosition: { x: number; y: number };
 }
 
-const DepthPlane = ({ imageUrl, depthUrl }: DepthPlaneProps) => {
+const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const { camera, size } = useThree();
   const colorMap = useLoader(TextureLoader, imageUrl);
@@ -54,6 +55,8 @@ const DepthPlane = ({ imageUrl, depthUrl }: DepthPlaneProps) => {
           uColorMap: { value: colorMap },
           uDepthMap: { value: depthMap },
           uTime: { value: 0 },
+          uMouse: { value: new THREE.Vector2(0, 0) },
+          uParallaxStrength: { value: 0.02 },
         },
         vertexShader: `
       varying vec2 vUv;
@@ -69,9 +72,22 @@ const DepthPlane = ({ imageUrl, depthUrl }: DepthPlaneProps) => {
         fragmentShader: `
       varying vec2 vUv;
       uniform sampler2D uColorMap;
+      uniform sampler2D uDepthMap;
+      uniform vec2 uMouse;
+      uniform float uParallaxStrength;
 
       void main() {
-        gl_FragColor = texture2D(uColorMap, vUv);
+        // Sample depth at current UV
+        float depth = texture2D(uDepthMap, vUv).r;
+        
+        // Calculate parallax offset based on mouse position and depth
+        vec2 parallaxOffset = uMouse * depth * uParallaxStrength;
+        
+        // Apply offset to UV coordinates
+        vec2 offsetUV = vUv + parallaxOffset;
+        
+        // Sample color with offset UV
+        gl_FragColor = texture2D(uColorMap, offsetUV);
       }
     `,
       }),
@@ -81,6 +97,7 @@ const DepthPlane = ({ imageUrl, depthUrl }: DepthPlaneProps) => {
   useFrame(({ clock }) => {
     if (shaderMaterial) {
       shaderMaterial.uniforms.uTime.value = clock.elapsedTime;
+      shaderMaterial.uniforms.uMouse.value.set(mousePosition.x, mousePosition.y);
     }
   });
 
@@ -92,7 +109,16 @@ const DepthPlane = ({ imageUrl, depthUrl }: DepthPlaneProps) => {
   );
 };
 
-export default function DepthScene({ imageUrl, depthUrl }: DepthPlaneProps) {
+export default function DepthScene({ imageUrl, depthUrl }: Omit<DepthPlaneProps, 'mousePosition'>) {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    setMousePosition({ x, y });
+  };
+
   return (
     <Canvas
       style={{
@@ -104,8 +130,9 @@ export default function DepthScene({ imageUrl, depthUrl }: DepthPlaneProps) {
         zIndex: 1,
       }}
       camera={{ position: [0, 0, 3], fov: 50 }}
+      onMouseMove={handleMouseMove}
     >
-      <DepthPlane imageUrl={imageUrl} depthUrl={depthUrl} />
+      <DepthPlane imageUrl={imageUrl} depthUrl={depthUrl} mousePosition={mousePosition} />
     </Canvas>
   );
 }
