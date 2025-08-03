@@ -28,7 +28,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
 
     // Calculate scale for cover behavior (fill the most constrained dimension)
     let scaleX, scaleY;
-    const cropFactor = 1.1; // Scale up by 10% to crop 5% from each side
+    const cropFactor = 1.5; // Scale up by 10% to crop 5% from each side
     
     if (imageAspect > canvasAspect) {
       // Image is wider than canvas, scale to fill height + crop
