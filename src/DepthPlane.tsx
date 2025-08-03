@@ -28,8 +28,8 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
 
     // Calculate scale for cover behavior (fill the most constrained dimension)
     let scaleX, scaleY;
-    const cropFactor = 1.5; // Scale up by 10% to crop 5% from each side
-    
+    const cropFactor = 1.2; // Scale up by 20% to crop 10% from each side
+
     if (imageAspect > canvasAspect) {
       // Image is wider than canvas, scale to fill height + crop
       scaleY = visibleHeight * cropFactor;
@@ -42,7 +42,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
 
     // Position for "center bottom" - center horizontally, align to bottom
     const posX = 0; // Center horizontally
-    const posY = -visibleHeight / 2 + scaleY / 2; // Align to bottom
+    const posY = 0; // Center vertically
 
     return {
       scale: [scaleX, scaleY, 1] as [number, number, number],
