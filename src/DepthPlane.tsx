@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
-import { useRef, useMemo, useState } from 'react';
+import { useRef, useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { TextureLoader } from 'three';
 
@@ -15,7 +15,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
 
-  // Calculate scale and position for object-fit: cover behavior
+  // Calculate scale and position for object-fit: cover behavior with 5% crop
   const { scale, position } = useMemo(() => {
     const canvasAspect = size.width / size.height;
     const imageAspect = colorMap.image.width / colorMap.image.height;
@@ -28,13 +28,15 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
 
     // Calculate scale for cover behavior (fill the most constrained dimension)
     let scaleX, scaleY;
+    const cropFactor = 1.1; // Scale up by 10% to crop 5% from each side
+    
     if (imageAspect > canvasAspect) {
-      // Image is wider than canvas, scale to fill height
-      scaleY = visibleHeight;
+      // Image is wider than canvas, scale to fill height + crop
+      scaleY = visibleHeight * cropFactor;
       scaleX = scaleY * imageAspect;
     } else {
-      // Image is taller than canvas, scale to fill width
-      scaleX = visibleWidth;
+      // Image is taller than canvas, scale to fill width + crop
+      scaleX = visibleWidth * cropFactor;
       scaleY = scaleX / imageAspect;
     }
 
@@ -112,12 +114,21 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
 export default function DepthScene({ imageUrl, depthUrl }: Omit<DepthPlaneProps, 'mousePosition'>) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    setMousePosition({ x, y });
-  };
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      // Calculate position relative to the viewport
+      const x = (event.clientX / window.innerWidth) * 2 - 1;
+      const y = -(event.clientY / window.innerHeight) * 2 + 1;
+      setMousePosition({ x, y });
+    };
+
+    // Add event listener to the entire document
+    document.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
 
   return (
     <Canvas
@@ -128,9 +139,9 @@ export default function DepthScene({ imageUrl, depthUrl }: Omit<DepthPlaneProps,
         width: '100vw',
         height: '90vh',
         zIndex: 1,
+        pointerEvents: 'none', // Allow events to pass through to elements below
       }}
       camera={{ position: [0, 0, 3], fov: 50 }}
-      onMouseMove={handleMouseMove}
     >
       <DepthPlane imageUrl={imageUrl} depthUrl={depthUrl} mousePosition={mousePosition} />
     </Canvas>
