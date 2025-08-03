@@ -66,9 +66,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
 
       void main() {
         vUv = uv;
-        float depth = texture2D(uDepthMap, uv).r;
-        vec3 displacedPosition = position + normal * depth * 0.3;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(displacedPosition, 1.0);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `,
         fragmentShader: `
