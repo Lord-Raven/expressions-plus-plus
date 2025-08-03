@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FC } from "react";
-import ImageDepthMap from 'react-depth-map';
+import { DepthPlane } from "./DepthPlane";
 
 interface BackgroundImageProps {
     imageUrl: string;
@@ -72,22 +72,9 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, depthUrl, childre
                             }}
                         >
                             {depthUrl ? (
-                                <ImageDepthMap
-                                    originalImg={imageUrl}
-                                    depthImg={depthUrl}
-                                    verticalThreshold={25}
-                                    horizontalThreshold={15}
-                                    style={{
-                                        position: "absolute",
-                                        left: 0,
-                                        bottom: "8vh",
-                                        width: "100vw",
-                                        height: "90vh",
-                                        objectFit: "cover",
-                                        objectPosition: "center bottom",
-                                        filter: "blur(1px)",
-                                        zIndex: 1,
-                                    }}
+                                <DepthPlane
+                                    imageUrl={imageUrl}
+                                    depthUrl={depthUrl}
                                 />
                             ) : (
                                 <img

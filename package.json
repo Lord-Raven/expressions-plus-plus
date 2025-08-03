@@ -19,8 +19,8 @@
     "@gradio/client": "^1.7.1",
     "@typescript-eslint/parser": "^7.4.0",
     "@xenova/transformers": "^2.16.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "vite-plugin-dts": "^3.9.1",
     "framer-motion": "12.19.1",
     "fast-average-color": "9.5.0",
@@ -30,7 +30,9 @@
     "@emotion/styled": "11.14.0",
     "@types/parse-json": "7.0.0",
     "@types/react-transition-group": "4.4.12",
-    "react-depth-map": "^1.0.0"
+    "three": "0.179.1",
+    "@react-three/fiber": "9.3.0",
+    "@react-three/drei": "10.6.1"
   },
   "engines": {
     "node": "21.7.1"
