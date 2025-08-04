@@ -18,7 +18,7 @@ interface SpeakerImageProps {
     alphaMode: boolean;
 }
 
-const DEPTH = 100;;
+const DEPTH = 50;
 
 const SpeakerImage: FC<SpeakerImageProps> = ({
     speaker, 
@@ -48,16 +48,16 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         };
     }, []);
 
-    // Calculate parallax offset
-    const parallaxOffsetX = mousePosition.x * (alphaMode ? DEPTH * PARALLAX_STRENGTH : 1); // Convert to vw
-    const parallaxOffsetY = mousePosition.y * (alphaMode ? DEPTH * PARALLAX_STRENGTH : 1); // Convert to vh
+    // Calculate final parallax position
+    const finalX = (isTalking ? 50 : xPosition) * (alphaMode ? (50 - mousePosition.x * DEPTH * PARALLAX_STRENGTH) : 1);
+    const finalY = (isTalking ? (2 + yPosition) : (4 + yPosition)) * (alphaMode ? (50 - mousePosition.y * DEPTH * PARALLAX_STRENGTH) : 1);
 
     const variants: Variants = {
         absent: {
             color: '#BBBBBB', 
             opacity: 0, 
-            x: `calc(150vw + ${parallaxOffsetX}vw)`, 
-            bottom: `calc(${4 + yPosition}vh + ${parallaxOffsetY}vh)`, 
+            x: `150vw`, 
+            bottom: `${finalY}vh)`, 
             height: `${IDLE_HEIGHT - yPosition * 2}vh`, 
             filter: 'brightness(0.8)', 
             zIndex: zIndex, 
@@ -66,8 +66,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         talking: {
             color: '#FFFFFF', 
             opacity: 1, 
-            x: `calc(50vw + ${parallaxOffsetX}vw)`, 
-            bottom: `calc(2vh + ${parallaxOffsetY}vh)`, 
+            x: `${finalX}vw`, 
+            bottom: `${finalY}vh`, 
             height: `${SPEAKING_HEIGHT}vh`, 
             filter: 'brightness(1)', 
             zIndex: 100, 
@@ -76,8 +76,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         idle: {
             color: '#BBBBBB', 
             opacity: 1, 
-            x: `calc(${xPosition}vw + ${parallaxOffsetX}vw)`, 
-            bottom: `calc(${4 + yPosition}vh + ${parallaxOffsetY}vh)`, 
+            x: `${finalX}vw`,
+            bottom: `${finalY}vh`, 
             height: `${IDLE_HEIGHT - yPosition * 2}vh`, 
             filter: 'brightness(0.8)', 
             zIndex: zIndex, 
