@@ -18,7 +18,7 @@ interface SpeakerImageProps {
     alphaMode: boolean;
 }
 
-const DEPTH = 0.5;
+const DEPTH = 1;
 
 const SpeakerImage: FC<SpeakerImageProps> = ({
     speaker, 
@@ -50,10 +50,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
 
     // Calculate final parallax position
     const depth = yPosition * DEPTH;
-    const finalX = (isTalking ? 50 : xPosition) + (alphaMode ? (- mousePosition.x * depth * PARALLAX_STRENGTH) : 1);
-    const finalY = (isTalking ? (2 + yPosition) : (4 + yPosition)) + (alphaMode ? (- mousePosition.y * depth * PARALLAX_STRENGTH) : 1);
+    const finalX = (isTalking ? 50 : xPosition) + (alphaMode ? (- mousePosition.x * depth * PARALLAX_STRENGTH) : 0);
+    const finalY = (isTalking ? (2 + yPosition) : (4 + yPosition)) + (alphaMode ? (- mousePosition.y * depth * PARALLAX_STRENGTH) : 0);
     if (alphaMode) {
-        console.log(`Alpha mode enabled: xPosition=${xPosition}, yPosition=${yPosition}, mousePosition=${mousePosition.x}, ${mousePosition.y}, finalX=${finalX}, finalY=${finalY}`);
+        console.log(`Alpha mode enabled: depth=${depth}, xPosition=${xPosition}, yPosition=${yPosition}, mousePosition=${mousePosition.x}, ${mousePosition.y}, finalX=${finalX}, finalY=${finalY}`);
     }
 
     const variants: Variants = {
