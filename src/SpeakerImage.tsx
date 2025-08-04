@@ -18,7 +18,7 @@ interface SpeakerImageProps {
     alphaMode: boolean;
 }
 
-const DEPTH = 1;
+const DEPTH = 0.1;
 
 const SpeakerImage: FC<SpeakerImageProps> = ({
     speaker, 
