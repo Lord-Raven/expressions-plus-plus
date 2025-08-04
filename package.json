@@ -32,7 +32,9 @@
     "@types/react-transition-group": "4.4.12",
     "three": "0.179.1",
     "@react-three/fiber": "9.3.0",
-    "@react-three/drei": "10.6.1"
+    "@react-three/drei": "10.6.1",
+    "colorthief": "2.6.0",
+    "@types/colorthief": "2.6.0"
   },
   "engines": {
     "node": "21.7.1"

@@ -9,7 +9,7 @@ interface DepthPlaneProps {
   mousePosition: { x: number; y: number };
 }
 
-export const PARALLAX_STRENGTH: number = 0.2; // This is used to calculate some positions elsewhere
+export const PARALLAX_STRENGTH: number = 0.1; // This is used to calculate some positions elsewhere
 
 const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -86,7 +86,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
           depth = smoothstep(0.0, 1.0, depth);
           
           // Calculate parallax offset with reduced strength for smoother effect
-          vec2 parallaxOffset = uMouse * depth * uParallaxStrength * 0.5;
+          vec2 parallaxOffset = uMouse * depth * uParallaxStrength;
           
           // Apply offset to UV coordinates with clamping to prevent sampling outside texture
           vec2 offsetUV = clamp(vUv + parallaxOffset, 0.0, 1.0);

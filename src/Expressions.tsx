@@ -19,6 +19,7 @@ import {FastAverageColor} from "fast-average-color";
 import { AnimatePresence } from "framer-motion";
 import SpeakerSettings, {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
 import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
+import ColorThief from "colorthief";
 
 type ChatStateType = {
     generatedWardrobes:{[key: string]: {[key: string]: EmotionPack}};
@@ -206,7 +207,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     // Should be set after a successful load/reconciliation.
     backupWardrobes: {[key: string]: WardrobeType} = {};
 
-
     // Not saved:
     emotionPipeline: any = null;
     zeroShotPipeline: any = null;
@@ -219,6 +219,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     alphaMode: boolean;
 
     readonly fac = new FastAverageColor();
+    readonly colorThief = new ColorThief();
     private messageHandle?: MessageQueueHandle;
     private speakerSettingsHandle?: SpeakerSettingsHandle;
 
@@ -765,6 +766,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     // This endpoint takes actual image data and not a URL; need to load data from imageUrl
                     const response = await fetch(imageUrl);
                     const imageBlob = await response.blob();
+                    // Need to get a HtmlImageElement for getPalette:
+                    const imageElement = document.createElement('img');
+                    imageElement.src = URL.createObjectURL(imageBlob);
+                    const colors = this.colorThief.getPalette(imageElement, 10);
+                    console.log(`Color palette: ${colors}`);
                     this.messageState.depthUrl = '';
                     try {
                         const depthResponse = await this.depthPipeline.predict("/on_submit", {image: imageBlob});

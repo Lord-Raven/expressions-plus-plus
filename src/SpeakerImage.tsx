@@ -18,8 +18,6 @@ interface SpeakerImageProps {
     alphaMode: boolean;
 }
 
-const DEPTH = 10;
-
 const SpeakerImage: FC<SpeakerImageProps> = ({
     speaker, 
     emotion, 
@@ -50,9 +48,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
 
     // Calculate final parallax position
     const tempY =  (isTalking ? 2 : (4 + yPosition));
-    const depth = (48 - tempY) / 50 * DEPTH;
-    const finalX = (isTalking ? 50 : xPosition) + (alphaMode ? (- mousePosition.x * depth * PARALLAX_STRENGTH) : 0);
-    const finalY = tempY + (alphaMode ? (- mousePosition.y * depth * PARALLAX_STRENGTH) : 0);
+    const depth = (48 - tempY) / 50;
+    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (- mousePosition.x * depth * PARALLAX_STRENGTH) : 0) * 100);
+    const finalY = tempY + ((alphaMode ? (- mousePosition.y * depth * PARALLAX_STRENGTH) : 0) * 100);
 
     const variants: Variants = {
         absent: {
