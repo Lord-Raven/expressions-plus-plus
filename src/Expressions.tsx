@@ -19,6 +19,7 @@ import {FastAverageColor} from "fast-average-color";
 import { AnimatePresence } from "framer-motion";
 import SpeakerSettings, {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
 import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
+import {PARALLAX_STRENGTH} from "./DepthPlane.tsx";
 
 type ChatStateType = {
     generatedWardrobes:{[key: string]: {[key: string]: EmotionPack}};
@@ -899,14 +900,20 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         {Object.values(this.speakers).map(character => {
                             if (this.isSpeakerDisplayed(character)) {
                                 index++;
-                                const xPosition = count == 1 ? 50 :
+                                let xPosition = count == 1 ? 50 :
                                     ((index % 2 == 1) ?
                                         (Math.ceil(index / 2) * (50 / (Math.ceil(count / 2) + 1))) :
                                         (Math.floor(index / 2) * (50 / (Math.floor(count / 2) + 1)) + 50));
                                 // Farther from 50, higher up on the screen:
-                                const yPosition = Math.ceil(Math.abs(xPosition - 50) / 5);
+                                let yPosition = Math.ceil(Math.abs(xPosition - 50) / 5);
                                 // Closer to 50, higher visual priority:
                                 const zIndex = Math.ceil((50 - Math.abs(xPosition - 50)) / 5);
+
+                                if (this.alphaMode && this.messageState.depthUrl) {
+                                    // Apply depth effect by adjusting x and y positions using PARALLAX_STRENGTH
+                                    xPosition = (xPosition - 50) * PARALLAX_STRENGTH;
+                                    yPosition = (yPosition - 50) * PARALLAX_STRENGTH;
+                                }
 
                                 return <SpeakerImage
                                     key={`character_${character.anonymizedId}`}

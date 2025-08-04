@@ -9,6 +9,8 @@ interface DepthPlaneProps {
   mousePosition: { x: number; y: number };
 }
 
+export const PARALLAX_STRENGTH: number = 0.1; // This is used to calculate some positions elsewhere
+
 const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const { camera, size } = useThree();
@@ -57,7 +59,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
           uColorMap: { value: colorMap },
           uDepthMap: { value: depthMap },
           uMouse: { value: new THREE.Vector2(0, 0) },
-          uParallaxStrength: { value: 0.05 },
+          uParallaxStrength: { value: PARALLAX_STRENGTH },
         },
         vertexShader: `
       varying vec2 vUv;
