@@ -18,7 +18,7 @@ interface SpeakerImageProps {
     alphaMode: boolean;
 }
 
-const DEPTH = 2;
+const DEPTH = 10;
 
 const SpeakerImage: FC<SpeakerImageProps> = ({
     speaker, 
@@ -85,7 +85,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             height: `${IDLE_HEIGHT - yPosition * 2}vh`, 
             filter: 'brightness(0.8)', 
             zIndex: zIndex, 
-            transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}
+            transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}},
         },
     };
 
