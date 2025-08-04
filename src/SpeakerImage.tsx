@@ -65,7 +65,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             zIndex: zIndex, 
             transition: {
                 x: { ease: "easeOut", duration: 0.8 }, 
-                bottom: { ease: "linear", duration: 0.15 }, 
+                bottom: { ease: "linear", duration: 0.1 }, 
                 opacity: { ease: "easeOut", duration: 0.3 }
             }
         },
@@ -78,8 +78,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(1)', 
             zIndex: 100, 
             transition: {
-                x: { ease: "linear", duration: 0.15 }, 
-                bottom: { ease: "linear", duration: 0.15 }, 
+                x: { ease: "linear", duration: 0.1 }, 
+                bottom: { ease: "linear", duration: 0.1 }, 
                 opacity: { ease: "easeOut", duration: 0.3 }
             }
         },
@@ -92,8 +92,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(0.8)', 
             zIndex: zIndex, 
             transition: {
-                x: { ease: "linear", duration: 0.15 }, 
-                bottom: { ease: "linear", duration: 0.15 }, 
+                x: { ease: "linear", duration: 0.1 }, 
+                bottom: { ease: "linear", duration: 0.1 }, 
                 opacity: { ease: "easeOut", duration: 0.3 }
             },
         },
