@@ -654,7 +654,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async generateSpeakerImage(speaker: Speaker, outfitKey: string, emotion: Emotion): Promise<void> {
         console.log(`Current generated descriptions: ${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfitKey}`]} and ${this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt}`);
-        const outfitName = this.alphaMode ? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].name : outfitKey;
+        const outfitName = this.alphaMode ? (this.wardrobes[speaker.anonymizedId].outfits[outfitKey]?.name ?? outfitKey) : outfitKey;
 
         if (!this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfitKey}`] || (this.alphaMode && !this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt)) {
             await this.generateSpeakerImagePrompt(speaker, outfitKey);
@@ -763,35 +763,37 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.warn(`Failed to generate a background image.`);
             } else {
                 if (this.alphaMode) {
-                    // This endpoint takes actual image data and not a URL; need to load data from imageUrl
-                    const response = await fetch(imageUrl);
-                    const imageBlob = await response.blob();
-                    // Need to get a HtmlImageElement for getPalette:
-                    const imageElement = document.createElement('img');
-                    imageElement.src = URL.createObjectURL(imageBlob);
-                    // Wait for the image to load before calling getPalette
-                    await new Promise((resolve, reject) => {
-                        imageElement.onload = resolve;
-                        imageElement.onerror = reject;
-                    });
-                    const colors = this.colorThief.getPalette(imageElement, 10);
-                    console.log(`Color palette: ${colors}`);
-                    this.messageState.depthUrl = '';
+
                     try {
+                        // This endpoint takes actual image data and not a URL; need to load data from imageUrl
+                        const response = await fetch(imageUrl);
+                        const imageBlob = await response.blob();
+                        // Need to get a HtmlImageElement for getPalette:
+                        const imageElement = document.createElement('img');
+                        imageElement.src = URL.createObjectURL(imageBlob);
+                        // Wait for the image to load before calling getPalette
+                        await new Promise((resolve) => {
+                            imageElement.onload = resolve;
+                        });
+                        const colors = this.colorThief.getPalette(imageElement, 10);
+                        console.log(`Color palette: ${colors}`);
+                        this.messageState.depthUrl = '';
                         const depthResponse = await this.depthPipeline.predict("/on_submit", {image: imageBlob});
                         console.log(depthResponse);
                         this.messageState.depthUrl = depthResponse.data[1].url;
                     } catch (err) {
-                        console.warn(`Failed to generate depth map for background image: ${err}`);
+                        console.warn(`Failed to generate palette or depth map for background image: ${err}`);
+                    }
+                } else {
+                    try {
+                        this.messageState.borderColor = (await this.fac.getColorAsync(imageUrl)).rgba ?? DEFAULT_BORDER_COLOR;
+                    } catch(err) {
+                        this.messageState.borderColor = DEFAULT_BORDER_COLOR;
                     }
                 }
             }
             this.messageState.backgroundUrl = imageUrl;
-            try {
-                this.messageState.borderColor = (await this.fac.getColorAsync(imageUrl)).rgba ?? DEFAULT_BORDER_COLOR;
-            } catch(err) {
-                this.messageState.borderColor = DEFAULT_BORDER_COLOR;
-            }
+
             await this.updateBackground();
         }
     }

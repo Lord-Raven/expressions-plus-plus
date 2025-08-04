@@ -45,6 +45,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             document.removeEventListener('mousemove', handleMouseMove);
         };
     }, []);
+    
+    console.log(`mousePosition: ${mousePosition.x}, ${mousePosition.y}`);
 
     // Calculate final parallax position
     const tempY =  (isTalking ? 2 : (4 + yPosition));
