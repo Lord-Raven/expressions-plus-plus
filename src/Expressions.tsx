@@ -769,6 +769,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     // Need to get a HtmlImageElement for getPalette:
                     const imageElement = document.createElement('img');
                     imageElement.src = URL.createObjectURL(imageBlob);
+                    // Wait for the image to load before calling getPalette
+                    await new Promise((resolve, reject) => {
+                        imageElement.onload = resolve;
+                        imageElement.onerror = reject;
+                    });
                     const colors = this.colorThief.getPalette(imageElement, 10);
                     console.log(`Color palette: ${colors}`);
                     this.messageState.depthUrl = '';
