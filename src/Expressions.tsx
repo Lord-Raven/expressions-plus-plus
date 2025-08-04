@@ -19,7 +19,6 @@ import {FastAverageColor} from "fast-average-color";
 import { AnimatePresence } from "framer-motion";
 import SpeakerSettings, {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
 import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
-import {PARALLAX_STRENGTH} from "./DepthPlane.tsx";
 
 type ChatStateType = {
     generatedWardrobes:{[key: string]: {[key: string]: EmotionPack}};
@@ -909,12 +908,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                                 // Closer to 50, higher visual priority:
                                 const zIndex = Math.ceil((50 - Math.abs(xPosition - 50)) / 5);
 
-                                if (this.alphaMode && this.messageState.depthUrl) {
-                                    // Apply depth effect by adjusting x and y positions using PARALLAX_STRENGTH
-                                    xPosition = (xPosition - 50) * PARALLAX_STRENGTH;
-                                    yPosition = (yPosition - 50) * PARALLAX_STRENGTH;
-                                }
-
                                 return <SpeakerImage
                                     key={`character_${character.anonymizedId}`}
                                     speaker={character}
@@ -924,6 +917,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                                     zIndex={zIndex}
                                     imageUrl={this.getSpeakerImage(character.anonymizedId, this.chatState.selectedOutfit[character.anonymizedId], this.getSpeakerEmotion(character.anonymizedId), '')}
                                     isTalking={this.messageState.activeSpeaker == character.anonymizedId}
+                                    alphaMode={this.alphaMode}
                                 />
                             } else {
                                 return <></>
