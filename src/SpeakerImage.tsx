@@ -49,7 +49,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     }, []);
 
     // Calculate final parallax position
-    const depth = yPosition * DEPTH;
+    const depth = (50 - yPosition) * DEPTH;
     const finalX = (isTalking ? 50 : xPosition) + (alphaMode ? (- mousePosition.x * depth * PARALLAX_STRENGTH) : 0);
     const finalY = (isTalking ? (2 + yPosition) : (4 + yPosition)) + (alphaMode ? (- mousePosition.y * depth * PARALLAX_STRENGTH) : 0);
     if (alphaMode) {
