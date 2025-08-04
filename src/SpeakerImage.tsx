@@ -53,9 +53,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     const depth = (48 - tempY) / 50 * DEPTH;
     const finalX = (isTalking ? 50 : xPosition) + (alphaMode ? (- mousePosition.x * depth * PARALLAX_STRENGTH) : 0);
     const finalY = tempY + (alphaMode ? (- mousePosition.y * depth * PARALLAX_STRENGTH) : 0);
-    if (alphaMode) {
-        console.log(`Alpha mode enabled: depth=${depth}, xPosition=${xPosition}, yPosition=${yPosition}, mousePosition=${mousePosition.x}, ${mousePosition.y}, finalX=${finalX}, finalY=${finalY}`);
-    }
 
     const variants: Variants = {
         absent: {
