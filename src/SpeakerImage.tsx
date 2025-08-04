@@ -66,7 +66,11 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             height: `${IDLE_HEIGHT - yPosition * 2}vh`, 
             filter: 'brightness(0.8)', 
             zIndex: zIndex, 
-            transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}
+            transition: {
+                x: { ease: "easeOut", duration: 0.8 }, 
+                bottom: { ease: "linear", duration: 0.15 }, 
+                opacity: { ease: "easeOut", duration: 0.3 }
+            }
         },
         talking: {
             color: '#FFFFFF', 
@@ -76,7 +80,11 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             height: `${SPEAKING_HEIGHT}vh`, 
             filter: 'brightness(1)', 
             zIndex: 100, 
-            transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}}
+            transition: {
+                x: { ease: "linear", duration: 0.15 }, 
+                bottom: { ease: "linear", duration: 0.15 }, 
+                opacity: { ease: "easeOut", duration: 0.3 }
+            }
         },
         idle: {
             color: '#BBBBBB', 
@@ -86,7 +94,11 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             height: `${IDLE_HEIGHT - yPosition * 2}vh`, 
             filter: 'brightness(0.8)', 
             zIndex: zIndex, 
-            transition: {x: {ease: "easeOut"}, bottom: {ease: "easeOut"}, opacity: {ease: "easeOut"}},
+            transition: {
+                x: { ease: "linear", duration: 0.15 }, 
+                bottom: { ease: "linear", duration: 0.15 }, 
+                opacity: { ease: "easeOut", duration: 0.3 }
+            },
         },
     };
 
