@@ -71,6 +71,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
         }
       `,
         fragmentShader: `
+        #extension GL_OES_standard_derivatives : enable
         precision highp float;
         varying vec2 vUv;
         uniform sampler2D uColorMap;
