@@ -61,6 +61,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
           uMouse: { value: new THREE.Vector2(0, 0) },
           uParallaxStrength: { value: PARALLAX_STRENGTH },
         },
+        extensions: { derivatives: true },
         vertexShader: `
         precision highp float;
         varying vec2 vUv;
@@ -70,8 +71,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
-        fragmentShader: 
-        `#extension GL_OES_standard_derivatives : enable
+        fragmentShader: `
         precision highp float;
         varying vec2 vUv;
         uniform sampler2D uColorMap;
