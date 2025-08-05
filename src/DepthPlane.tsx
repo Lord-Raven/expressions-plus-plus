@@ -61,7 +61,6 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
           uMouse: { value: new THREE.Vector2(0, 0) },
           uParallaxStrength: { value: PARALLAX_STRENGTH },
         },
-        extensions: { derivatives: true },
         vertexShader: `
         precision highp float;
         varying vec2 vUv;
@@ -119,6 +118,10 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
 
 export default function DepthScene({ imageUrl, depthUrl }: Omit<DepthPlaneProps, 'mousePosition'>) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const renderer = new THREE.WebGLRenderer({antialias: true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  console.log(renderer.capabilities.isWebGL2);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {

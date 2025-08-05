@@ -29,6 +29,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     alphaMode
 }) => {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [previousState, setPreviousState] = useState<string>('absent');
+    const currentState = isTalking ? 'talking' : 'idle';
 
     useEffect(() => {
         const handleMouseMove = (event: MouseEvent) => {
@@ -53,6 +55,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         };
     }, []);
     
+    useEffect(() => {
+        setPreviousState(currentState);
+    }, [currentState]);
+
     console.log(`mousePosition: ${mousePosition.x}, ${mousePosition.y}`);
 
     // Calculate final parallax position
@@ -71,9 +77,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(0.8)', 
             zIndex: zIndex, 
             transition: {
-                x: { ease: "easeOut", duration: 0.8 }, 
-                bottom: { ease: "linear", duration: 0.1 }, 
-                opacity: { ease: "easeOut", duration: 0.3 }
+                x: { ease: "easeOut", duration: 1.0 }, 
+                bottom: { ease: "linear", duration: 1.0 }, 
+                opacity: { ease: "easeOut", duration: 1.0 }
             }
         },
         talking: {
@@ -84,10 +90,14 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             height: `${SPEAKING_HEIGHT}vh`, 
             filter: 'brightness(1)', 
             zIndex: 100, 
-            transition: {
-                x: { ease: "linear", duration: 0.1 }, 
-                bottom: { ease: "linear", duration: 0.1 }, 
-                opacity: { ease: "easeOut", duration: 0.3 }
+            transition: previousState === 'absent' ? {
+                x: { ease: "easeOut", duration: 1.0 }, 
+                bottom: { ease: "linear", duration: 1.0 }, 
+                opacity: { ease: "easeOut", duration: 1.0 }
+            } : {
+                x: { ease: "linear", duration: 0.01 }, 
+                bottom: { ease: "linear", duration: 0.01 }, 
+                opacity: { ease: "easeOut", duration: 0.01 }
             }
         },
         idle: {
@@ -97,13 +107,17 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             bottom: `${finalY}vh`, 
             height: `${IDLE_HEIGHT - yPosition * 2}vh`, 
             filter: 'brightness(0.8)', 
-            zIndex: zIndex, 
-            transition: {
-                x: { ease: "linear", duration: 0.1 }, 
-                bottom: { ease: "linear", duration: 0.1 }, 
-                opacity: { ease: "easeOut", duration: 0.3 }
-            },
-        },
+            zIndex: zIndex,
+            transition: previousState === 'absent' ? {
+                x: { ease: "easeOut", duration: 1.0 }, 
+                bottom: { ease: "linear", duration: 1.0 }, 
+                opacity: { ease: "easeOut", duration: 1.0 }
+            } : {
+                x: { ease: "linear", duration: 0.01 }, 
+                bottom: { ease: "linear", duration: 0.01 }, 
+                opacity: { ease: "easeOut", duration: 0.01 }
+            }
+        }
     };
 
     return imageUrl ? (
@@ -112,7 +126,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             variants={variants}
             initial='absent'
             exit='absent'
-            animate={isTalking ? 'talking' : 'idle'}
+            animate={currentState}
             style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', zIndex: 10, overflow: 'visible'}}>
             <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', filter: 'blur(2.5px)', transform: 'translate(-50%, 0)', zIndex: 4}} alt={`${speaker.name} (${emotion})`}/>
             <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', opacity: 0.75, transform: 'translate(-50%, 0)', zIndex: 5}} alt={`${speaker.name} (${emotion})`}/>
