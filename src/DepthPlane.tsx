@@ -70,8 +70,8 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
-        fragmentShader: `
-        #extension GL_OES_standard_derivatives : enable
+        fragmentShader: 
+        `#extension GL_OES_standard_derivatives : enable
         precision highp float;
         varying vec2 vUv;
         uniform sampler2D uColorMap;
