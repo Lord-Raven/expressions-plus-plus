@@ -81,8 +81,8 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
         void main() {
           // Sample depth with better filtering
           float depth = texture2D(uDepthMap, vUv).r;
-          vec2 depthDx = dFdx(depth);
-          vec2 depthDy = dFdy(depth);
+          float depthDx = dFdx(depth);
+          float depthDy = dFdy(depth);
           float edgeStrength = length(vec2(depthDx, depthDy));
           depth *= 1.0 - smoothstep(0.1, 0.4, edgeStrength);
           
@@ -118,10 +118,6 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
 
 export default function DepthScene({ imageUrl, depthUrl }: Omit<DepthPlaneProps, 'mousePosition'>) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  const renderer = new THREE.WebGLRenderer({antialias: true});
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  console.log(renderer.capabilities.isWebGL2);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
