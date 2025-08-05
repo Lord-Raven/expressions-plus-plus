@@ -33,8 +33,15 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     useEffect(() => {
         const handleMouseMove = (event: MouseEvent) => {
             // Calculate position relative to the viewport
-            const x = (event.clientX / window.innerWidth) * 2 - 1;
-            const y = -(event.clientY / window.innerHeight) * 2 + 1;
+            let x = (event.clientX / window.innerWidth) * 2 - 1;
+            let y = -(event.clientY / window.innerHeight) * 2 + 1;
+            // If window aspect ratio is > 9:16, image height is constrained, so multiply y by this ratio to keep parallax effect consistent with DepthPlane
+            if (window.innerWidth / window.innerHeight > 9 / 16) {
+                y *= (9 / 16) / (window.innerWidth / window.innerHeight);
+            } else {
+                // Otherwise, image width is constrained, so multiply x by this ratio
+                x *= (window.innerHeight / window.innerWidth) / (9 / 16);
+            }
             setMousePosition({ x, y });
         };
 
@@ -51,8 +58,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     // Calculate final parallax position
     const tempY =  (isTalking ? 2 : (4 + yPosition));
     const depth = (48 - tempY) / 100; // depth between 0 and 0.48, I guess.
-    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (- mousePosition.x * depth * PARALLAX_STRENGTH) : 0) * 100);
-    const finalY = tempY + ((alphaMode ? (- mousePosition.y * depth * PARALLAX_STRENGTH) : 0) * 100);
+    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (-mousePosition.x * depth * PARALLAX_STRENGTH) : 0) * 100);
+    const finalY = tempY + ((alphaMode ? (-mousePosition.y * depth * PARALLAX_STRENGTH) : 0) * 100);
 
     const variants: Variants = {
         absent: {
