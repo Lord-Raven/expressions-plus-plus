@@ -81,9 +81,10 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
         void main() {
           // Sample depth with better filtering
           float depth = texture2D(uDepthMap, vUv).r;
-          
-          // Smooth the depth to reduce artifacts
-          depth = smoothstep(0.0, 1.0, depth);
+          vec2 depthDx = dFdx(depth);
+          vec2 depthDy = dFdy(depth);
+          float edgeStrength = length(vec2(depthDx, depthDy));
+          depth *= 1.0 - smoothstep(0.1, 0.4, edgeStrength);
           
           // Calculate parallax offset with reduced strength for smoother effect
           vec2 parallaxOffset = uMouse * depth * uParallaxStrength;
