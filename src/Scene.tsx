@@ -103,7 +103,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                     </motion.div>
                 </>
             )}
-            <div style={{position: "relative", height: "100vh", width: "100vw", zIndex: 2}}>
+            <div style={{position: "absolute", top: 0, height: "100vh", width: "100vw", zIndex: 2}}>
                 {Object.values(stage.speakers).map(character => {
                     console.log(`Rendering speaker: ${character.anonymizedId}, displayed: ${stage.isSpeakerDisplayed(character)}`);
                     if (stage.isSpeakerDisplayed(character)) {
