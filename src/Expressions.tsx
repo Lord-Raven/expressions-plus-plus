@@ -9,14 +9,12 @@ import {
 } from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Client } from "@gradio/client";
-import SpeakerImage from "./SpeakerImage.tsx";
 import {ReactElement} from "react";
-import BackgroundImage from "./BackgroundImage";
+import Scene from "./Scene.tsx";
 import SpeakerButton from "./SpeakerButton.tsx";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
 import {FastAverageColor} from "fast-average-color";
-import { AnimatePresence } from "framer-motion";
 import SpeakerSettings, {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
 import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
 import ColorThief from "colorthief";
@@ -148,7 +146,7 @@ const CHARACTER_ART_PROMPT: string = 'plain flat background, standing, full body
 const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), scenery, special effects, scene, dynamic angle, action, cut-off';
 const BACKGROUND_ART_PROMPT: string = 'unpopulated, visual novel background scenery, background only, scenery only';
 
-const DEFAULT_BORDER_COLOR: string = '#1e1e1edd';
+export const DEFAULT_BORDER_COLOR: string = '#1e1e1edd';
 export const DEFAULT_OUTFIT_NAME: string = 'Starter Outfit';
 
 // Replace trigger words with less triggering words, so image gen can succeed.
@@ -861,8 +859,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     render(): ReactElement {
-        const count = Object.values(this.speakers).filter(speaker => this.isSpeakerDisplayed(speaker)).length;
-        let index = 0;
 
         return(
             <div className="big-stacker"
@@ -907,36 +903,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             />
                         ))}
                     </div>
-                    <BackgroundImage imageUrl={this.messageState.backgroundUrl} depthUrl={this.messageState.depthUrl} borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}/>
-                    <AnimatePresence>
-                        {Object.values(this.speakers).map(character => {
-                            if (this.isSpeakerDisplayed(character)) {
-                                index++;
-                                let xPosition = count == 1 ? 50 :
-                                    ((index % 2 == 1) ?
-                                        (Math.ceil(index / 2) * (50 / (Math.ceil(count / 2) + 1))) :
-                                        (Math.floor(index / 2) * (50 / (Math.floor(count / 2) + 1)) + 50));
-                                // Farther from 50, higher up on the screen:
-                                let yPosition = Math.ceil(Math.abs(xPosition - 50) / 5);
-                                // Closer to 50, higher visual priority:
-                                const zIndex = Math.ceil((50 - Math.abs(xPosition - 50)) / 5);
-
-                                return <SpeakerImage
-                                    key={`character_${character.anonymizedId}`}
-                                    speaker={character}
-                                    emotion={this.getSpeakerEmotion(character.anonymizedId)}
-                                    xPosition={xPosition}
-                                    yPosition={yPosition}
-                                    zIndex={zIndex}
-                                    imageUrl={this.getSpeakerImage(character.anonymizedId, this.chatState.selectedOutfit[character.anonymizedId], this.getSpeakerEmotion(character.anonymizedId), '')}
-                                    isTalking={this.messageState.activeSpeaker == character.anonymizedId}
-                                    alphaMode={this.alphaMode}
-                                />
-                            } else {
-                                return <></>
-                            }
-                        })}
-                    </AnimatePresence>
+                    <Scene imageUrl={this.messageState.backgroundUrl} depthUrl={this.messageState.depthUrl} stage={this}/>
                 </ThemeProvider>
             </div>
 

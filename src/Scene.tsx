@@ -1,19 +1,24 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FC } from "react";
 import DepthScene from "./DepthPlane";
+import { DEFAULT_BORDER_COLOR, Expressions } from "./Expressions";
+import SpeakerImage from "./SpeakerImage";
 
-interface BackgroundImageProps {
+interface SceneProps {
     imageUrl: string;
     depthUrl: string;
-    children?: React.ReactNode;
-    borderColor: string;
+    stage: Expressions;
 }
 
 const FRAME_START_LEFT = "100vw";
 const FRAME_END_LEFT = "6vw";
 
-const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, depthUrl, children, borderColor }) => {
+const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
 
+    const borderColor = stage.messageState.borderColor ?? DEFAULT_BORDER_COLOR;
+
+    const speakerCount = Object.values(stage.speakers).filter(speaker => stage.isSpeakerDisplayed(speaker)).length;
+    let speakerIndex = 0;
     return (
         <AnimatePresence>
             {imageUrl && (
@@ -95,7 +100,35 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, depthUrl, childre
                                 />
                             )}
                             <div style={{position: "relative", zIndex: 2}}>
-                                {children}
+                                <AnimatePresence>
+                                    {Object.values(stage.speakers).map(character => {
+                                        if (stage.isSpeakerDisplayed(character)) {
+                                            speakerIndex++;
+                                            let xPosition = speakerCount == 1 ? 50 :
+                                                ((speakerIndex % 2 == 1) ?
+                                                    (Math.ceil(speakerIndex / 2) * (50 / (Math.ceil(speakerCount / 2) + 1))) :
+                                                    (Math.floor(speakerIndex / 2) * (50 / (Math.floor(speakerCount / 2) + 1)) + 50));
+                                            // Farther from 50, higher up on the screen:
+                                            let yPosition = Math.ceil(Math.abs(xPosition - 50) / 5);
+                                            // Closer to 50, higher visual priority:
+                                            const zIndex = Math.ceil((50 - Math.abs(xPosition - 50)) / 5);
+
+                                            return <SpeakerImage
+                                                key={`character_${character.anonymizedId}`}
+                                                speaker={character}
+                                                emotion={stage.getSpeakerEmotion(character.anonymizedId)}
+                                                xPosition={xPosition}
+                                                yPosition={yPosition}
+                                                zIndex={zIndex}
+                                                imageUrl={stage.getSpeakerImage(character.anonymizedId, stage.chatState.selectedOutfit[character.anonymizedId], stage.getSpeakerEmotion(character.anonymizedId), '')}
+                                                isTalking={stage.messageState.activeSpeaker == character.anonymizedId}
+                                                alphaMode={stage.alphaMode}
+                                            />
+                                        } else {
+                                            return <></>
+                                        }
+                                    })}
+                                </AnimatePresence>
                             </div>
                         </motion.div>
                     </motion.div>
@@ -105,4 +138,4 @@ const BackgroundImage: FC<BackgroundImageProps> = ({ imageUrl, depthUrl, childre
     );
 };
 
-export default BackgroundImage;
+export default Scene;
