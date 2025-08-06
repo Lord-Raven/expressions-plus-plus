@@ -162,7 +162,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                             zIndex: 1,
                                             pointerEvents: 'none', // Allow events to pass through to elements below
                                         }}
-                                        camera={{ position: [0, 0, 3], fov: 50 }}
+                                        camera={{ position: [0, 0, 3], fov: 70 }}
                                     >
                                         <DepthPlane
                                             imageUrl={imageUrl}

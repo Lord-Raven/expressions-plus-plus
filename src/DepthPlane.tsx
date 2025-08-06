@@ -145,8 +145,8 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       
       // Apply panning offset to mesh position
       meshRef.current.position.set(
-        position[0] - panX,
-        position[1] + panY,
+        position[0],
+        position[1],
         position[2]
       );
 
@@ -154,6 +154,8 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       const rotationStrength = 1; // Adjust this value to control rotation intensity
       camera.rotation.x = parallaxY * rotationStrength;
       camera.rotation.y = parallaxX * rotationStrength;
+      camera.position.x = panX;
+      camera.position.y = panY;
     }
   });
 
