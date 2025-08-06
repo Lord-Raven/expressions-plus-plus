@@ -161,6 +161,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
       shaderMaterial.uniforms.uMouse.value.set(mousePosition.x, mousePosition.y);
       
       // Apply panning offset to mesh position
+      console.log(`panOffset: ${panOffset.x}, ${panOffset.y}`);
       meshRef.current.position.set(
         position[0] + panOffset.x,
         position[1] + panOffset.y,
