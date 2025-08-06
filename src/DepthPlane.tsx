@@ -72,7 +72,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
 
     // Calculate scale for cover behavior (fill the most constrained dimension)
     let scaleX, scaleY;
-    const cropFactor = 1.2; // Scale up by 20% to crop 10% from each side
+    const cropFactor = 1.2; // Scale up to crop
 
     if (imageAspect > canvasAspect) {
       // Image is wider than canvas, scale to fill height + crop
@@ -120,21 +120,52 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
         uniform vec2 uMouse;
         uniform float uParallaxStrength;
 
+        vec2 reliefMapping(vec2 texCoords, vec2 viewDir) {
+          // Number of depth layers for ray marching
+          const float minLayers = 8.0;
+          const float maxLayers = 32.0;
+          float numLayers = mix(maxLayers, minLayers, abs(dot(vec2(0.0, 1.0), viewDir)));
+          
+          // Calculate layer depth
+          float layerDepth = 1.0 / numLayers;
+          float currentLayerDepth = 0.0;
+          
+          // Amount to shift the texture coordinates per layer
+          vec2 P = viewDir * uParallaxStrength;
+          vec2 deltaTexCoords = P / numLayers;
+          
+          // Initial values
+          vec2 currentTexCoords = texCoords;
+          float currentDepthMapValue = texture2D(uDepthMap, currentTexCoords).r;
+          
+          // Ray marching
+          while(currentLayerDepth < currentDepthMapValue) {
+            currentTexCoords -= deltaTexCoords;
+            currentDepthMapValue = texture2D(uDepthMap, currentTexCoords).r;
+            currentLayerDepth += layerDepth;
+          }
+          
+          // Binary search for better precision
+          vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+          float afterDepth = currentDepthMapValue - currentLayerDepth;
+          float beforeDepth = texture2D(uDepthMap, prevTexCoords).r - currentLayerDepth + layerDepth;
+          
+          float weight = afterDepth / (afterDepth - beforeDepth);
+          vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+          
+          return finalTexCoords;
+        }
+
         void main() {
-          // Sample depth with better filtering
-          float depth = texture2D(uDepthMap, vUv).r;
-          //float depthDx = dFdx(depth);
-          //float depthDy = dFdy(depth);
-          //float edgeStrength = length(vec2(depthDx, depthDy));
-          //depth *= 1.0 - smoothstep(0.1, 0.4, edgeStrength);
+          vec2 viewDir = normalize(uMouse);
           
-          // Calculate parallax offset with reduced strength for smoother effect
-          vec2 parallaxOffset = uMouse * depth * uParallaxStrength;
+          // Use relief mapping to find correct UV coordinates
+          vec2 offsetUV = reliefMapping(vUv, viewDir);
           
-          // Apply offset to UV coordinates with clamping to prevent sampling outside texture
-          vec2 offsetUV = clamp(vUv + parallaxOffset, 0.0, 1.0);
+          // Clamp to prevent sampling outside texture
+          offsetUV = clamp(offsetUV, 0.0, 1.0);
           
-          // Sample color with linear filtering
+          // Sample color
           vec4 color = texture2D(uColorMap, offsetUV);
           
           gl_FragColor = color;
