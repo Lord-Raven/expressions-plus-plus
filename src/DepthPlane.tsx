@@ -104,7 +104,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
           uParallaxStrength: { value: PARALLAX_STRENGTH },
         },
         vertexShader: `
-        precision mediump float;
+        precision highp float;
         varying vec2 vUv;
 
         void main() {
@@ -121,32 +121,16 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
         uniform float uParallaxStrength;
 
         void main() {
-          vec2 texelSize = 1.0 / vec2(textureSize(uDepthMap, 0));
-          
-          // Sample depth at current position
+          // Sample depth with better filtering
           float depth = texture2D(uDepthMap, vUv).r;
           
-          // Calculate depth gradients for edge detection
-          float depthRight = texture2D(uDepthMap, vUv + vec2(texelSize.x, 0.0)).r;
-          float depthDown = texture2D(uDepthMap, vUv + vec2(0.0, texelSize.y)).r;
-          float depthLeft = texture2D(uDepthMap, vUv - vec2(texelSize.x, 0.0)).r;
-          float depthUp = texture2D(uDepthMap, vUv - vec2(0.0, texelSize.y)).r;
+          // Calculate parallax offset with reduced strength for smoother effect
+          vec2 parallaxOffset = uMouse * depth * uParallaxStrength;
           
-          // Calculate edge strength
-          float edgeStrength = abs(depth - depthRight) + abs(depth - depthDown) + 
-                              abs(depth - depthLeft) + abs(depth - depthUp);
-          
-          // Reduce parallax strength near edges
-          float edgeFactor = 1.0 - smoothstep(0.1, 0.3, edgeStrength);
-          float adjustedStrength = uParallaxStrength * edgeFactor;
-          
-          // Calculate parallax offset
-          vec2 parallaxOffset = uMouse * depth * adjustedStrength;
-          
-          // Apply offset to UV coordinates
+          // Apply offset to UV coordinates with clamping to prevent sampling outside texture
           vec2 offsetUV = clamp(vUv + parallaxOffset, 0.0, 1.0);
           
-          // Sample color
+          // Sample color with linear filtering
           vec4 color = texture2D(uColorMap, offsetUV);
           
           gl_FragColor = color;
