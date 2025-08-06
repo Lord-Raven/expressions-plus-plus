@@ -121,10 +121,8 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
         uniform float uParallaxStrength;
 
         vec2 reliefMapping(vec2 texCoords, vec2 viewDir) {
-          // Number of depth layers for ray marching
-          const float minLayers = 8.0;
-          const float maxLayers = 32.0;
-          float numLayers = mix(maxLayers, minLayers, abs(dot(vec2(0.0, 1.0), viewDir)));
+          // Fixed number of layers to avoid varying iteration
+          const float numLayers = 16.0;
           
           // Calculate layer depth
           float layerDepth = 1.0 / numLayers;
@@ -136,22 +134,20 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
           
           // Initial values
           vec2 currentTexCoords = texCoords;
-          float currentDepthMapValue = texture2D(uDepthMap, currentTexCoords).r;
+          vec2 finalTexCoords = texCoords;
           
-          // Ray marching
-          while(currentLayerDepth < currentDepthMapValue) {
+          // Use texture2DLod to avoid gradient issues in loops
+          for(float i = 0.0; i < numLayers; i += 1.0) {
+            float currentDepthMapValue = texture2DLod(uDepthMap, currentTexCoords, 0.0).r;
+            
+            if(currentLayerDepth >= currentDepthMapValue) {
+              break;
+            }
+            
+            finalTexCoords = currentTexCoords;
             currentTexCoords -= deltaTexCoords;
-            currentDepthMapValue = texture2D(uDepthMap, currentTexCoords).r;
             currentLayerDepth += layerDepth;
           }
-          
-          // Binary search for better precision
-          vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
-          float afterDepth = currentDepthMapValue - currentLayerDepth;
-          float beforeDepth = texture2D(uDepthMap, prevTexCoords).r - currentLayerDepth + layerDepth;
-          
-          float weight = afterDepth / (afterDepth - beforeDepth);
-          vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
           
           return finalTexCoords;
         }
@@ -165,7 +161,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
           // Clamp to prevent sampling outside texture
           offsetUV = clamp(offsetUV, 0.0, 1.0);
           
-          // Sample color
+          // Sample color with normal texture2D (gradients work fine outside loops)
           vec4 color = texture2D(uColorMap, offsetUV);
           
           gl_FragColor = color;
