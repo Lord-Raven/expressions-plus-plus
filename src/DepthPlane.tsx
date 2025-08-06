@@ -17,6 +17,27 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
 
+  const blurredColorMap = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx || !colorMap.image) return colorMap;
+
+    canvas.width = colorMap.image.width;
+    canvas.height = colorMap.image.height;
+
+    // Apply blur filter
+    ctx.filter = 'blur(2px)';
+    ctx.drawImage(colorMap.image, 0, 0);
+    
+    const blurredTexture = new THREE.CanvasTexture(canvas);
+    blurredTexture.minFilter = THREE.LinearFilter;
+    blurredTexture.magFilter = THREE.LinearFilter;
+    blurredTexture.wrapS = THREE.ClampToEdgeWrapping;
+    blurredTexture.wrapT = THREE.ClampToEdgeWrapping;
+    
+    return blurredTexture;
+  }, [colorMap]);
+
   const blurredDepthMap = useMemo(() => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -77,7 +98,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
     () =>
       new THREE.ShaderMaterial({
         uniforms: {
-          uColorMap: { value: blurredDepthMap },
+          uColorMap: { value: blurredColorMap },
           uDepthMap: { value: blurredDepthMap },
           uMouse: { value: new THREE.Vector2(0, 0) },
           uParallaxStrength: { value: PARALLAX_STRENGTH },
