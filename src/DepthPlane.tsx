@@ -58,7 +58,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
     () =>
       new THREE.ShaderMaterial({
         uniforms: {
-          uColorMap: { value: colorMap },
+          uColorMap: { value: depthMap },
           uDepthMap: { value: depthMap},
           uMouse: { value: new THREE.Vector2(0, 0) },
           uParallaxStrength: { value: PARALLAX_STRENGTH },
