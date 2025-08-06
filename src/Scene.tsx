@@ -99,41 +99,41 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                     }}
                                 />
                             )}
-                            <div style={{position: "relative", height: "100vh", width: "100vw", zIndex: 2}}>
-                                {Object.values(stage.speakers).map(character => {
-                                    console.log(`Rendering speaker: ${character.anonymizedId}, displayed: ${stage.isSpeakerDisplayed(character)}`);
-                                    if (stage.isSpeakerDisplayed(character)) {
-                                        console.log(`Speaker ${character.anonymizedId} is displayed, index: ${speakerIndex}`);
-                                        speakerIndex++;
-                                        let xPosition = speakerCount == 1 ? 50 :
-                                            ((speakerIndex % 2 == 1) ?
-                                                (Math.ceil(speakerIndex / 2) * (50 / (Math.ceil(speakerCount / 2) + 1))) :
-                                                (Math.floor(speakerIndex / 2) * (50 / (Math.floor(speakerCount / 2) + 1)) + 50));
-                                        // Farther from 50, higher up on the screen:
-                                        let yPosition = Math.ceil(Math.abs(xPosition - 50) / 5);
-                                        // Closer to 50, higher visual priority:
-                                        const zIndex = Math.ceil((50 - Math.abs(xPosition - 50)) / 5);
-
-                                        return <SpeakerImage
-                                            key={`character_${character.anonymizedId}`}
-                                            speaker={character}
-                                            emotion={stage.getSpeakerEmotion(character.anonymizedId)}
-                                            xPosition={xPosition}
-                                            yPosition={yPosition}
-                                            zIndex={zIndex}
-                                            imageUrl={stage.getSpeakerImage(character.anonymizedId, stage.chatState.selectedOutfit[character.anonymizedId], stage.getSpeakerEmotion(character.anonymizedId), '')}
-                                            isTalking={stage.messageState.activeSpeaker == character.anonymizedId}
-                                            alphaMode={stage.alphaMode}
-                                        />
-                                    } else {
-                                        return <></>
-                                    }
-                                })}
-                            </div>
                         </motion.div>
                     </motion.div>
                 </>
             )}
+            <div style={{position: "relative", height: "100vh", width: "100vw", zIndex: 2}}>
+                {Object.values(stage.speakers).map(character => {
+                    console.log(`Rendering speaker: ${character.anonymizedId}, displayed: ${stage.isSpeakerDisplayed(character)}`);
+                    if (stage.isSpeakerDisplayed(character)) {
+                        console.log(`Speaker ${character.anonymizedId} is displayed, index: ${speakerIndex}`);
+                        speakerIndex++;
+                        let xPosition = speakerCount == 1 ? 50 :
+                            ((speakerIndex % 2 == 1) ?
+                                (Math.ceil(speakerIndex / 2) * (50 / (Math.ceil(speakerCount / 2) + 1))) :
+                                (Math.floor(speakerIndex / 2) * (50 / (Math.floor(speakerCount / 2) + 1)) + 50));
+                        // Farther from 50, higher up on the screen:
+                        let yPosition = Math.ceil(Math.abs(xPosition - 50) / 5);
+                        // Closer to 50, higher visual priority:
+                        const zIndex = Math.ceil((50 - Math.abs(xPosition - 50)) / 5);
+
+                        return <SpeakerImage
+                            key={`character_${character.anonymizedId}`}
+                            speaker={character}
+                            emotion={stage.getSpeakerEmotion(character.anonymizedId)}
+                            xPosition={xPosition}
+                            yPosition={yPosition}
+                            zIndex={zIndex}
+                            imageUrl={stage.getSpeakerImage(character.anonymizedId, stage.chatState.selectedOutfit[character.anonymizedId], stage.getSpeakerEmotion(character.anonymizedId), '')}
+                            isTalking={stage.messageState.activeSpeaker == character.anonymizedId}
+                            alphaMode={stage.alphaMode}
+                        />
+                    } else {
+                        return <></>
+                    }
+                })}
+            </div>
         </AnimatePresence>
     );
 };
