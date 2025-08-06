@@ -101,47 +101,47 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
         uniforms: {
           uColorMap: { value: blurredColorMap },
           uDepthMap: { value: blurredDepthMap },
-          uParallax: { value: new THREE.Vector2(0, 0) },
+          uDisplacementStrength: { value: 0.5 }, // Control displacement intensity
+          uParallax: { value: new THREE.Vector2(0, 0) }, // Keep for potential additional effects
         },
         vertexShader: `
         precision highp float;
         varying vec2 vUv;
+        uniform sampler2D uDepthMap;
+        uniform float uDisplacementStrength;
 
         void main() {
           vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          
+          // Sample depth map for displacement
+          float depth = texture2D(uDepthMap, uv).r;
+          
+          // Create displaced position
+          vec3 newPosition = position;
+          newPosition.z += depth * uDisplacementStrength;
+          
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
         }
       `,
         fragmentShader: `
         precision highp float;
         varying vec2 vUv;
         uniform sampler2D uColorMap;
-        uniform sampler2D uDepthMap;
-        uniform vec2 uParallax;
 
         void main() {
-          // Sample depth with better filtering
-          float depth = texture2D(uDepthMap, vUv).r;
-          
-          // Calculate parallax offset
-          vec2 parallaxOffset = uParallax * depth;
-          
-          // Apply offset to UV coordinates with clamping to prevent sampling outside texture
-          vec2 offsetUV = clamp(vUv + parallaxOffset, 0.0, 1.0);
-          
-          // Sample color with linear filtering
-          vec4 color = texture2D(uColorMap, offsetUV);
-          
+          // Simple texture sampling - no parallax needed since displacement is in vertices
+          vec4 color = texture2D(uColorMap, vUv);
           gl_FragColor = color;
         }
       `,
       }),
-    [colorMap, depthMap]
+    [blurredColorMap, blurredDepthMap]
   );
 
   useFrame(() => {
     if (shaderMaterial && meshRef.current) {
-      shaderMaterial.uniforms.uParallax.value.set(parallaxX, parallaxY);
+      // You can animate displacement strength or other properties here
+      // shaderMaterial.uniforms.uDisplacementStrength.value = Math.sin(Date.now() * 0.001) * 0.5 + 0.5;
       
       // Apply panning offset to mesh position
       meshRef.current.position.set(
