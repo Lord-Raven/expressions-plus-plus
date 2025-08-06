@@ -145,7 +145,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       
       // Apply panning offset to mesh position
       meshRef.current.position.set(
-        position[0] + panX,
+        position[0] - panX,
         position[1] + panY,
         position[2]
       );
