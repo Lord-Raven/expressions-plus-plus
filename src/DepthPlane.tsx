@@ -85,8 +85,8 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
     }
 
     // Determine if we can pan in each axis (image is smaller than container)
-    const canPanX = scaleX < visibleWidth;
-    const canPanY = scaleY < visibleHeight;
+    const canPanX = imageAspect > canvasAspect;
+    const canPanY = imageAspect <= canvasAspect;
 
     // Position for "center bottom" - center horizontally, align to bottom
     const posX = 0; // Center horizontally
