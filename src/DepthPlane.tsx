@@ -104,7 +104,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
           uParallaxStrength: { value: PARALLAX_STRENGTH },
         },
         vertexShader: `
-        precision highp float;
+        precision mediump float;
         varying vec2 vUv;
 
         void main() {
@@ -113,80 +113,50 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
         }
       `,
         fragmentShader: `
-        precision highp float;
+        precision mediump float;
         varying vec2 vUv;
         uniform sampler2D uColorMap;
         uniform sampler2D uDepthMap;
         uniform vec2 uMouse;
         uniform float uParallaxStrength;
 
-        vec2 reliefMapping(vec2 texCoords, vec2 viewDir) {
-          // Unrolled loop to avoid gradient issues
-          const float numLayers = 8.0;
-          float layerDepth = 1.0 / numLayers;
+        vec2 parallaxOcclusionMapping(vec2 texCoords, vec2 viewDir) {
+          // Number of depth layers
+          const float numLayers = 16.0;
           
+          // Calculate layer depth
+          float layerDepth = 1.0 / numLayers;
+          float currentLayerDepth = 0.0;
+          
+          // Amount to shift the texture coordinates per layer
           vec2 P = viewDir * uParallaxStrength;
           vec2 deltaTexCoords = P / numLayers;
           
+          // Initial values
           vec2 currentTexCoords = texCoords;
-          float currentLayerDepth = 0.0;
+          float currentDepthMapValue = texture2D(uDepthMap, currentTexCoords).r;
           
-          // Unroll the loop manually to avoid gradient issues
-          float depth0 = texture2D(uDepthMap, currentTexCoords).r;
-          if (currentLayerDepth < depth0) {
+          // Step through layers until we find intersection
+          while(currentLayerDepth < currentDepthMapValue) {
             currentTexCoords -= deltaTexCoords;
+            currentDepthMapValue = texture2D(uDepthMap, currentTexCoords).r;
             currentLayerDepth += layerDepth;
-            
-            float depth1 = texture2D(uDepthMap, currentTexCoords).r;
-            if (currentLayerDepth < depth1) {
-              currentTexCoords -= deltaTexCoords;
-              currentLayerDepth += layerDepth;
-              
-              float depth2 = texture2D(uDepthMap, currentTexCoords).r;
-              if (currentLayerDepth < depth2) {
-                currentTexCoords -= deltaTexCoords;
-                currentLayerDepth += layerDepth;
-                
-                float depth3 = texture2D(uDepthMap, currentTexCoords).r;
-                if (currentLayerDepth < depth3) {
-                  currentTexCoords -= deltaTexCoords;
-                  currentLayerDepth += layerDepth;
-                  
-                  float depth4 = texture2D(uDepthMap, currentTexCoords).r;
-                  if (currentLayerDepth < depth4) {
-                    currentTexCoords -= deltaTexCoords;
-                    currentLayerDepth += layerDepth;
-                    
-                    float depth5 = texture2D(uDepthMap, currentTexCoords).r;
-                    if (currentLayerDepth < depth5) {
-                      currentTexCoords -= deltaTexCoords;
-                      currentLayerDepth += layerDepth;
-                      
-                      float depth6 = texture2D(uDepthMap, currentTexCoords).r;
-                      if (currentLayerDepth < depth6) {
-                        currentTexCoords -= deltaTexCoords;
-                        currentLayerDepth += layerDepth;
-                        
-                        float depth7 = texture2D(uDepthMap, currentTexCoords).r;
-                        if (currentLayerDepth < depth7) {
-                          currentTexCoords -= deltaTexCoords;
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
           }
           
-          return currentTexCoords;
+          // Linear interpolation for smoother result
+          vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+          float afterDepth = currentDepthMapValue - currentLayerDepth;
+          float beforeDepth = texture2D(uDepthMap, prevTexCoords).r - currentLayerDepth + layerDepth;
+          
+          float weight = afterDepth / (afterDepth - beforeDepth);
+          return prevTexCoords * weight + currentTexCoords * (1.0 - weight);
         }
 
         void main() {
           vec2 viewDir = normalize(uMouse);
           
-          // Use relief mapping to find correct UV coordinates
-          vec2 offsetUV = reliefMapping(vUv, viewDir);
+          // Use parallax occlusion mapping
+          vec2 offsetUV = parallaxOcclusionMapping(vUv, viewDir);
           
           // Clamp to prevent sampling outside texture
           offsetUV = clamp(offsetUV, 0.0, 1.0);

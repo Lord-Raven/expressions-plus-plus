@@ -9,7 +9,7 @@ tagline: "Shows character emotions based on a set of images.++"
 
 # A longer explanation. Supports Markdown format.
 creator_notes: "
-_Hey, can you all just ignore it if this randomly breaks while I work on it? I'm trying out the new storage API and trying to gate off the impact but I could easily make a mistake. Don't turn on alpha mode._  
+_Apologies for lots of alpha updates that aren't adding anything new for most users. I am working on a few new features that are not ready for widespread use yet. I don't advise turning on alpha mode._  
   
 This is a shameless knock-off of the [official Expression Packs stage](https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d). 
 You can add this stage to any chat by searching for it under Stages in Chat Settings, but you may want to read some of this beforehand.  
@@ -17,7 +17,7 @@ You can add this stage to any chat by searching for it under Stages in Chat Sett
 ### No Expression Pack Support 
 
 _Unlike_ that stage, this one doesn't actually support expression packs; they appear to currently be locked to the official stage. Write your congressperson. 
-When this changes, I'll update this stage to use the character's pack by default.  
+When this changes, I'll update this stage to use the character's pack by default.  (Update: expression packs are now supported, but I am awaiting some new storage API features before integrating this.)  
 
 ### So, Uh, What Is This, Then? 
 
@@ -61,10 +61,9 @@ undoubtedly situations that will still fail. The character management UI will in
 
 ### Updates  
 
-2025.07.28:
+2025.08.05:
 
-- Please ignore what is bound to be a series of potentially breaking updates as I experiment with the new storage API. 
-I am attempting to gate this off so it doesn't break the entire stage, but I'm playing real loose with it. Sorry!
+- I am continuing to experiment with some new features that are not ready for prime time yet; they are constrained to alpha mode, but I'm sorry that the stage is getting bumped every time I make a change. 
 
 2025.07.10: 
 
