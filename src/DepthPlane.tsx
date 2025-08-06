@@ -9,7 +9,7 @@ interface DepthPlaneProps {
   mousePosition: { x: number; y: number };
 }
 
-export const PARALLAX_STRENGTH: number = 0.02; // This is used to calculate some positions elsewhere
+export const PARALLAX_STRENGTH: number = 0.01; // This is used to calculate some positions in other classes, too
 
 const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -102,7 +102,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
 
   // Calculate panning offset based on mouse position and available space
   const panOffset = useMemo(() => {
-    const panStrength = 0.1; // Adjust this value to control panning sensitivity
+    const panStrength = 0.5; // Adjust this value to control panning sensitivity
     
     return {
       x: canPanX ? mousePosition.x * panStrength : 0,
