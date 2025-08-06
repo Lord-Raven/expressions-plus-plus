@@ -101,7 +101,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
         uniforms: {
           uColorMap: { value: blurredColorMap },
           uDepthMap: { value: blurredDepthMap },
-          uDisplacementStrength: { value: 2 }, // Control displacement intensity
+          uDisplacementStrength: { value: 5 }, // Control displacement intensity
           uParallax: { value: new THREE.Vector2(0, 0) }, // Keep for potential additional effects
         },
         vertexShader: `
@@ -118,8 +118,8 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           
           // Create displaced position
           vec3 newPosition = position;
-          newPosition.z += depth * uDisplacementStrength;
-          
+          newPosition.z -= (1.0 - depth) * uDisplacementStrength;
+
           gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
         }
       `,
@@ -154,7 +154,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
 
   return (
     <mesh ref={meshRef} scale={scale} position={position}>
-      <planeGeometry args={[1, 1, 256, 256]} />
+      <planeGeometry args={[1, 1, 512, 512]} />
       <primitive object={shaderMaterial} attach="material" />
     </mesh>
   );
