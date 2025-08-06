@@ -9,15 +9,15 @@ interface DepthPlaneProps {
   mousePosition: { x: number; y: number };
 }
 
-export const PARALLAX_STRENGTH: number = 0.1; // This is used to calculate some positions elsewhere
+export const PARALLAX_STRENGTH: number = 0.05; // This is used to calculate some positions elsewhere
 
 const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const { camera, size } = useThree();
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
-  depthMap.minFilter = THREE.NearestFilter; // Use nearest filtering for discrete steps
-  depthMap.magFilter = THREE.NearestFilter; // Use nearest filtering for discrete steps
+  depthMap.minFilter = THREE.LinearFilter; // Use linear filtering for smoother depth transitions
+  depthMap.magFilter = THREE.LinearFilter; // Use linear filtering for smoother depth transitions
 
   // Calculate scale and position for object-fit: cover behavior with 5% crop
   const { scale, position } = useMemo(() => {
