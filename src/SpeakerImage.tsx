@@ -64,6 +64,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     const depth = (48 - tempY) / 100; // depth between 0 and 0.48, I guess.
     const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (-mousePosition.x * depth * PARALLAX_STRENGTH) : 0) * 100);
     const finalY = tempY + ((alphaMode ? (-mousePosition.y * depth * PARALLAX_STRENGTH) : 0) * 100);
+    if (finalY > 50) {
+        console.log(`Warning: finalY (${finalY}) is greater than 50, which may cause the speaker to be positioned off-screen.`);
+    }
 
     const variants: Variants = {
         absent: {
@@ -89,9 +92,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(1)', 
             zIndex: 100, 
             transition: previousState === 'absent' ? {
-                x: { ease: "easeOut", duration: 1.0 }, 
-                bottom: { ease: "linear", duration: 1.0 }, 
-                opacity: { ease: "easeOut", duration: 1.0 }
+                x: { ease: "easeOut", duration: 3.0 }, 
+                bottom: { ease: "linear", duration: 3.0 }, 
+                opacity: { ease: "easeOut", duration: 3.0 }
             } : {
                 x: { ease: "linear", duration: 0.01 }, 
                 bottom: { ease: "linear", duration: 0.01 }, 
@@ -107,9 +110,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(0.8)', 
             zIndex: zIndex,
             transition: previousState === 'absent' ? {
-                x: { ease: "easeOut", duration: 1.0 }, 
-                bottom: { ease: "linear", duration: 1.0 }, 
-                opacity: { ease: "easeOut", duration: 1.0 }
+                x: { ease: "easeOut", duration: 3.0 }, 
+                bottom: { ease: "linear", duration: 3.0 }, 
+                opacity: { ease: "easeOut", duration: 3.0 }
             } : {
                 x: { ease: "linear", duration: 0.01 }, 
                 bottom: { ease: "linear", duration: 0.01 }, 
