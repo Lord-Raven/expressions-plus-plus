@@ -48,7 +48,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
     canvas.height = depthMap.image.height;
     
     // Apply blur filter
-    ctx.filter = 'blur(4px)';
+    ctx.filter = 'blur(2px)';
     ctx.drawImage(depthMap.image, 0, 0);
     
     const blurredTexture = new THREE.CanvasTexture(canvas);

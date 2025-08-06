@@ -71,7 +71,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
 
         // Calculate parallax offset (for depth effects)
         const parallaxStrength = 0.03;
-        const parallaxX = (stage.alphaMode && imageUrl) ? mousePosition.x * parallaxStrength : 0;
+        const parallaxX = (stage.alphaMode && imageUrl) ? -mousePosition.x * parallaxStrength : 0;
         const parallaxY = (stage.alphaMode && imageUrl) ? mousePosition.y * parallaxStrength : 0;
 
         return { panX, panY, parallaxX, parallaxY };
