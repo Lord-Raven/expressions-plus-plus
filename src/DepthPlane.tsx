@@ -9,7 +9,7 @@ interface DepthPlaneProps {
   mousePosition: { x: number; y: number };
 }
 
-export const PARALLAX_STRENGTH: number = 0.05; // This is used to calculate some positions elsewhere
+export const PARALLAX_STRENGTH: number = 0.02; // This is used to calculate some positions elsewhere
 
 const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -60,7 +60,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   }, [depthMap]);
 
   // Calculate scale and position for object-fit: cover behavior with 5% crop
-  const { scale, position } = useMemo(() => {
+  const { scale, position, canPanX, canPanY } = useMemo(() => {
     const canvasAspect = size.width / size.height;
     const imageAspect = colorMap.image.width / colorMap.image.height;
 
@@ -84,6 +84,10 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
       scaleY = scaleX / imageAspect;
     }
 
+    // Determine if we can pan in each axis (image is smaller than container)
+    const canPanX = scaleX < visibleWidth;
+    const canPanY = scaleY < visibleHeight;
+
     // Position for "center bottom" - center horizontally, align to bottom
     const posX = 0; // Center horizontally
     const posY = 0; // Center vertically
@@ -91,8 +95,20 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
     return {
       scale: [scaleX, scaleY, 1] as [number, number, number],
       position: [posX, posY, 0] as [number, number, number],
+      canPanX,
+      canPanY,
     };
   }, [colorMap, camera, size]);
+
+  // Calculate panning offset based on mouse position and available space
+  const panOffset = useMemo(() => {
+    const panStrength = 0.1; // Adjust this value to control panning sensitivity
+    
+    return {
+      x: canPanX ? mousePosition.x * panStrength : 0,
+      y: canPanY ? mousePosition.y * panStrength : 0,
+    };
+  }, [mousePosition, canPanX, canPanY]);
 
   const shaderMaterial = useMemo(
     () =>
@@ -141,8 +157,15 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   );
 
   useFrame(() => {
-    if (shaderMaterial) {
+    if (shaderMaterial && meshRef.current) {
       shaderMaterial.uniforms.uMouse.value.set(mousePosition.x, mousePosition.y);
+      
+      // Apply panning offset to mesh position
+      meshRef.current.position.set(
+        position[0] + panOffset.x,
+        position[1] + panOffset.y,
+        position[2]
+      );
     }
   });
 
