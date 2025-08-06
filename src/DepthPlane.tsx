@@ -26,7 +26,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
     canvas.height = colorMap.image.height;
 
     // Apply blur filter
-    ctx.filter = 'blur(2px)';
+    ctx.filter = 'blur(1px)';
     ctx.drawImage(colorMap.image, 0, 0);
     
     const blurredTexture = new THREE.CanvasTexture(canvas);
@@ -47,7 +47,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
     canvas.height = depthMap.image.height;
     
     // Apply blur filter
-    ctx.filter = 'blur(2px)';
+    ctx.filter = 'blur(1px)';
     ctx.drawImage(depthMap.image, 0, 0);
     
     const blurredTexture = new THREE.CanvasTexture(canvas);
