@@ -113,53 +113,38 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
         }
       `,
         fragmentShader: `
-        precision mediump float;
+        precision highp float;
         varying vec2 vUv;
         uniform sampler2D uColorMap;
         uniform sampler2D uDepthMap;
         uniform vec2 uMouse;
         uniform float uParallaxStrength;
 
-        vec2 parallaxOcclusionMapping(vec2 texCoords, vec2 viewDir) {
-          // Number of depth layers
-          const float numLayers = 16.0;
-          
-          // Calculate layer depth
-          float layerDepth = 1.0 / numLayers;
-          float currentLayerDepth = 0.0;
-          
-          // Amount to shift the texture coordinates per layer
-          vec2 P = viewDir * uParallaxStrength;
-          vec2 deltaTexCoords = P / numLayers;
-          
-          // Initial values
-          vec2 currentTexCoords = texCoords;
-          float currentDepthMapValue = texture2D(uDepthMap, currentTexCoords).r;
-          
-          // Step through layers until we find intersection
-          while(currentLayerDepth < currentDepthMapValue) {
-            currentTexCoords -= deltaTexCoords;
-            currentDepthMapValue = texture2D(uDepthMap, currentTexCoords).r;
-            currentLayerDepth += layerDepth;
-          }
-          
-          // Linear interpolation for smoother result
-          vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
-          float afterDepth = currentDepthMapValue - currentLayerDepth;
-          float beforeDepth = texture2D(uDepthMap, prevTexCoords).r - currentLayerDepth + layerDepth;
-          
-          float weight = afterDepth / (afterDepth - beforeDepth);
-          return prevTexCoords * weight + currentTexCoords * (1.0 - weight);
-        }
-
         void main() {
-          vec2 viewDir = normalize(uMouse);
+          vec2 texelSize = 1.0 / vec2(textureSize(uDepthMap, 0));
           
-          // Use parallax occlusion mapping
-          vec2 offsetUV = parallaxOcclusionMapping(vUv, viewDir);
+          // Sample depth at current position
+          float depth = texture2D(uDepthMap, vUv).r;
           
-          // Clamp to prevent sampling outside texture
-          offsetUV = clamp(offsetUV, 0.0, 1.0);
+          // Calculate depth gradients for edge detection
+          float depthRight = texture2D(uDepthMap, vUv + vec2(texelSize.x, 0.0)).r;
+          float depthDown = texture2D(uDepthMap, vUv + vec2(0.0, texelSize.y)).r;
+          float depthLeft = texture2D(uDepthMap, vUv - vec2(texelSize.x, 0.0)).r;
+          float depthUp = texture2D(uDepthMap, vUv - vec2(0.0, texelSize.y)).r;
+          
+          // Calculate edge strength
+          float edgeStrength = abs(depth - depthRight) + abs(depth - depthDown) + 
+                              abs(depth - depthLeft) + abs(depth - depthUp);
+          
+          // Reduce parallax strength near edges
+          float edgeFactor = 1.0 - smoothstep(0.1, 0.3, edgeStrength);
+          float adjustedStrength = uParallaxStrength * edgeFactor;
+          
+          // Calculate parallax offset
+          vec2 parallaxOffset = uMouse * depth * adjustedStrength;
+          
+          // Apply offset to UV coordinates
+          vec2 offsetUV = clamp(vUv + parallaxOffset, 0.0, 1.0);
           
           // Sample color
           vec4 color = texture2D(uColorMap, offsetUV);
