@@ -151,7 +151,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       );
 
       // Apply parallax as camera rotation
-      const rotationStrength = 0.05; // Adjust this value to control rotation intensity
+      const rotationStrength = 5; // Adjust this value to control rotation intensity
       camera.rotation.x = parallaxY * rotationStrength;
       camera.rotation.y = parallaxX * rotationStrength;
     }
