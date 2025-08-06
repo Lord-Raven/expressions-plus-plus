@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, useMemo } from "react";
 import { DEFAULT_BORDER_COLOR, Expressions } from "./Expressions";
 import SpeakerImage from "./SpeakerImage";
 import DepthPlane from "./DepthPlane";
@@ -54,6 +54,28 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
             return () => clearInterval(interval);
         }
     }, [isMouseOver]);
+
+    // Calculate pan and parallax values
+    const { panX, panY, parallaxX, parallaxY } = useMemo(() => {
+        const canvasAspect = window.innerWidth / window.innerHeight;
+        const imageAspect = 9 / 16; // Assuming standard aspect ratio, adjust if needed
+        
+        // Determine if we can pan in each axis
+        const canPanX = imageAspect > canvasAspect;
+        const canPanY = imageAspect <= canvasAspect;
+        
+        // Calculate panning offset
+        const panStrength = 0.3;
+        const panX = (stage.alphaMode && imageUrl && canPanX) ? mousePosition.x * panStrength : 0;
+        const panY = (stage.alphaMode && imageUrl && canPanY) ? mousePosition.y * panStrength : 0;
+
+        // Calculate parallax offset (for depth effects)
+        const parallaxStrength = 0.03;
+        const parallaxX = (stage.alphaMode && imageUrl) ? mousePosition.x * parallaxStrength : 0;
+        const parallaxY = (stage.alphaMode && imageUrl) ? mousePosition.y * parallaxStrength : 0;
+
+        return { panX, panY, parallaxX, parallaxY };
+    }, [mousePosition]);
 
     const borderColor = stage.messageState.borderColor ?? DEFAULT_BORDER_COLOR;
 
@@ -145,7 +167,10 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                         <DepthPlane
                                             imageUrl={imageUrl}
                                             depthUrl={depthUrl}
-                                            mousePosition={mousePosition}
+                                            panX={panX}
+                                            panY={panY}
+                                            parallaxX={parallaxX}
+                                            parallaxY={parallaxY}
                                         />
                                     </Canvas>
                                 ) : (
@@ -193,7 +218,10 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                 imageUrl={stage.getSpeakerImage(character.anonymizedId, stage.chatState.selectedOutfit[character.anonymizedId], stage.getSpeakerEmotion(character.anonymizedId), '')}
                                 isTalking={stage.messageState.activeSpeaker == character.anonymizedId}
                                 alphaMode={stage.alphaMode}
-                                mousePosition={mousePosition}
+                                panX={panX}
+                                panY={panY}
+                                parallaxX={parallaxX}
+                                parallaxY={parallaxY}
                             />
                         } else {
                             return <></>

@@ -2,7 +2,6 @@ import {motion, Variants} from "framer-motion";
 import { Emotion } from "./Expressions";
 import { Speaker } from "@chub-ai/stages-ts";
 import { FC, useState, useEffect } from "react";
-import { PARALLAX_STRENGTH } from "./DepthPlane";
 
 const IDLE_HEIGHT: number = 70;
 const SPEAKING_HEIGHT: number = 80;
@@ -16,7 +15,10 @@ interface SpeakerImageProps {
     zIndex: number;
     isTalking: boolean;
     alphaMode: boolean;
-    mousePosition: { x: number; y: number };
+    panX: number;
+    panY: number;
+    parallaxX: number;
+    parallaxY: number;
 }
 
 const SpeakerImage: FC<SpeakerImageProps> = ({
@@ -28,7 +30,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     zIndex, 
     isTalking, 
     alphaMode,
-    mousePosition
+    panX,
+    panY,
+    parallaxX,
+    parallaxY
 }) => {
     const [previousState, setPreviousState] = useState<string>('absent');
     const currentState = isTalking ? 'talking' : 'idle';
@@ -39,9 +44,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
 
     // Calculate final parallax position
     const tempY =  (isTalking ? 2 : (4 + yPosition));
-    const depth = (48 - tempY) / 100; // depth between 0 and 0.48, I guess.
-    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (-mousePosition.x * depth * PARALLAX_STRENGTH) : 0) * 100);
-    const finalY = tempY + ((alphaMode ? (-mousePosition.y * depth * PARALLAX_STRENGTH) : 0) * 100);
+    const depth = (48 - tempY) / 100; // depth between 0 and 0.48
+    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (-parallaxX * depth) : 0) + panX) * 100;
+    const finalY = tempY + ((alphaMode ? (-parallaxY * depth) : 0) + panY) * 100;
 
     const variants: Variants = {
         absent: {
