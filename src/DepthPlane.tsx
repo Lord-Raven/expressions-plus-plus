@@ -16,8 +16,27 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   const { camera, size } = useThree();
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
-  depthMap.minFilter = THREE.LinearFilter; // Use linear filtering for smoother depth transitions
-  depthMap.magFilter = THREE.LinearFilter; // Use linear filtering for smoother depth transitions
+
+  const blurredDepthMap = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx || !depthMap.image) return depthMap;
+    
+    canvas.width = depthMap.image.width;
+    canvas.height = depthMap.image.height;
+    
+    // Apply blur filter
+    ctx.filter = 'blur(2px)';
+    ctx.drawImage(depthMap.image, 0, 0);
+    
+    const blurredTexture = new THREE.CanvasTexture(canvas);
+    blurredTexture.minFilter = THREE.LinearFilter;
+    blurredTexture.magFilter = THREE.LinearFilter;
+    blurredTexture.wrapS = THREE.ClampToEdgeWrapping;
+    blurredTexture.wrapT = THREE.ClampToEdgeWrapping;
+    
+    return blurredTexture;
+  }, [depthMap]);
 
   // Calculate scale and position for object-fit: cover behavior with 5% crop
   const { scale, position } = useMemo(() => {
@@ -58,8 +77,8 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
     () =>
       new THREE.ShaderMaterial({
         uniforms: {
-          uColorMap: { value: depthMap },
-          uDepthMap: { value: depthMap},
+          uColorMap: { value: blurredDepthMap },
+          uDepthMap: { value: blurredDepthMap },
           uMouse: { value: new THREE.Vector2(0, 0) },
           uParallaxStrength: { value: PARALLAX_STRENGTH },
         },
