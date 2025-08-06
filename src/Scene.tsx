@@ -3,6 +3,7 @@ import { FC, useState, useEffect } from "react";
 import { DEFAULT_BORDER_COLOR, Expressions } from "./Expressions";
 import SpeakerImage from "./SpeakerImage";
 import DepthPlane from "./DepthPlane";
+import { Canvas } from "@react-three/fiber";
 
 interface SceneProps {
     imageUrl: string;
@@ -129,11 +130,24 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                 }}
                             >
                                 {depthUrl ? (
-                                    <DepthPlane
-                                        imageUrl={imageUrl}
-                                        depthUrl={depthUrl}
-                                        mousePosition={mousePosition}
-                                    />
+                                    <Canvas
+                                        style={{
+                                            position: 'absolute',
+                                            left: '0',
+                                            bottom: '8vh',
+                                            width: '100vw',
+                                            height: '90vh',
+                                            zIndex: 1,
+                                            pointerEvents: 'none', // Allow events to pass through to elements below
+                                        }}
+                                        camera={{ position: [0, 0, 3], fov: 50 }}
+                                    >
+                                        <DepthPlane
+                                            imageUrl={imageUrl}
+                                            depthUrl={depthUrl}
+                                            mousePosition={mousePosition}
+                                        />
+                                    </Canvas>
                                 ) : (
                                     <img
                                         src={imageUrl}

@@ -1,4 +1,4 @@
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
+import { useFrame, useLoader, useThree } from '@react-three/fiber';
 import { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { TextureLoader } from 'three';
@@ -170,23 +170,11 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   });
 
   return (
-    <Canvas
-      style={{
-        position: 'absolute',
-        left: '0',
-        bottom: '8vh',
-        width: '100vw',
-        height: '90vh',
-        zIndex: 1,
-        pointerEvents: 'none', // Allow events to pass through to elements below
-      }}
-      camera={{ position: [0, 0, 3], fov: 50 }}
-    >
-      <mesh ref={meshRef} scale={scale} position={position}>
-        <planeGeometry args={[1, 1, 128, 128]} />
-        <primitive object={shaderMaterial} attach="material" />
-      </mesh>
-    </Canvas>
+
+    <mesh ref={meshRef} scale={scale} position={position}>
+      <planeGeometry args={[1, 1, 128, 128]} />
+      <primitive object={shaderMaterial} attach="material" />
+    </mesh>
   );
 };
 export default DepthPlane;
