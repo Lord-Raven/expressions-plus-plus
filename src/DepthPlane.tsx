@@ -101,7 +101,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
         uniforms: {
           uColorMap: { value: blurredColorMap },
           uDepthMap: { value: blurredDepthMap },
-          uDisplacementStrength: { value: 0.5 }, // Control displacement intensity
+          uDisplacementStrength: { value: 5 }, // Control displacement intensity
           uParallax: { value: new THREE.Vector2(0, 0) }, // Keep for potential additional effects
         },
         vertexShader: `
