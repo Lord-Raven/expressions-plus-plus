@@ -16,7 +16,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   const { camera, size } = useThree();
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
-  depthMap.minFilter = THREE.LinearFilter; // Use linear filtering for smoother depth transitions
+  depthMap.minFilter = THREE.NearestFilter; // Use nearest filtering for discrete steps
   depthMap.magFilter = THREE.NearestFilter; // Use nearest filtering for discrete steps
 
   // Calculate scale and position for object-fit: cover behavior with 5% crop
@@ -83,10 +83,10 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
         void main() {
           // Sample depth with better filtering
           float depth = texture2D(uDepthMap, vUv).r;
-          float depthDx = dFdx(depth);
-          float depthDy = dFdy(depth);
-          float edgeStrength = length(vec2(depthDx, depthDy));
-          depth *= 1.0 - smoothstep(0.1, 0.4, edgeStrength);
+          //float depthDx = dFdx(depth);
+          //float depthDy = dFdy(depth);
+          //float edgeStrength = length(vec2(depthDx, depthDy));
+          //depth *= 1.0 - smoothstep(0.1, 0.4, edgeStrength);
           
           // Calculate parallax offset with reduced strength for smoother effect
           vec2 parallaxOffset = uMouse * depth * uParallaxStrength;
