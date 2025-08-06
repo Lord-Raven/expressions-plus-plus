@@ -16,6 +16,8 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   const { camera, size } = useThree();
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
+  depthMap.minFilter = THREE.LinearFilter; // Use linear filtering for smoother depth transitions
+  depthMap.magFilter = THREE.NearestFilter; // Use nearest filtering for discrete steps
 
   // Calculate scale and position for object-fit: cover behavior with 5% crop
   const { scale, position } = useMemo(() => {
@@ -57,7 +59,7 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
       new THREE.ShaderMaterial({
         uniforms: {
           uColorMap: { value: colorMap },
-          uDepthMap: { value: depthMap },
+          uDepthMap: { value: depthMap},
           uMouse: { value: new THREE.Vector2(0, 0) },
           uParallaxStrength: { value: PARALLAX_STRENGTH },
         },
