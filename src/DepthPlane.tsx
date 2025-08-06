@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
-import { useRef, useMemo, useEffect, useState } from 'react';
+import { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { TextureLoader } from 'three';
 
@@ -170,33 +170,6 @@ const DepthPlane = ({ imageUrl, depthUrl, mousePosition }: DepthPlaneProps) => {
   });
 
   return (
-    <mesh ref={meshRef} scale={scale} position={position}>
-      <planeGeometry args={[1, 1, 128, 128]} />
-      <primitive object={shaderMaterial} attach="material" />
-    </mesh>
-  );
-};
-
-export default function DepthScene({ imageUrl, depthUrl }: Omit<DepthPlaneProps, 'mousePosition'>) {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      // Calculate position relative to the viewport
-      const x = (event.clientX / window.innerWidth) * 2 - 1;
-      const y = -(event.clientY / window.innerHeight) * 2 + 1;
-      setMousePosition({ x, y });
-    };
-
-    // Add event listener to the entire document
-    document.addEventListener('mousemove', handleMouseMove);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, []);
-
-  return (
     <Canvas
       style={{
         position: 'absolute',
@@ -209,7 +182,11 @@ export default function DepthScene({ imageUrl, depthUrl }: Omit<DepthPlaneProps,
       }}
       camera={{ position: [0, 0, 3], fov: 50 }}
     >
-      <DepthPlane imageUrl={imageUrl} depthUrl={depthUrl} mousePosition={mousePosition} />
+      <mesh ref={meshRef} scale={scale} position={position}>
+        <planeGeometry args={[1, 1, 128, 128]} />
+        <primitive object={shaderMaterial} attach="material" />
+      </mesh>
     </Canvas>
   );
-}
+};
+export default DepthPlane;

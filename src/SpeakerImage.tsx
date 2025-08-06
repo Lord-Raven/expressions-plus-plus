@@ -16,6 +16,7 @@ interface SpeakerImageProps {
     zIndex: number;
     isTalking: boolean;
     alphaMode: boolean;
+    mousePosition: { x: number; y: number };
 }
 
 const SpeakerImage: FC<SpeakerImageProps> = ({
@@ -26,34 +27,11 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     yPosition, 
     zIndex, 
     isTalking, 
-    alphaMode
+    alphaMode,
+    mousePosition
 }) => {
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [previousState, setPreviousState] = useState<string>('absent');
     const currentState = isTalking ? 'talking' : 'idle';
-
-    useEffect(() => {
-        const handleMouseMove = (event: MouseEvent) => {
-            // Calculate position relative to the viewport
-            let x = (event.clientX / window.innerWidth) * 2 - 1;
-            let y = -(event.clientY / window.innerHeight) * 2 + 1;
-            // If window aspect ratio is > 9:16, image height is constrained, so multiply y by this ratio to keep parallax effect consistent with DepthPlane
-            if (window.innerWidth / window.innerHeight > 9 / 16) {
-                y *= (9 / 16) / (window.innerWidth / window.innerHeight);
-            } else {
-                // Otherwise, image width is constrained, so multiply x by this ratio
-                x *= (window.innerHeight / window.innerWidth) / (9 / 16);
-            }
-            setMousePosition({ x, y });
-        };
-
-        // Add event listener to the entire document
-        document.addEventListener('mousemove', handleMouseMove);
-
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-        };
-    }, []);
     
     useEffect(() => {
         setPreviousState(currentState);
@@ -64,9 +42,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     const depth = (48 - tempY) / 100; // depth between 0 and 0.48, I guess.
     const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (-mousePosition.x * depth * PARALLAX_STRENGTH) : 0) * 100);
     const finalY = tempY + ((alphaMode ? (-mousePosition.y * depth * PARALLAX_STRENGTH) : 0) * 100);
-    if (finalY > 50) {
-        console.log(`Warning: finalY (${finalY}) is greater than 50, which may cause the speaker to be positioned off-screen.`);
-    }
 
     const variants: Variants = {
         absent: {
@@ -92,9 +67,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(1)', 
             zIndex: 100, 
             transition: previousState === 'absent' ? {
-                x: { ease: "easeOut", duration: 3.0 }, 
-                bottom: { ease: "linear", duration: 3.0 }, 
-                opacity: { ease: "easeOut", duration: 3.0 }
+                x: { ease: "easeOut", duration: 1.0 }, 
+                bottom: { ease: "linear", duration: 1.0 }, 
+                opacity: { ease: "easeOut", duration: 1.0 }
             } : {
                 x: { ease: "linear", duration: 0.01 }, 
                 bottom: { ease: "linear", duration: 0.01 }, 
@@ -110,9 +85,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(0.8)', 
             zIndex: zIndex,
             transition: previousState === 'absent' ? {
-                x: { ease: "easeOut", duration: 3.0 }, 
-                bottom: { ease: "linear", duration: 3.0 }, 
-                opacity: { ease: "easeOut", duration: 3.0 }
+                x: { ease: "easeOut", duration: 1.0 }, 
+                bottom: { ease: "linear", duration: 1.0 }, 
+                opacity: { ease: "easeOut", duration: 1.0 }
             } : {
                 x: { ease: "linear", duration: 0.01 }, 
                 bottom: { ease: "linear", duration: 0.01 }, 
