@@ -143,19 +143,21 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       // You can animate displacement strength or other properties here
       // shaderMaterial.uniforms.uDisplacementStrength.value = Math.sin(Date.now() * 0.001) * 0.5 + 0.5;
       
-      // Apply panning offset to mesh position
+      // Keep mesh at its original position
       meshRef.current.position.set(
         position[0],
         position[1],
         position[2]
       );
 
-      // Apply parallax as camera rotation
-      const rotationStrength = 1; // Adjust this value to control rotation intensity
-      camera.rotation.x = parallaxY * rotationStrength;
-      camera.rotation.y = parallaxX * rotationStrength;
-      camera.position.x = -panX * 5;
-      camera.position.y = panY * 5;
+      // Move camera based on panX/panY
+      const panStrength = 5; // Adjust this to control how much the camera moves
+      camera.position.x = panX * panStrength;
+      camera.position.y = panY * panStrength;
+      
+      // Keep camera looking at the center of the mesh
+      const meshCenter = new THREE.Vector3(position[0], position[1], position[2]);
+      camera.lookAt(meshCenter);
     }
   });
 
