@@ -144,7 +144,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
               // We found an edge where current vertex is farther away
               // Move current vertex further in the direction from center to hide it
               float hideAmount = abs(depthDiff) * 2.0; // Scale factor for hiding
-              vec2 hideOffset = directionFromCenter * hideAmount * 0.1; // Convert to world space offset
+              vec2 hideOffset = directionFromCenter * hideAmount;
               
               // Apply the hiding offset to position
               vec3 newPosition = position;
@@ -193,8 +193,8 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       );
 
       // Move camera based on panX/panY
-      const panStrength = 6; // Adjust this to control how much the camera moves
-      const panInnerStrength = 5; // Inner movement strength for subtlety
+      const panStrength = 10; // Adjust this to control how much the camera moves
+      const panInnerStrength = -2; // Inner movement strength for subtlety
       camera.position.x = panX * panStrength;
       camera.position.y = panY * panStrength;
       
