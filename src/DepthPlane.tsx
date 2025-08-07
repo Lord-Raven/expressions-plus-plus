@@ -147,7 +147,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
 
   useFrame(() => {
     if (shaderMaterial && meshRef.current) {
-      shaderMaterial.uniforms.uParallax.value.set(panX * 10, panY * 10);
+      shaderMaterial.uniforms.uParallax.value.set(panX, panY);
       
       // Apply panning offset to mesh position
       meshRef.current.position.set(
