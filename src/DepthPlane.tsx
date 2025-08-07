@@ -100,61 +100,25 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       new THREE.ShaderMaterial({
         uniforms: {
           uColorMap: { value: blurredColorMap },
-          uDepthMap: { value: depthMap },
-          uDisplacementStrength: { value: 3 },
-          uEdgeThreshold: { value: 0.1 }, // Sensitivity for edge detection
-          uEdgeDisplacementMultiplier: { value: 1.0 }, // Extra displacement near edges
-          uTexelSize: { value: new THREE.Vector2(1.0 / depthMap.image.width, 1.0 / depthMap.image.height) }, // Adjust based on depth map resolution
+          uDepthMap: { value: blurredDepthMap },
+          uDisplacementStrength: { value: 3 }, // Control displacement intensity
+          uParallax: { value: new THREE.Vector2(0, 0) }, // Keep for potential additional effects
         },
         vertexShader: `
         precision highp float;
         varying vec2 vUv;
         uniform sampler2D uDepthMap;
         uniform float uDisplacementStrength;
-        uniform float uEdgeThreshold;
-        uniform float uEdgeDisplacementMultiplier;
-        uniform vec2 uTexelSize;
-
-        float sampleDepth(vec2 uv) {
-          return texture2D(uDepthMap, uv).r;
-        }
-
-        float detectEdge(vec2 uv) {
-          // Sobel edge detection
-          float tl = sampleDepth(uv + vec2(-uTexelSize.x, -uTexelSize.y)); // top left
-          float tm = sampleDepth(uv + vec2(0.0, -uTexelSize.y));           // top middle
-          float tr = sampleDepth(uv + vec2(uTexelSize.x, -uTexelSize.y));  // top right
-          float ml = sampleDepth(uv + vec2(-uTexelSize.x, 0.0));           // middle left
-          float mr = sampleDepth(uv + vec2(uTexelSize.x, 0.0));            // middle right
-          float bl = sampleDepth(uv + vec2(-uTexelSize.x, uTexelSize.y));  // bottom left
-          float bm = sampleDepth(uv + vec2(0.0, uTexelSize.y));            // bottom middle
-          float br = sampleDepth(uv + vec2(uTexelSize.x, uTexelSize.y));   // bottom right
-
-          // Sobel X kernel
-          float sobelX = (tr + 2.0 * mr + br) - (tl + 2.0 * ml + bl);
-          
-          // Sobel Y kernel  
-          float sobelY = (tl + 2.0 * tm + tr) - (bl + 2.0 * bm + br);
-          
-          // Edge magnitude
-          return sqrt(sobelX * sobelX + sobelY * sobelY);
-        }
 
         void main() {
           vUv = uv;
           
-          // Sample depth at current position
-          float depth = sampleDepth(uv);
+          // Sample depth map for displacement
+          float depth = texture2D(uDepthMap, uv).r;
           
-          // Detect edges in the depth map
-          float edgeStrength = detectEdge(uv);
-          
-          // Create adaptive displacement based on edge proximity
-          float edgeMultiplier = 1.0 + smoothstep(uEdgeThreshold * 0.5, uEdgeThreshold, edgeStrength) * uEdgeDisplacementMultiplier;
-          
-          // Apply displacement with edge-based enhancement
+          // Create displaced position
           vec3 newPosition = position;
-          newPosition.z -= (1.0 - depth) * uDisplacementStrength * edgeMultiplier;
+          newPosition.z -= (1.0 - depth) * uDisplacementStrength;
 
           gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
         }
@@ -165,6 +129,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
         uniform sampler2D uColorMap;
 
         void main() {
+          // Simple texture sampling - no parallax needed since displacement is in vertices
           vec4 color = texture2D(uColorMap, vUv);
           gl_FragColor = color;
         }
@@ -176,7 +141,6 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
   useFrame(() => {
     if (shaderMaterial && meshRef.current) {
       // You can animate displacement strength or other properties here
-      // shaderMaterial.uniforms.uDisplacementStrength.value = Math.sin(Date.now() * 0.001) * 0.5 + 0.5;
       
       // Keep mesh at its original position
       meshRef.current.position.set(
