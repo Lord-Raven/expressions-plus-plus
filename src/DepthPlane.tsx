@@ -141,13 +141,13 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
             
             // Check for depth discontinuity (current vertex is farther than search point)
             float depthDiff = currentDepth - searchDepth;
-            float edgeThreshold = 0.1; // Adjust this to control sensitivity
+            float edgeThreshold = 0.02; // Adjust this to control sensitivity
             
             if (depthDiff < -edgeThreshold) {
               // We found an edge where current vertex is farther away
               // Move current vertex further in the direction from center to hide it
-              float hideAmount = abs(depthDiff) * 3.0; // Scale factor for hiding
-              vec2 hideOffset = directionFromCenter * hideAmount * texelSize * vec2(1.0, -1.0);
+              float hideAmount = abs(depthDiff) * 5.0; // Scale factor for hiding
+              vec2 hideOffset = directionFromCenter * hideAmount * texelSize;
               
               // Apply the hiding offset to position
               newPosition.xy += hideOffset;
