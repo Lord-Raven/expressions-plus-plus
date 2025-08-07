@@ -57,8 +57,8 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
 
     // Calculate pan and parallax values
     const { panX, panY, parallaxX, parallaxY } = useMemo(() => {
-        const canvasAspect = window.innerWidth / window.innerHeight;
-        const imageAspect = 9 / 16; // Assuming standard aspect ratio, adjust if needed
+        //const canvasAspect = window.innerWidth / window.innerHeight;
+        //const imageAspect = 9 / 16; // Assuming standard aspect ratio, adjust if needed
         
         // Determine if we can pan in each axis
         const canPanX = true; //imageAspect > canvasAspect;
