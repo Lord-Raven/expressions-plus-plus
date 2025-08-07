@@ -103,7 +103,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           uDepthMap: { value: depthMap },
           uDisplacementStrength: { value: 3 },
           uEdgeThreshold: { value: 0.1 }, // Sensitivity for edge detection
-          uEdgeDisplacementMultiplier: { value: 1.2 }, // Extra displacement near edges
+          uEdgeDisplacementMultiplier: { value: 1.0 }, // Extra displacement near edges
           uTexelSize: { value: new THREE.Vector2(1.0 / depthMap.image.width, 1.0 / depthMap.image.height) }, // Adjust based on depth map resolution
         },
         vertexShader: `
