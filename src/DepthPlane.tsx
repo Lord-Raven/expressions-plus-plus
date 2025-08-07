@@ -116,8 +116,8 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           // Sample depth at current vertex
           float currentDepth = texture2D(uDepthMap, uv).r;
           
-          // Calculate direction from center (0.5, 0.5) to current vertex
-          vec2 centerToVertex = uv - vec2(0.5, 0.5);
+          // Calculate direction from center in POSITION space (not UV space)
+          vec2 centerToVertex = position.xy; // Position is already centered at origin
           float distanceFromCenter = length(centerToVertex);
           vec2 directionFromCenter = normalize(centerToVertex);
 
@@ -126,12 +126,14 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
 
           // Only process vertices that are not at the center
           if (distanceFromCenter > 0.001) {
-            // Calculate search distance and direction
-            vec2 texelSize = 1.0 / vec2(1536.0, 640.0); // Match your geometry resolution
-            float searchRadius = 1.0; // How many pixels to search
+            // Convert position direction to UV direction for sampling
+            // Note: This assumes your geometry and texture have the same orientation
+            vec2 texelSize = 1.0 / vec2(1536.0, 640.0);
+            float searchRadius = 2.0; // Increased search radius
             
-            vec2 searchDirection = directionFromCenter * texelSize * searchRadius;
-            vec2 searchUV = uv + searchDirection;
+            // Search in the direction AWAY from center in UV space
+            vec2 uvDirection = directionFromCenter; // May need adjustment based on texture orientation
+            vec2 searchUV = uv + uvDirection * texelSize * searchRadius;
             
             // Clamp search UV to valid range
             searchUV = clamp(searchUV, vec2(0.0), vec2(1.0));
