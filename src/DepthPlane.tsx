@@ -100,11 +100,11 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       new THREE.ShaderMaterial({
         uniforms: {
           uColorMap: { value: blurredColorMap },
-          uDepthMap: { value: blurredDepthMap },
+          uDepthMap: { value: depthMap },
           uDisplacementStrength: { value: 3 },
           uEdgeThreshold: { value: 0.1 }, // Sensitivity for edge detection
-          uEdgeDisplacementMultiplier: { value: 2.0 }, // Extra displacement near edges
-          uTexelSize: { value: new THREE.Vector2(1.0 / 1024, 1.0 / 1024) }, // Adjust based on depth map resolution
+          uEdgeDisplacementMultiplier: { value: 1.5 }, // Extra displacement near edges
+          uTexelSize: { value: new THREE.Vector2(1.0 / depthMap.image.width, 1.0 / depthMap.image.height) }, // Adjust based on depth map resolution
         },
         vertexShader: `
         precision highp float;
@@ -186,8 +186,8 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       );
 
       // Move camera based on panX/panY
-      const panStrength = 3; // Adjust this to control how much the camera moves
-      const panInnerStrength = 2; // Inner movement strength for subtlety
+      const panStrength = 6; // Adjust this to control how much the camera moves
+      const panInnerStrength = 5; // Inner movement strength for subtlety
       camera.position.x = panX * panStrength;
       camera.position.y = panY * panStrength;
       
