@@ -61,8 +61,8 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
         const imageAspect = 9 / 16; // Assuming standard aspect ratio, adjust if needed
         
         // Determine if we can pan in each axis
-        const canPanX = imageAspect > canvasAspect;
-        const canPanY = imageAspect <= canvasAspect;
+        const canPanX = true; //imageAspect > canvasAspect;
+        const canPanY = true; // imageAspect <= canvasAspect;
         
         // Calculate panning offset
         const panStrength = 0.1;

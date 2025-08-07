@@ -125,7 +125,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           if (distanceFromCenter > 0.001) {
             // Calculate search distance and direction
             vec2 texelSize = 1.0 / vec2(1024.0, 1024.0); // Match your geometry resolution
-            float searchRadius = 3.0; // How many pixels to search
+            float searchRadius = 1.0; // How many pixels to search
             
             vec2 searchDirection = directionFromCenter * texelSize * searchRadius;
             vec2 searchUV = uv + searchDirection;
@@ -144,7 +144,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
               // We found an edge where current vertex is farther away
               // Move current vertex further in the direction from center to hide it
               float hideAmount = abs(depthDiff) * 2.0; // Scale factor for hiding
-              vec2 hideOffset = directionFromCenter * hideAmount; // Convert to world space offset
+              vec2 hideOffset = directionFromCenter * hideAmount * 0.1; // Convert to world space offset
               
               // Apply the hiding offset to position
               vec3 newPosition = position;
