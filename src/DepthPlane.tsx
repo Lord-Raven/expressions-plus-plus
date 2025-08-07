@@ -117,8 +117,8 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
           uniform sampler2D uDepthMap;
           uniform vec2 uParallax;
 
-          const int MAX_STEPS = 16;
-          const float DEPTH_SCALE = 0.2;
+          const int MAX_STEPS = 20;
+          const float DEPTH_SCALE = 0.1;
 
           void main() {
             vec2 currentUV = vUv;
