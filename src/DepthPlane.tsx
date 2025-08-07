@@ -158,7 +158,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
   useFrame(() => {
     if (shaderMaterial && meshRef.current) {
       // Increase the parallax sensitivity for better depth perception
-      shaderMaterial.uniforms.uParallax.value.set(panX * 1.0, panY * 1.0);
+      shaderMaterial.uniforms.uParallax.value.set(panX * 2.0, panY * 2.0);
       
       // Apply panning offset to mesh position (reduced for more subtle movement)
       meshRef.current.position.set(
