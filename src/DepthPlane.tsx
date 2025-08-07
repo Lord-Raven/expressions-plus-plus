@@ -13,12 +13,10 @@ interface DepthPlaneProps {
 }
 
 const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: DepthPlaneProps) => {
-  const meshRefs = useRef<THREE.Mesh[]>([]);
+  const meshRef = useRef<THREE.Mesh>(null);
   const { camera, size } = useThree();
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
-  
-  const NUM_LAYERS = 12;
 
   const blurredColorMap = useMemo(() => {
     const canvas = document.createElement('canvas');
@@ -63,6 +61,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
   }, [depthMap]);
 
   // Calculate scale and position for object-fit: cover behavior with 5% crop
+  // Calculate scale and position for object-fit: cover behavior with 5% crop
   const { scale, position } = useMemo(() => {
     const canvasAspect = size.width / size.height;
     const imageAspect = colorMap.image.width / colorMap.image.height;
@@ -97,123 +96,74 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
     };
   }, [colorMap, camera, size]);
 
-  // Create materials for each depth layer
-  const layerMaterials = useMemo(() => {
-    const materials: THREE.ShaderMaterial[] = [];
-    
-    for (let i = 0; i < NUM_LAYERS; i++) {
-      const depthThreshold = i / (NUM_LAYERS - 1); // 0 to 1
-      const layerDepth = i * 0.1; // Spacing between layers
-      
-      const material = new THREE.ShaderMaterial({
+  const shaderMaterial = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
         uniforms: {
           uColorMap: { value: blurredColorMap },
           uDepthMap: { value: blurredDepthMap },
-          uDepthThreshold: { value: depthThreshold },
-          uDisplacementStrength: { value: 1.5 }, // Reduced for subtlety
-          uLayerDepth: { value: layerDepth },
+          uParallax: { value: new THREE.Vector2(0, 0) },
         },
-        transparent: true,
         vertexShader: `
         precision highp float;
         varying vec2 vUv;
-        varying float vDepth;
-        uniform sampler2D uDepthMap;
-        uniform float uDisplacementStrength;
-        uniform float uLayerDepth;
 
         void main() {
           vUv = uv;
-          
-          // Sample depth at current vertex
-          float currentDepth = texture2D(uDepthMap, uv).r;
-          vDepth = currentDepth;
-          
-          vec3 newPosition = position;
-          
-          // Add subtle depth variation for smoother transitions
-          float depthVariation = sin(uv.x * 10.0) * sin(uv.y * 10.0) * 0.1;
-          newPosition.z -= (1.0 - currentDepth) * uDisplacementStrength + depthVariation;
-          
-          // Position this layer further back
-          newPosition.z -= uLayerDepth;
-          
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
-        `,
+      `,
         fragmentShader: `
-        precision highp float;
-        varying vec2 vUv;
-        varying float vDepth;
-        uniform sampler2D uColorMap;
-        uniform float uDepthThreshold;
+          precision highp float;
+          varying vec2 vUv;
+          uniform sampler2D uColorMap;
+          uniform sampler2D uDepthMap;
+          uniform vec2 uParallax;
 
-        void main() {
-          // Only render pixels above the depth threshold
-          if (vDepth < uDepthThreshold) {
-            discard;
+          const int MAX_STEPS = 32;
+          const float STEP_SIZE = 0.01;
+
+          void main() {
+            vec2 rayDir = uParallax * STEP_SIZE;
+            vec2 uv = vUv;
+            float depthSample;
+            vec4 color = vec4(0.0);
+
+            for (int i = 0; i < MAX_STEPS; i++) {
+              depthSample = texture2D(uDepthMap, uv).r;
+              uv += rayDir * depthSample;
+
+              // Clamp to avoid sampling outside texture bounds
+              uv = clamp(uv, 0.0, 1.0);
+
+              color = texture2D(uColorMap, uv);
+            }
+
+            gl_FragColor = color;
           }
-          
-          vec4 color = texture2D(uColorMap, vUv);
-          
-          // Add slight transparency for blending between layers
-          float alpha = smoothstep(uDepthThreshold, uDepthThreshold + 0.1, vDepth);
-          color.a *= alpha;
-          
-          gl_FragColor = color;
-        }
-        `,
-      });
-      
-      materials.push(material);
-    }
-    
-    return materials;
-  }, [blurredColorMap, blurredDepthMap, NUM_LAYERS]);
+      `,
+      }),
+    [colorMap, depthMap]
+  );
 
   useFrame(() => {
-    if (layerMaterials && meshRefs.current.length > 0) {
-      // Move camera based on panX/panY
-      const panStrength = 10; // Adjust this to control how much the camera moves
-      const panInnerStrength = 8; // Inner movement strength for subtlety
-      camera.position.x = panX * panStrength;
-      camera.position.y = panY * panStrength;
+    if (shaderMaterial && meshRef.current) {
+      shaderMaterial.uniforms.uParallax.value.set(parallaxX, parallaxY);
       
-      // Keep camera looking at the center of the mesh
-      const meshCenter = new THREE.Vector3(position[0] + panX * panInnerStrength, position[1] + panY * panInnerStrength, position[2]);
-      camera.lookAt(meshCenter);
-      
-      // Update positions for all layers
-      meshRefs.current.forEach((mesh, index) => {
-        if (mesh) {
-          mesh.position.set(
-            position[0],
-            position[1], 
-            position[2] - index * 0.5 // Layer spacing
-          );
-        }
-      });
+      // Apply panning offset to mesh position
+      meshRef.current.position.set(
+        position[0] + panX,
+        position[1] + panY,
+        position[2]
+      );
     }
   });
 
   return (
-    <>
-      {layerMaterials.map((material, index) => (
-        <mesh 
-          key={index}
-          ref={(mesh) => {
-            if (mesh) {
-              meshRefs.current[index] = mesh;
-            }
-          }}
-          scale={scale} 
-          position={[position[0], position[1], position[2] - index * 0.1]}
-        >
-          <planeGeometry args={[1, 1, 384, 160]} />
-          <primitive object={material} attach="material" />
-        </mesh>
-      ))}
-    </>
+    <mesh ref={meshRef} scale={scale} position={position}>
+      <planeGeometry args={[1, 1, 128, 128]} />
+      <primitive object={shaderMaterial} attach="material" />
+    </mesh>
   );
 };
 
