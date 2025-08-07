@@ -61,7 +61,6 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
   }, [depthMap]);
 
   // Calculate scale and position for object-fit: cover behavior with 5% crop
-  // Calculate scale and position for object-fit: cover behavior with 5% crop
   const { scale, position } = useMemo(() => {
     const canvasAspect = size.width / size.height;
     const imageAspect = colorMap.image.width / colorMap.image.height;
@@ -152,8 +151,8 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       
       // Apply panning offset to mesh position
       meshRef.current.position.set(
-        position[0] + panX,
-        position[1] + panY,
+        position[0] + panX * 10,
+        position[1] + panY * 10,
         position[2]
       );
     }
