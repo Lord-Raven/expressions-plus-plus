@@ -118,7 +118,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
           uniform vec2 uParallax;
 
           const int MAX_STEPS = 16;
-          const float DEPTH_SCALE = 0.05;
+          const float DEPTH_SCALE = 0.2;
 
           void main() {
             vec2 currentUV = vUv;
@@ -158,7 +158,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
   useFrame(() => {
     if (shaderMaterial && meshRef.current) {
       // Increase the parallax sensitivity for better depth perception
-      shaderMaterial.uniforms.uParallax.value.set(panX * 2.0, panY * 2.0);
+      shaderMaterial.uniforms.uParallax.value.set(panX, panY);
       
       // Apply panning offset to mesh position (reduced for more subtle movement)
       meshRef.current.position.set(
