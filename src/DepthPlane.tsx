@@ -18,7 +18,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
   
-  const NUM_LAYERS = 16;
+  const NUM_LAYERS = 4;
 
   const blurredColorMap = useMemo(() => {
     const canvas = document.createElement('canvas');
