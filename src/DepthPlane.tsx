@@ -18,7 +18,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
   
-  const NUM_LAYERS = 8;
+  const NUM_LAYERS = 12;
 
   const blurredColorMap = useMemo(() => {
     const canvas = document.createElement('canvas');
@@ -175,7 +175,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
     if (layerMaterials && meshRefs.current.length > 0) {
       // Move camera based on panX/panY
       const panStrength = 10; // Adjust this to control how much the camera moves
-      const panInnerStrength = -2; // Inner movement strength for subtlety
+      const panInnerStrength = 8; // Inner movement strength for subtlety
       camera.position.x = panX * panStrength;
       camera.position.y = panY * panStrength;
       
@@ -189,7 +189,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           mesh.position.set(
             position[0],
             position[1], 
-            position[2] - index * 0.2 // Layer spacing
+            position[2] - index * 0.5 // Layer spacing
           );
         }
       });
