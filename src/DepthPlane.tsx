@@ -52,8 +52,8 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
     ctx.drawImage(depthMap.image, 0, 0);
     
     const blurredTexture = new THREE.CanvasTexture(canvas);
-    blurredTexture.minFilter = THREE.LinearFilter;
-    blurredTexture.magFilter = THREE.LinearFilter;
+    blurredTexture.minFilter = THREE.NearestFilter;
+    blurredTexture.magFilter = THREE.NearestFilter;
     blurredTexture.wrapS = THREE.ClampToEdgeWrapping;
     blurredTexture.wrapT = THREE.ClampToEdgeWrapping;
     
@@ -138,7 +138,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
             
             // Check for depth discontinuity (current vertex is farther than search point)
             float depthDiff = currentDepth - searchDepth;
-            float edgeThreshold = 0.03; // Adjust this to control sensitivity
+            float edgeThreshold = 0.1; // Adjust this to control sensitivity
             
             if (depthDiff < -edgeThreshold) {
               // We found an edge where current vertex is farther away
