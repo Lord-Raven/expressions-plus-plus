@@ -39,27 +39,6 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
     return blurredTexture;
   }, [colorMap]);
 
-  const blurredDepthMap = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx || !depthMap.image) return depthMap;
-    
-    canvas.width = depthMap.image.width;
-    canvas.height = depthMap.image.height;
-    
-    // Apply blur filter
-    ctx.filter = 'blur(0.5px)';
-    ctx.drawImage(depthMap.image, 0, 0);
-    
-    const blurredTexture = new THREE.CanvasTexture(canvas);
-    blurredTexture.minFilter = THREE.LinearFilter;
-    blurredTexture.magFilter = THREE.LinearFilter;
-    blurredTexture.wrapS = THREE.ClampToEdgeWrapping;
-    blurredTexture.wrapT = THREE.ClampToEdgeWrapping;
-    
-    return blurredTexture;
-  }, [depthMap]);
-
   // Calculate scale and position for object-fit: cover behavior with 5% crop
   const { scale, position } = useMemo(() => {
     const canvasAspect = size.width / size.height;
