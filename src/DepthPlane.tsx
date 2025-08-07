@@ -120,7 +120,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           uniform vec2 uParallax;
 
           const int MAX_STEPS = 32;
-          const float STEP_SIZE = 0.01;
+          const float STEP_SIZE = 0.02;
 
           void main() {
             vec2 rayDir = uParallax * STEP_SIZE;
@@ -147,12 +147,12 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
 
   useFrame(() => {
     if (shaderMaterial && meshRef.current) {
-      shaderMaterial.uniforms.uParallax.value.set(panX, panY);
+      shaderMaterial.uniforms.uParallax.value.set(panX * 0.5, panY * 0.5);
       
       // Apply panning offset to mesh position
       meshRef.current.position.set(
         position[0] + panX * 10,
-        position[1] + panY * 10,
+        position[1] + -panY * 10,
         position[2]
       );
     }
