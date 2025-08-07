@@ -169,8 +169,6 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                             depthUrl={depthUrl}
                                             panX={panX}
                                             panY={panY}
-                                            parallaxX={parallaxX}
-                                            parallaxY={parallaxY}
                                         />
                                     </Canvas>
                                 ) : (

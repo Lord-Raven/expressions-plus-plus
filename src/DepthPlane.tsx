@@ -8,11 +8,9 @@ interface DepthPlaneProps {
   depthUrl: string;
   panX: number;
   panY: number;
-  parallaxX: number;
-  parallaxY: number;
 }
 
-const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: DepthPlaneProps) => {
+const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const { camera, size } = useThree();
   const colorMap = useLoader(TextureLoader, imageUrl);
@@ -119,26 +117,61 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           uniform sampler2D uDepthMap;
           uniform vec2 uParallax;
 
-          const int MAX_STEPS = 48;
-          const float STEP_SIZE = 0.01;
+          const int MAX_STEPS = 32;
+          const float DEPTH_SCALE = 0.08;
+          const float MIN_STEP_SIZE = 0.005;
+          const float MAX_STEP_SIZE = 0.02;
 
           void main() {
-            vec2 rayDir = uParallax * STEP_SIZE;
-            vec2 uv = vUv;
-            float depthSample;
-            vec4 color = vec4(0.0);
-
+            vec2 startUV = vUv;
+            vec2 rayDirection = normalize(uParallax);
+            float rayLength = length(uParallax);
+            
+            // Start from the surface and march inward
+            vec2 currentUV = startUV;
+            vec4 finalColor = vec4(0.0);
+            float totalWeight = 0.0;
+            
+            // March through the depth layers
             for (int i = 0; i < MAX_STEPS; i++) {
-              depthSample = texture2D(uDepthMap, uv).r;
-              uv += rayDir * depthSample;
-
-              // Clamp to avoid sampling outside texture bounds
-              uv = clamp(uv, 0.0, 1.0);
-
-              color = texture2D(uColorMap, uv);
+              if (currentUV.x < 0.0 || currentUV.x > 1.0 || currentUV.y < 0.0 || currentUV.y > 1.0) {
+                break;
+              }
+              
+              // Sample the depth at current position
+              float depth = texture2D(uDepthMap, currentUV).r;
+              
+              // Convert depth to parallax displacement
+              // Inverted: 0 (black) = near, 1 (white) = far
+              float parallaxAmount = (1.0 - depth) * DEPTH_SCALE;
+              
+              // Calculate step size based on depth (smaller steps for near objects)
+              float stepSize = mix(MIN_STEP_SIZE, MAX_STEP_SIZE, depth);
+              
+              // Sample color at current position
+              vec4 color = texture2D(uColorMap, currentUV);
+              
+              // Weight based on depth and step (near objects contribute more)
+              float weight = (1.0 - depth) * stepSize;
+              
+              finalColor += color * weight;
+              totalWeight += weight;
+              
+              // Move to next position along ray
+              currentUV += rayDirection * stepSize * rayLength;
             }
-
-            gl_FragColor = color;
+            
+            // Normalize by total weight and add fallback
+            if (totalWeight > 0.0) {
+              finalColor /= totalWeight;
+            } else {
+              // Fallback to simple parallax if ray marching fails
+              vec2 fallbackUV = startUV + uParallax * 0.02;
+              fallbackUV = clamp(fallbackUV, 0.0, 1.0);
+              finalColor = texture2D(uColorMap, fallbackUV);
+            }
+            
+            gl_FragColor = finalColor;
           }
       `,
       }),
@@ -147,12 +180,13 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
 
   useFrame(() => {
     if (shaderMaterial && meshRef.current) {
-      shaderMaterial.uniforms.uParallax.value.set(panX * 0.5, panY * 0.5);
+      // Increase the parallax sensitivity for better depth perception
+      shaderMaterial.uniforms.uParallax.value.set(panX * 1.0, panY * 1.0);
       
-      // Apply panning offset to mesh position
+      // Apply panning offset to mesh position (reduced for more subtle movement)
       meshRef.current.position.set(
-        position[0] + panX * 10,
-        position[1] + -panY * 10,
+        position[0] + panX * 3,
+        position[1] + -panY * 3,
         position[2]
       );
     }
