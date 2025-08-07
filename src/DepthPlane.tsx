@@ -102,13 +102,15 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           uColorMap: { value: blurredColorMap },
           uDepthMap: { value: depthMap },
           uDisplacementStrength: { value: 3 },
-          uEdgeThreshold: { value: 0.1 }, // Sensitivity for edge detection
-          uEdgeDisplacementMultiplier: { value: 1.5 }, // Extra displacement near edges
-          uTexelSize: { value: new THREE.Vector2(1.0 / depthMap.image.width, 1.0 / depthMap.image.height) }, // Adjust based on depth map resolution
+          uEdgeThreshold: { value: 0.1 },
+          uEdgeDisplacementMultiplier: { value: 2.0 },
+          uTexelSize: { value: new THREE.Vector2(1.0 / depthMap.image.width, 1.0 / depthMap.image.height) },
+          uResolution: { value: new THREE.Vector2(size.width, size.height) },
         },
         vertexShader: `
         precision highp float;
         varying vec2 vUv;
+        varying vec4 vScreenPos;
         uniform sampler2D uDepthMap;
         uniform float uDisplacementStrength;
         uniform float uEdgeThreshold;
@@ -121,56 +123,56 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
 
         float detectEdge(vec2 uv) {
           // Sobel edge detection
-          float tl = sampleDepth(uv + vec2(-uTexelSize.x, -uTexelSize.y)); // top left
-          float tm = sampleDepth(uv + vec2(0.0, -uTexelSize.y));           // top middle
-          float tr = sampleDepth(uv + vec2(uTexelSize.x, -uTexelSize.y));  // top right
-          float ml = sampleDepth(uv + vec2(-uTexelSize.x, 0.0));           // middle left
-          float mr = sampleDepth(uv + vec2(uTexelSize.x, 0.0));            // middle right
-          float bl = sampleDepth(uv + vec2(-uTexelSize.x, uTexelSize.y));  // bottom left
-          float bm = sampleDepth(uv + vec2(0.0, uTexelSize.y));            // bottom middle
-          float br = sampleDepth(uv + vec2(uTexelSize.x, uTexelSize.y));   // bottom right
+          float tl = sampleDepth(uv + vec2(-uTexelSize.x, -uTexelSize.y));
+          float tm = sampleDepth(uv + vec2(0.0, -uTexelSize.y));
+          float tr = sampleDepth(uv + vec2(uTexelSize.x, -uTexelSize.y));
+          float ml = sampleDepth(uv + vec2(-uTexelSize.x, 0.0));
+          float mr = sampleDepth(uv + vec2(uTexelSize.x, 0.0));
+          float bl = sampleDepth(uv + vec2(-uTexelSize.x, uTexelSize.y));
+          float bm = sampleDepth(uv + vec2(0.0, uTexelSize.y));
+          float br = sampleDepth(uv + vec2(uTexelSize.x, uTexelSize.y));
 
-          // Sobel X kernel
           float sobelX = (tr + 2.0 * mr + br) - (tl + 2.0 * ml + bl);
-          
-          // Sobel Y kernel  
           float sobelY = (tl + 2.0 * tm + tr) - (bl + 2.0 * bm + br);
           
-          // Edge magnitude
           return sqrt(sobelX * sobelX + sobelY * sobelY);
         }
 
         void main() {
           vUv = uv;
           
-          // Sample depth at current position
           float depth = sampleDepth(uv);
-          
-          // Detect edges in the depth map
           float edgeStrength = detectEdge(uv);
-          
-          // Create adaptive displacement based on edge proximity
           float edgeMultiplier = 1.0 + smoothstep(uEdgeThreshold * 0.5, uEdgeThreshold, edgeStrength) * uEdgeDisplacementMultiplier;
           
-          // Apply displacement with edge-based enhancement
           vec3 newPosition = position;
           newPosition.z -= (1.0 - depth) * uDisplacementStrength * edgeMultiplier;
 
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+          vec4 mvPosition = modelViewMatrix * vec4(newPosition, 1.0);
+          vScreenPos = projectionMatrix * mvPosition;
+          gl_Position = vScreenPos;
         }
       `,
         fragmentShader: `
         precision highp float;
         varying vec2 vUv;
+        varying vec4 vScreenPos;
         uniform sampler2D uColorMap;
+        uniform vec2 uResolution;
 
         void main() {
-          vec4 color = texture2D(uColorMap, vUv);
+          // Use screen space coordinates for texture sampling to reduce stretching
+          vec2 screenUV = (vScreenPos.xy / vScreenPos.w) * 0.5 + 0.5;
+          
+          // Blend between original UV and screen-space UV based on depth
+          vec2 finalUV = mix(vUv, screenUV, 0.3);
+          
+          vec4 color = texture2D(uColorMap, finalUV);
           gl_FragColor = color;
         }
       `,
       }),
-    [blurredColorMap, blurredDepthMap]
+    [blurredColorMap, depthMap, size]
   );
 
   useFrame(() => {
