@@ -55,8 +55,8 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
         }
     }, [isMouseOver]);
 
-    // Calculate pan and parallax values
-    const { panX, panY, parallaxX, parallaxY } = useMemo(() => {
+    // Calculate pan values
+    const { panX, panY } = useMemo(() => {
         //const canvasAspect = window.innerWidth / window.innerHeight;
         //const imageAspect = 9 / 16; // Assuming standard aspect ratio, adjust if needed
         
@@ -66,15 +66,10 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
         
         // Calculate panning offset
         const panStrength = 0.1;
-        const panX = (stage.alphaMode && imageUrl && canPanX) ? mousePosition.x * panStrength : 0;
+        const panX = (stage.alphaMode && imageUrl && canPanX) ? -mousePosition.x * panStrength : 0;
         const panY = (stage.alphaMode && imageUrl && canPanY) ? mousePosition.y * panStrength : 0;
 
-        // Calculate parallax offset (for depth effects)
-        const parallaxStrength = 0.02;
-        const parallaxX = (stage.alphaMode && imageUrl) ? -mousePosition.x * parallaxStrength : 0;
-        const parallaxY = (stage.alphaMode && imageUrl) ? mousePosition.y * parallaxStrength : 0;
-
-        return { panX, panY, parallaxX, parallaxY };
+        return { panX, panY };
     }, [mousePosition]);
 
     const borderColor = stage.messageState.borderColor ?? DEFAULT_BORDER_COLOR;
@@ -218,8 +213,6 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                 alphaMode={stage.alphaMode}
                                 panX={panX}
                                 panY={panY}
-                                parallaxX={parallaxX}
-                                parallaxY={parallaxY}
                             />
                         } else {
                             return <></>

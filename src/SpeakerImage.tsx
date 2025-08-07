@@ -17,8 +17,6 @@ interface SpeakerImageProps {
     alphaMode: boolean;
     panX: number;
     panY: number;
-    parallaxX: number;
-    parallaxY: number;
 }
 
 const SpeakerImage: FC<SpeakerImageProps> = ({
@@ -31,9 +29,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     isTalking, 
     alphaMode,
     panX,
-    panY,
-    parallaxX,
-    parallaxY
+    panY
 }) => {
     const [previousState, setPreviousState] = useState<string>('absent');
     const currentState = isTalking ? 'talking' : 'idle';
@@ -45,8 +41,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     // Calculate final parallax position
     const tempY =  (isTalking ? 2 : (4 + yPosition));
     const depth = (48 - tempY) / 60;
-    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (-parallaxX * depth) : 0) + panX) * 100;
-    const finalY = tempY + ((alphaMode ? (-parallaxY * depth) : 0) + panY) * 100;
+    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (-panX * depth) : 0)) * 100;
+    const finalY = tempY + ((alphaMode ? (-panY * depth) : 0)) * 100;
 
     const variants: Variants = {
         absent: {
