@@ -27,7 +27,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
     canvas.height = colorMap.image.height;
 
     // Apply blur filter
-    ctx.filter = 'blur(0.5px)';
+    //ctx.filter = 'blur(0.5px)';
     ctx.drawImage(colorMap.image, 0, 0);
     
     const blurredTexture = new THREE.CanvasTexture(canvas);
@@ -120,11 +120,14 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           vec2 centerToVertex = uv - vec2(0.5, 0.5);
           float distanceFromCenter = length(centerToVertex);
           vec2 directionFromCenter = normalize(centerToVertex);
-          
+
+          vec3 newPosition = position;
+          newPosition.z -= (1.0 - currentDepth) * uDisplacementStrength;
+
           // Only process vertices that are not at the center
           if (distanceFromCenter > 0.001) {
             // Calculate search distance and direction
-            vec2 texelSize = 1.0 / vec2(768.0, 320.0); // Match your geometry resolution
+            vec2 texelSize = 1.0 / vec2(1536.0, 640.0); // Match your geometry resolution
             float searchRadius = 1.0; // How many pixels to search
             
             vec2 searchDirection = directionFromCenter * texelSize * searchRadius;
@@ -138,32 +141,19 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
             
             // Check for depth discontinuity (current vertex is farther than search point)
             float depthDiff = currentDepth - searchDepth;
-            float edgeThreshold = 0.1; // Adjust this to control sensitivity
+            float edgeThreshold = 0.05; // Adjust this to control sensitivity
             
             if (depthDiff < -edgeThreshold) {
               // We found an edge where current vertex is farther away
               // Move current vertex further in the direction from center to hide it
               float hideAmount = abs(depthDiff) * 2.0; // Scale factor for hiding
-              vec2 hideOffset = directionFromCenter * hideAmount;
+              vec2 hideOffset = directionFromCenter * hideAmount * texelSize;
               
               // Apply the hiding offset to position
-              vec3 newPosition = position;
               newPosition.xy += hideOffset;
-              newPosition.z -= (1.0 - currentDepth) * uDisplacementStrength;
-              
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-            } else {
-              // Normal displacement without hiding
-              vec3 newPosition = position;
-              newPosition.z -= (1.0 - currentDepth) * uDisplacementStrength;
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
             }
-          } else {
-            // Center vertex - normal displacement
-            vec3 newPosition = position;
-            newPosition.z -= (1.0 - currentDepth) * uDisplacementStrength;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
           }
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
         }
       `,
         fragmentShader: `
@@ -206,7 +196,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
 
   return (
     <mesh ref={meshRef} scale={scale} position={position}>
-      <planeGeometry args={[1, 1, 768, 320]} />
+      <planeGeometry args={[1, 1, 1536, 640]} />
       <primitive object={shaderMaterial} attach="material" />
     </mesh>
   );
