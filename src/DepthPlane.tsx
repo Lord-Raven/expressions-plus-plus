@@ -126,32 +126,58 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
 
           // Only process vertices that are not at the center
           if (distanceFromCenter > 0.001) {
-            // Calculate search distance and direction
             vec2 texelSize = 1.0 / vec2(1536.0, 640.0); // Match your geometry resolution
-            float searchRadius = 2.0; // How many pixels to search
             
+            // Sample neighboring depths for edge detection and smoothing
+            float searchRadius = 2.0;
             vec2 searchDirection = directionFromCenter * texelSize * searchRadius;
-            vec2 searchUV = uv + searchDirection;
-            
-            // Clamp search UV to valid range
-            searchUV = clamp(searchUV, vec2(0.0), vec2(1.0));
-            
-            // Sample depth at search location
+            vec2 searchUV = clamp(uv + searchDirection, vec2(0.0), vec2(1.0));
             float searchDepth = texture2D(uDepthMap, searchUV).r;
             
-            // Check for depth discontinuity (current vertex is farther than search point)
+            // Also sample perpendicular directions for smoothing
+            vec2 perpendicular = vec2(-directionFromCenter.y, directionFromCenter.x);
+            float leftDepth = texture2D(uDepthMap, clamp(uv + perpendicular * texelSize, vec2(0.0), vec2(1.0))).r;
+            float rightDepth = texture2D(uDepthMap, clamp(uv - perpendicular * texelSize, vec2(0.0), vec2(1.0))).r;
+            
+            // Check for depth discontinuity
             float depthDiff = currentDepth - searchDepth;
-            float edgeThreshold = 0.02; // Adjust this to control sensitivity
+            float edgeThreshold = 0.02;
+            
+            vec2 totalOffset = vec2(0.0);
             
             if (depthDiff < -edgeThreshold) {
-              // We found an edge where current vertex is farther away
-              // Move current vertex further in the direction from center to hide it
-              float hideAmount = abs(depthDiff) * 5.0; // Scale factor for hiding
-              vec2 hideOffset = directionFromCenter * hideAmount * texelSize;
+              // Primary hiding: move vertex away from center to hide edge
+              float hideAmount = abs(depthDiff) * 5.0;
+              totalOffset += directionFromCenter * hideAmount * texelSize;
+            } else {
+              // Redistribution: smooth out gaps created by hidden vertices
+              // Check if nearby vertices in the radial direction might be hidden
+              vec2 innerUV = clamp(uv - searchDirection * 0.5, vec2(0.0), vec2(1.0));
+              float innerDepth = texture2D(uDepthMap, innerUV).r;
+              float innerSearchDepth = texture2D(uDepthMap, clamp(innerUV + searchDirection, vec2(0.0), vec2(1.0))).r;
+              float innerDepthDiff = innerDepth - innerSearchDepth;
               
-              // Apply the hiding offset to position
-              newPosition.xy += hideOffset;
+              if (innerDepthDiff < -edgeThreshold) {
+                // Inner vertex is likely being hidden, so redistribute this vertex slightly inward
+                float redistributeAmount = abs(innerDepthDiff) * 2.0;
+                totalOffset -= directionFromCenter * redistributeAmount * texelSize * 0.5;
+              }
+              
+              // Lateral smoothing based on neighboring depths
+              float lateralVariation = abs(leftDepth - rightDepth);
+              if (lateralVariation > edgeThreshold) {
+                // Smooth out lateral discontinuities
+                float smoothAmount = lateralVariation * 1.0;
+                vec2 lateralDirection = (leftDepth > rightDepth) ? perpendicular : -perpendicular;
+                totalOffset += lateralDirection * smoothAmount * texelSize * 0.3;
+              }
             }
+            
+            // Apply gradual falloff based on distance from center
+            float falloffFactor = smoothstep(0.8, 0.2, distanceFromCenter);
+            totalOffset *= falloffFactor;
+            
+            newPosition.xy += totalOffset;
           }
           gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
         }
