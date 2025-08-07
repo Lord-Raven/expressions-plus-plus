@@ -119,8 +119,8 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           uniform sampler2D uDepthMap;
           uniform vec2 uParallax;
 
-          const int MAX_STEPS = 32;
-          const float STEP_SIZE = 0.02;
+          const int MAX_STEPS = 48;
+          const float STEP_SIZE = 0.01;
 
           void main() {
             vec2 rayDir = uParallax * STEP_SIZE;
