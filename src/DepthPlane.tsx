@@ -144,7 +144,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
               // We found an edge where current vertex is farther away
               // Move current vertex further in the direction from center to hide it
               float hideAmount = abs(depthDiff) * 2.0; // Scale factor for hiding
-              vec2 hideOffset = directionFromCenter * hideAmount * 0.01; // Convert to world space offset
+              vec2 hideOffset = directionFromCenter * hideAmount; // Convert to world space offset
               
               // Apply the hiding offset to position
               vec3 newPosition = position;
