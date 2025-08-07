@@ -209,7 +209,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           scale={scale} 
           position={[position[0], position[1], position[2] - index * 0.1]}
         >
-          <planeGeometry args={[1, 1, 1536, 640]} />
+          <planeGeometry args={[1, 1, 384, 160]} />
           <primitive object={material} attach="material" />
         </mesh>
       ))}
