@@ -18,7 +18,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
   
-  const NUM_LAYERS = 4;
+  const NUM_LAYERS = 8;
 
   const blurredColorMap = useMemo(() => {
     const canvas = document.createElement('canvas');
@@ -29,7 +29,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
     canvas.height = colorMap.image.height;
 
     // Apply blur filter
-    //ctx.filter = 'blur(0.5px)';
+    ctx.filter = 'blur(0.5px)';
     ctx.drawImage(colorMap.image, 0, 0);
     
     const blurredTexture = new THREE.CanvasTexture(canvas);
@@ -189,7 +189,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           mesh.position.set(
             position[0],
             position[1], 
-            position[2] - index * 0.1 // Layer spacing
+            position[2] - index * 0.2 // Layer spacing
           );
         }
       });
