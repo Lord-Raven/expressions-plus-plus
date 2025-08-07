@@ -117,61 +117,38 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
           uniform sampler2D uDepthMap;
           uniform vec2 uParallax;
 
-          const int MAX_STEPS = 32;
-          const float DEPTH_SCALE = 0.08;
-          const float MIN_STEP_SIZE = 0.005;
-          const float MAX_STEP_SIZE = 0.02;
+          const int MAX_STEPS = 16;
+          const float DEPTH_SCALE = 0.05;
 
           void main() {
-            vec2 startUV = vUv;
-            vec2 rayDirection = normalize(uParallax);
-            float rayLength = length(uParallax);
+            vec2 currentUV = vUv;
+            vec2 parallaxOffset = uParallax;
             
-            // Start from the surface and march inward
-            vec2 currentUV = startUV;
-            vec4 finalColor = vec4(0.0);
-            float totalWeight = 0.0;
-            
-            // March through the depth layers
+            // Iterative parallax mapping to find the correct depth layer
             for (int i = 0; i < MAX_STEPS; i++) {
-              if (currentUV.x < 0.0 || currentUV.x > 1.0 || currentUV.y < 0.0 || currentUV.y > 1.0) {
-                break;
-              }
-              
-              // Sample the depth at current position
+              // Sample depth at current position
               float depth = texture2D(uDepthMap, currentUV).r;
               
-              // Convert depth to parallax displacement
-              // Inverted: 0 (black) = near, 1 (white) = far
-              float parallaxAmount = (1.0 - depth) * DEPTH_SCALE;
+              // Calculate parallax displacement based on depth
+              float heightAtUV = depth * DEPTH_SCALE;
               
-              // Calculate step size based on depth (smaller steps for near objects)
-              float stepSize = mix(MIN_STEP_SIZE, MAX_STEP_SIZE, depth);
+              // Calculate new UV position
+              vec2 offset = parallaxOffset * heightAtUV;
+              currentUV = vUv + offset;
               
-              // Sample color at current position
-              vec4 color = texture2D(uColorMap, currentUV);
+              // Clamp to texture bounds
+              currentUV = clamp(currentUV, 0.0, 1.0);
               
-              // Weight based on depth and step (near objects contribute more)
-              float weight = (1.0 - depth) * stepSize;
-              
-              finalColor += color * weight;
-              totalWeight += weight;
-              
-              // Move to next position along ray
-              currentUV += rayDirection * stepSize * rayLength;
+              // Check if we've found the right depth layer
+              float newDepth = texture2D(uDepthMap, currentUV).r;
+              if (abs(newDepth - depth) < 0.01) {
+                break; // Converged
+              }
             }
             
-            // Normalize by total weight and add fallback
-            if (totalWeight > 0.0) {
-              finalColor /= totalWeight;
-            } else {
-              // Fallback to simple parallax if ray marching fails
-              vec2 fallbackUV = startUV + uParallax * 0.02;
-              fallbackUV = clamp(fallbackUV, 0.0, 1.0);
-              finalColor = texture2D(uColorMap, fallbackUV);
-            }
-            
-            gl_FragColor = finalColor;
+            // Sample final color at the displaced UV
+            vec4 color = texture2D(uColorMap, currentUV);
+            gl_FragColor = color;
           }
       `,
       }),
