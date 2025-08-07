@@ -13,10 +13,12 @@ interface DepthPlaneProps {
 }
 
 const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: DepthPlaneProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRefs = useRef<THREE.Mesh[]>([]);
   const { camera, size } = useThree();
   const colorMap = useLoader(TextureLoader, imageUrl);
   const depthMap = useLoader(TextureLoader, depthUrl);
+  
+  const NUM_LAYERS = 16;
 
   const blurredColorMap = useMemo(() => {
     const canvas = document.createElement('canvas');
@@ -95,119 +97,82 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
     };
   }, [colorMap, camera, size]);
 
-  const shaderMaterial = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
+  // Create materials for each depth layer
+  const layerMaterials = useMemo(() => {
+    const materials: THREE.ShaderMaterial[] = [];
+    
+    for (let i = 0; i < NUM_LAYERS; i++) {
+      const depthThreshold = i / (NUM_LAYERS - 1); // 0 to 1
+      const layerDepth = i * 0.1; // Spacing between layers
+      
+      const material = new THREE.ShaderMaterial({
         uniforms: {
           uColorMap: { value: blurredColorMap },
           uDepthMap: { value: blurredDepthMap },
-          uDisplacementStrength: { value: 3 }, // Control displacement intensity
-          uParallax: { value: new THREE.Vector2(0, 0) }, // Keep for potential additional effects
+          uDepthThreshold: { value: depthThreshold },
+          uDisplacementStrength: { value: 1.5 }, // Reduced for subtlety
+          uLayerDepth: { value: layerDepth },
         },
+        transparent: true,
         vertexShader: `
         precision highp float;
         varying vec2 vUv;
+        varying float vDepth;
         uniform sampler2D uDepthMap;
         uniform float uDisplacementStrength;
+        uniform float uLayerDepth;
 
         void main() {
           vUv = uv;
           
           // Sample depth at current vertex
           float currentDepth = texture2D(uDepthMap, uv).r;
+          vDepth = currentDepth;
           
-          // Calculate direction from center (0.5, 0.5) to current vertex
-          vec2 centerToVertex = uv - vec2(0.5, 0.5);
-          float distanceFromCenter = length(centerToVertex);
-          vec2 directionFromCenter = normalize(centerToVertex);
-
           vec3 newPosition = position;
-          newPosition.z -= (1.0 - currentDepth) * uDisplacementStrength;
-
-          // Only process vertices that are not at the center
-          if (distanceFromCenter > 0.001) {
-            vec2 texelSize = 1.0 / vec2(1536.0, 640.0); // Match your geometry resolution
-            
-            // Sample neighboring depths for edge detection and smoothing
-            float searchRadius = 2.0;
-            vec2 searchDirection = directionFromCenter * texelSize * searchRadius;
-            vec2 searchUV = clamp(uv + searchDirection, vec2(0.0), vec2(1.0));
-            float searchDepth = texture2D(uDepthMap, searchUV).r;
-            
-            // Also sample perpendicular directions for smoothing
-            vec2 perpendicular = vec2(-directionFromCenter.y, directionFromCenter.x);
-            float leftDepth = texture2D(uDepthMap, clamp(uv + perpendicular * texelSize, vec2(0.0), vec2(1.0))).r;
-            float rightDepth = texture2D(uDepthMap, clamp(uv - perpendicular * texelSize, vec2(0.0), vec2(1.0))).r;
-            
-            // Check for depth discontinuity
-            float depthDiff = currentDepth - searchDepth;
-            float edgeThreshold = 0.02;
-            
-            vec2 totalOffset = vec2(0.0);
-            
-            if (depthDiff < -edgeThreshold) {
-              // Primary hiding: move vertex away from center to hide edge
-              float hideAmount = abs(depthDiff) * 5.0;
-              totalOffset += directionFromCenter * hideAmount * texelSize;
-            } else {
-              // Redistribution: smooth out gaps created by hidden vertices
-              // Check if nearby vertices in the radial direction might be hidden
-              vec2 innerUV = clamp(uv - searchDirection * 0.5, vec2(0.0), vec2(1.0));
-              float innerDepth = texture2D(uDepthMap, innerUV).r;
-              float innerSearchDepth = texture2D(uDepthMap, clamp(innerUV + searchDirection, vec2(0.0), vec2(1.0))).r;
-              float innerDepthDiff = innerDepth - innerSearchDepth;
-              
-              if (innerDepthDiff < -edgeThreshold) {
-                // Inner vertex is likely being hidden, so redistribute this vertex slightly inward
-                float redistributeAmount = abs(innerDepthDiff) * 2.0;
-                totalOffset -= directionFromCenter * redistributeAmount * texelSize * 0.5;
-              }
-              
-              // Lateral smoothing based on neighboring depths
-              float lateralVariation = abs(leftDepth - rightDepth);
-              if (lateralVariation > edgeThreshold) {
-                // Smooth out lateral discontinuities
-                float smoothAmount = lateralVariation * 1.0;
-                vec2 lateralDirection = (leftDepth > rightDepth) ? perpendicular : -perpendicular;
-                totalOffset += lateralDirection * smoothAmount * texelSize * 0.3;
-              }
-            }
-            
-            // Apply gradual falloff based on distance from center
-            float falloffFactor = smoothstep(0.8, 0.2, distanceFromCenter);
-            totalOffset *= falloffFactor;
-            
-            newPosition.xy += totalOffset;
-          }
+          
+          // Add subtle depth variation for smoother transitions
+          float depthVariation = sin(uv.x * 10.0) * sin(uv.y * 10.0) * 0.1;
+          newPosition.z -= (1.0 - currentDepth) * uDisplacementStrength + depthVariation;
+          
+          // Position this layer further back
+          newPosition.z -= uLayerDepth;
+          
           gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
         }
-      `,
+        `,
         fragmentShader: `
         precision highp float;
         varying vec2 vUv;
+        varying float vDepth;
         uniform sampler2D uColorMap;
+        uniform float uDepthThreshold;
 
         void main() {
-          // Simple texture sampling - no parallax needed since displacement is in vertices
+          // Only render pixels above the depth threshold
+          if (vDepth < uDepthThreshold) {
+            discard;
+          }
+          
           vec4 color = texture2D(uColorMap, vUv);
+          
+          // Add slight transparency for blending between layers
+          float alpha = smoothstep(uDepthThreshold, uDepthThreshold + 0.1, vDepth);
+          color.a *= alpha;
+          
           gl_FragColor = color;
         }
-      `,
-      }),
-    [blurredColorMap, blurredDepthMap]
-  );
+        `,
+      });
+      
+      materials.push(material);
+    }
+    
+    return materials;
+  }, [blurredColorMap, blurredDepthMap, NUM_LAYERS]);
 
   useFrame(() => {
-    if (shaderMaterial && meshRef.current) {
-      // You can animate displacement strength or other properties here
-      
-      // Keep mesh at its original position
-      meshRef.current.position.set(
-        position[0],
-        position[1],
-        position[2]
-      );
-
+    if (layerMaterials && meshRefs.current.length > 0) {
       // Move camera based on panX/panY
       const panStrength = 10; // Adjust this to control how much the camera moves
       const panInnerStrength = -2; // Inner movement strength for subtlety
@@ -217,14 +182,38 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       // Keep camera looking at the center of the mesh
       const meshCenter = new THREE.Vector3(position[0] + panX * panInnerStrength, position[1] + panY * panInnerStrength, position[2]);
       camera.lookAt(meshCenter);
+      
+      // Update positions for all layers
+      meshRefs.current.forEach((mesh, index) => {
+        if (mesh) {
+          mesh.position.set(
+            position[0],
+            position[1], 
+            position[2] - index * 0.1 // Layer spacing
+          );
+        }
+      });
     }
   });
 
   return (
-    <mesh ref={meshRef} scale={scale} position={position}>
-      <planeGeometry args={[1, 1, 1536, 640]} />
-      <primitive object={shaderMaterial} attach="material" />
-    </mesh>
+    <>
+      {layerMaterials.map((material, index) => (
+        <mesh 
+          key={index}
+          ref={(mesh) => {
+            if (mesh) {
+              meshRefs.current[index] = mesh;
+            }
+          }}
+          scale={scale} 
+          position={[position[0], position[1], position[2] - index * 0.1]}
+        >
+          <planeGeometry args={[1, 1, 1536, 640]} />
+          <primitive object={material} attach="material" />
+        </mesh>
+      ))}
+    </>
   );
 };
 
