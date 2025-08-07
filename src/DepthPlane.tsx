@@ -128,7 +128,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           if (distanceFromCenter > 0.001) {
             // Calculate search distance and direction
             vec2 texelSize = 1.0 / vec2(1536.0, 640.0); // Match your geometry resolution
-            float searchRadius = 1.0; // How many pixels to search
+            float searchRadius = 2.0; // How many pixels to search
             
             vec2 searchDirection = directionFromCenter * texelSize * searchRadius;
             vec2 searchUV = uv + searchDirection;
@@ -141,7 +141,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
             
             // Check for depth discontinuity (current vertex is farther than search point)
             float depthDiff = currentDepth - searchDepth;
-            float edgeThreshold = 0.05; // Adjust this to control sensitivity
+            float edgeThreshold = 0.1; // Adjust this to control sensitivity
             
             if (depthDiff < -edgeThreshold) {
               // We found an edge where current vertex is farther away
