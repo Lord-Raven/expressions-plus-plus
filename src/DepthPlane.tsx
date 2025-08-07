@@ -48,7 +48,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
     canvas.height = depthMap.image.height;
     
     // Apply blur filter
-    ctx.filter = 'blur(1px)';
+    ctx.filter = 'blur(0.5px)';
     ctx.drawImage(depthMap.image, 0, 0);
     
     const blurredTexture = new THREE.CanvasTexture(canvas);
@@ -151,19 +151,20 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
       );
 
       // Move camera based on panX/panY
-      const panStrength = 5; // Adjust this to control how much the camera moves
+      const panStrength = 4; // Adjust this to control how much the camera moves
+      const panInnerStrength = 2; // Inner movement strength for subtlety
       camera.position.x = panX * panStrength;
       camera.position.y = panY * panStrength;
       
       // Keep camera looking at the center of the mesh
-      const meshCenter = new THREE.Vector3(position[0], position[1], position[2]);
+      const meshCenter = new THREE.Vector3(position[0] + panX * panInnerStrength, position[1] + panY * panInnerStrength, position[2]);
       camera.lookAt(meshCenter);
     }
   });
 
   return (
     <mesh ref={meshRef} scale={scale} position={position}>
-      <planeGeometry args={[1, 1, 512, 512]} />
+      <planeGeometry args={[1, 1, 512, 1024]} />
       <primitive object={shaderMaterial} attach="material" />
     </mesh>
   );
