@@ -124,7 +124,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
           // Only process vertices that are not at the center
           if (distanceFromCenter > 0.001) {
             // Calculate search distance and direction
-            vec2 texelSize = 1.0 / vec2(1024.0, 1024.0); // Match your geometry resolution
+            vec2 texelSize = 1.0 / vec2(768.0, 320.0); // Match your geometry resolution
             float searchRadius = 1.0; // How many pixels to search
             
             vec2 searchDirection = directionFromCenter * texelSize * searchRadius;
@@ -206,7 +206,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY, parallaxX, parallaxY }: De
 
   return (
     <mesh ref={meshRef} scale={scale} position={position}>
-      <planeGeometry args={[1, 1, 1024, 1024]} />
+      <planeGeometry args={[1, 1, 768, 320]} />
       <primitive object={shaderMaterial} attach="material" />
     </mesh>
   );
