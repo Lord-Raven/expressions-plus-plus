@@ -154,7 +154,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     useBackgroundDepth: boolean;
     artStyle: string;
     speakers: {[key: string]: Speaker};
-    flagBackground: boolean = false;
     alphaMode: boolean;
 
     readonly fac = new FastAverageColor();
@@ -222,7 +221,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Initialize default background if none exists
         if (Object.keys(this.chatState.backgrounds).length === 0) {
-            const defaultBackgroundId = 'default';
+            const defaultBackgroundId = generateGuid();
             this.chatState.backgrounds[defaultBackgroundId] = {
                 id: defaultBackgroundId,
                 name: 'Default Background',
@@ -234,6 +233,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 triggerWords: ''
             };
             this.chatState.selectedBackground = defaultBackgroundId;
+            this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], this.chatState.backgrounds[defaultBackgroundId], this.chatState.backgrounds[defaultBackgroundId].name), `Generating background for ${this.chatState.backgrounds[defaultBackgroundId].name}.`);
         }
     }
 
@@ -364,7 +364,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (this.isSpeakerVisible(this.speakers[userMessage.anonymizedId])) {
             await this.updateEmotion(this.speakers[userMessage.anonymizedId], userMessage.content);
         }
-        await this.backgroundCheck(userMessage.content);
+        // await this.backgroundCheck(userMessage.content);
         return {
             stageDirections: null,
             messageState: this.messageState,
@@ -390,10 +390,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (this.isSpeakerVisible(this.speakers[botMessage.anonymizedId])) {
             await this.updateEmotion(this.speakers[botMessage.anonymizedId], botMessage.content);
         }
-        await this.backgroundCheck(botMessage.content);
-        if (this.flagBackground) {
-            await this.wrapPromise(this.generateBackgroundImage(this.speakers[botMessage.anonymizedId], botMessage.content), 'Generating new background image.');
-        }
+
+        // await this.backgroundCheck(botMessage.content);
+
         return {
             stageDirections: null,
             messageState: this.messageState,
@@ -666,7 +665,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async backgroundCheck(content: string): Promise<void> {
-        if (this.flagBackground || !this.generateBackgrounds || !content) return;
+        // Repurpose this for triggering background swaps to known backgrounds based on key words
+        /*if (this.flagBackground || !this.generateBackgrounds || !content) return;
 
         if (this.messageState.backgroundUrl) {
             const TRANSITION_LABEL = 'transitions to a new location';
@@ -690,87 +690,93 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }
         }
 
-        this.flagBackground = true;
+        this.flagBackground = true;*/
     }
 
-    async generateBackgroundImage(character: Speaker, content: string): Promise<void> {
+    async generateBackgroundImage(character: Speaker, background: Background, content: string): Promise<void> {
         // Must first build a visual description for the background
-        this.flagBackground = false
-        console.log(`Generate a description of the background.`);
-        const imageDescription = await this.generator.textGen({
-            prompt:
-                ((character && 'personality' in character) ? `Information about ${character.name}, for Flavor:\n${character.personality}` : '') +
-                `Chat History:\n{{messages}}\n\n` +
-                `Current Instruction:\nThe goal of this task is to digest the flavor text and chat history to construct a comprehensive and concise visual description of the current scenery. ` +
-                `This system response will be fed directly into an image generator, which is unfamiliar with the setting; ` +
-                `use tags and keywords to convey all essential details about the location, ambiance, weather, or time of day (as applicable), ` +
-                `presenting ample appearance notes. Fixate on the visual details of the surroundings, ignoring action or characters.\n\n` +
-                `Sample Response:\nDesolate wasteland, sandy, oppressively bright, glare, cracked earth, forlorn crags.\n\n` +
-                `Sample Response:\nSmall-town America, charming street, quaint houses, alluring shopfronts, crisp fall foliage.\n\n` +
-                `Sample Response:\nCramped sci-fi hallway, dim emergency lighting, aboard a space station, haunting shapes, loose ducts.\n\n` +
-                `Sample Response:\nForgotten ruins, mossy worn stonework, dense forest, swampy surroundings, entrance leading deep into the unknown, pervasive mist.`,
-            min_tokens: 50,
-            max_tokens: 150,
-            include_history: true
-        });
-        if (imageDescription?.result) {
-            console.log(`Received an image description: ${imageDescription.result}. Generating a background.`);
-            const imageUrl = (await this.generator.makeImage({
-                prompt: substitute(`(Art style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${imageDescription.result})`),
-                aspect_ratio: AspectRatio.CINEMATIC_HORIZONTAL,
-            }))?.url ?? '';
-            if (imageUrl == '') {
-                console.warn(`Failed to generate a background image.`);
+        if (!this.generateBackgrounds) return;
+        if (!background.artPrompt) {
+            console.log(`Generate a description of the background.`);
+            const imageDescription = await this.generator.textGen({
+                prompt:
+                    ((character && 'personality' in character) ? `Information about ${character.name}, for Flavor:\n${character.personality}` : '') +
+                    `Chat History:\n{{messages}}\n\n` +
+                    `Current Instruction:\nThe goal of this task is to digest the flavor text and chat history to construct a comprehensive and concise visual description of the current scenery. ` +
+                    `This system response will be fed directly into an image generator, which is unfamiliar with the setting; ` +
+                    `use tags and keywords to convey all essential details about the location, ambiance, weather, or time of day (as applicable), ` +
+                    `presenting ample appearance notes. Fixate on the visual details of the surroundings, ignoring action or characters.\n\n` +
+                    `Sample Response:\nDesolate wasteland, sandy, oppressively bright, glare, cracked earth, forlorn crags.\n\n` +
+                    `Sample Response:\nSmall-town America, charming street, quaint houses, alluring shopfronts, crisp fall foliage.\n\n` +
+                    `Sample Response:\nCramped sci-fi hallway, dim emergency lighting, aboard a space station, haunting shapes, loose ducts.\n\n` +
+                    `Sample Response:\nForgotten ruins, mossy worn stonework, dense forest, swampy surroundings, entrance leading deep into the unknown, pervasive mist.`,
+                min_tokens: 50,
+                max_tokens: 150,
+                include_history: true
+            });
+            if (imageDescription?.result) {
+                console.log(`Received an image description: ${imageDescription.result}. Generating a background.`);
+                background.artPrompt = imageDescription.result;
+            }
+        }
+        if (!background.artPrompt) {
+            // Display error message about failed art prompt:
+            console.warn(`Failed to generate a background description. Cannot generate background image.`);
+            return;
+        }
+        const imageUrl = (await this.generator.makeImage({
+            prompt: substitute(`(Art style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${background.artPrompt})`),
+            aspect_ratio: AspectRatio.CINEMATIC_HORIZONTAL,
+        }))?.url ?? '';
+        if (imageUrl == '') {
+            console.warn(`Failed to generate a background image.`);
+        } else {
+            if (this.alphaMode && this.useBackgroundDepth) {
+                try {
+                    // This endpoint takes actual image data and not a URL; need to load data from imageUrl
+                    const response = await fetch(imageUrl);
+                    const imageBlob = await response.blob();
+                    const depthPromise = this.depthPipeline.predict("/on_submit", {image: imageBlob});
+
+                    // Need to get a HtmlImageElement for getPalette:
+                    const imageElement = document.createElement('img');
+                    imageElement.src = URL.createObjectURL(imageBlob);
+                    // Wait for the image to load before calling getPalette
+                    await new Promise((resolve) => {
+                        imageElement.onload = resolve;
+                    });
+
+                    // Get colors and sort by "brightness"; map to CSS hex color from rgb
+                    const colors = this.colorThief.getPalette(imageElement, 10).sort((a, b) => {
+                        const brightnessA = a[0] * 0.299 + a[1] * 0.587 + a[2] * 0.114;
+                        const brightnessB = b[0] * 0.299 + b[1] * 0.587 + b[2] * 0.114;
+                        return brightnessB - brightnessA;
+                    }).map(c => `#${c.map(channel => channel.toString(16).padStart(2, '0')).join('')}`);
+
+                    console.log(`Color palette: ${colors}`);
+
+                    this.messageState.highlightColor = colors[0];
+                    this.messageState.borderColor = colors[Math.floor(colors.length / 2)];
+
+                    this.messageState.depthUrl = '';
+                    const depthResponse = await depthPromise;
+                    console.log(depthResponse);
+                    this.messageState.depthUrl = depthResponse.data[1].url;
+                } catch (err) {
+                    console.warn(`Failed to generate palette or depth map for background image: ${err}`);
+                }
             } else {
-                if (this.alphaMode && this.useBackgroundDepth) {
-
-                    try {
-                        // This endpoint takes actual image data and not a URL; need to load data from imageUrl
-                        const response = await fetch(imageUrl);
-                        const imageBlob = await response.blob();
-                        const depthPromise = this.depthPipeline.predict("/on_submit", {image: imageBlob});
-
-                        // Need to get a HtmlImageElement for getPalette:
-                        const imageElement = document.createElement('img');
-                        imageElement.src = URL.createObjectURL(imageBlob);
-                        // Wait for the image to load before calling getPalette
-                        await new Promise((resolve) => {
-                            imageElement.onload = resolve;
-                        });
-
-                        // Get colors and sort by "brightness"; map to CSS hex color from rgb
-                        const colors = this.colorThief.getPalette(imageElement, 10).sort((a, b) => {
-                            const brightnessA = a[0] * 0.299 + a[1] * 0.587 + a[2] * 0.114;
-                            const brightnessB = b[0] * 0.299 + b[1] * 0.587 + b[2] * 0.114;
-                            return brightnessB - brightnessA;
-                        }).map(c => `#${c.map(channel => channel.toString(16).padStart(2, '0')).join('')}`);
-
-                        console.log(`Color palette: ${colors}`);
-
-                        this.messageState.highlightColor = colors[0];
-                        this.messageState.borderColor = colors[Math.floor(colors.length / 2)];
-
-                        this.messageState.depthUrl = '';
-                        const depthResponse = await depthPromise;
-                        console.log(depthResponse);
-                        this.messageState.depthUrl = depthResponse.data[1].url;
-                    } catch (err) {
-                        console.warn(`Failed to generate palette or depth map for background image: ${err}`);
-                    }
-                } else {
-                    try {
-                        this.messageState.borderColor = (await this.fac.getColorAsync(imageUrl)).rgba ?? DEFAULT_BORDER_COLOR;
-                    } catch(err) {
-                        this.messageState.borderColor = DEFAULT_BORDER_COLOR;
-                    }
+                try {
+                    this.messageState.borderColor = (await this.fac.getColorAsync(imageUrl)).rgba ?? DEFAULT_BORDER_COLOR;
+                } catch(err) {
+                    this.messageState.borderColor = DEFAULT_BORDER_COLOR;
                 }
             }
-            this.messageState.backgroundUrl = imageUrl;
-
-            await this.updateBackground();
         }
-    }
+        this.messageState.backgroundUrl = imageUrl;
 
+        await this.updateBackground();
+    }
 
     async singleSpeakerCheck(speaker: Speaker) {
         const SINGLE_CHARACTER_LABEL = `a character named ${speaker.name}`;
@@ -907,6 +913,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         register={(handle) => {this.backgroundSettingsHandle = handle;}}
                         stage={this}
                         borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
+                        onRegenerate={(background) => {
+                            this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], background, background.name), `Generating background for ${background.name}.`);
+                        }}
                     />
                     <MessageQueue register={(handle) => {this.messageHandle = handle;}} borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}/>
                     {/* Regenerate buttons for each character */}

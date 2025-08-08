@@ -63,7 +63,7 @@ undoubtedly situations that will still fail. The character management UI will in
 
 2025.08.08:
 
-- I am continuing to experiment with some new features that are not ready for prime time yet; they are constrained to alpha mode, but I'm sorry that the stage is getting bumped every time I make a change. 
+- I am building a bunch of stuff in the background but also trying to push some changes to the way backgrounds are handled and managed, to make them more like outfits that you can prompt or swap between as you see fit. I could end up breaking things. 
 
 2025.07.10: 
 
