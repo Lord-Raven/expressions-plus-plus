@@ -119,7 +119,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
 
           const int MAX_STEPS = 20;
           const float DEPTH_SCALE = 0.1;
-          const float BLUR_STRENGTH = 2.0;
+          const float BLUR_STRENGTH = 3.0;
           const float FOCUS_DEPTH = 0.3; // Objects at this depth will be in focus
 
           // Simple box blur function
