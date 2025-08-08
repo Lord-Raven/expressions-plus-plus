@@ -10,11 +10,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
-import CodeIcon from '@mui/icons-material/Code';
-import PaletteIcon from '@mui/icons-material/Palette';
 import { Background } from "./Background";
+import EditModeFields, { EditModeFieldConfig } from "./EditModeFields";
 
 export interface BackgroundSettingsHandle {
     setOpen: (open: boolean) => void;
@@ -67,13 +64,6 @@ const BackgroundInfoIcon = ({
 const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
     // Ref for dialog content scroll
     const dialogContentRef = useRef<HTMLDivElement>(null);
-    let lastScrollTop = 0;
-    // Refs for edit fields
-    const promptRef = useRef<HTMLInputElement>(null);
-    const keywordsRef = useRef<HTMLInputElement>(null);
-    const jsonRef = useRef<HTMLInputElement>(null);
-    const borderColorRef = useRef<HTMLInputElement>(null);
-    const highlightColorRef = useRef<HTMLInputElement>(null);
     
     const [open, setOpen] = useState<boolean>(false);
     const [selectedBackground, setSelectedBackground] = useState<string>('');
@@ -308,198 +298,51 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
 
                                 {/* Editing controls section */}
                                 <Box sx={{ mt: 3 }}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                                        {/* Art Prompt */}
-                                        {editMode === 'artPrompt' ? (
-                                            <TextField
-                                                label="Art Prompt"
-                                                fullWidth
-                                                size="small"
-                                                value={currentBackground.artPrompt || ""}
-                                                onChange={e => {
-                                                    const val = e.target.value;
+                                    <EditModeFields
+                                        fields={[
+                                            {
+                                                type: 'artPrompt',
+                                                label: 'Art Prompt',
+                                                value: currentBackground.artPrompt || "",
+                                                onChange: (val: string) => {
                                                     const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, artPrompt: val } };
                                                     updateStageBackgrounds(updatedBackgrounds);
-                                                }}
-                                                inputRef={promptRef}
-                                                sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
-                                                variant="outlined"
-                                            />
-                                        ) : (
-                                            <Button
-                                                variant="outlined"
-                                                color="primary"
-                                                onClick={() => {
-                                                    if (dialogContentRef.current) {
-                                                        lastScrollTop = dialogContentRef.current.scrollTop;
-                                                    }
-                                                    setEditMode('artPrompt');
-                                                    setTimeout(() => {
-                                                        if (promptRef.current) {
-                                                            promptRef.current.focus({ preventScroll: true });
-                                                        }
-                                                        if (dialogContentRef.current) {
-                                                            dialogContentRef.current.scrollTop = lastScrollTop;
-                                                        }
-                                                    }, 0);
-                                                }}
-                                                sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                            >
-                                                <ChatBubbleOutlineIcon fontSize="small" />
-                                            </Button>
-                                        )}
-
-                                        {/* Keywords */}
-                                        {editMode === 'keywords' ? (
-                                            <TextField
-                                                label="Comma-Delimited Trigger Words"
-                                                fullWidth
-                                                size="small"
-                                                value={currentBackground.triggerWords || ""}
-                                                onChange={e => {
-                                                    const val = e.target.value;
+                                                }
+                                            },
+                                            {
+                                                type: 'keywords',
+                                                label: 'Comma-Delimited Trigger Words',
+                                                value: currentBackground.triggerWords || "",
+                                                onChange: (val: string) => {
                                                     const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, triggerWords: val } };
                                                     updateStageBackgrounds(updatedBackgrounds);
-                                                }}
-                                                inputRef={keywordsRef}
-                                                sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
-                                                variant="outlined"
-                                            />
-                                        ) : (
-                                            <Button
-                                                variant="outlined"
-                                                color="primary"
-                                                onClick={() => {
-                                                    if (dialogContentRef.current) {
-                                                        lastScrollTop = dialogContentRef.current.scrollTop;
-                                                    }
-                                                    setEditMode('keywords');
-                                                    setTimeout(() => {
-                                                        if (keywordsRef.current) {
-                                                            keywordsRef.current.focus({ preventScroll: true });
-                                                        }
-                                                        if (dialogContentRef.current) {
-                                                            dialogContentRef.current.scrollTop = lastScrollTop;
-                                                        }
-                                                    }, 0);
-                                                }}
-                                                sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                            >
-                                                <LocalOfferOutlinedIcon fontSize="small" />
-                                            </Button>
-                                        )}
-
-                                        {/* Border Color */}
-                                        {editMode === 'borderColor' ? (
-                                            <TextField
-                                                label="Border Color"
-                                                size="small"
-                                                value={currentBackground.borderColor || ""}
-                                                onChange={e => {
-                                                    const val = e.target.value;
+                                                }
+                                            },
+                                            {
+                                                type: 'borderColor',
+                                                label: 'Border Color',
+                                                value: currentBackground.borderColor || "",
+                                                onChange: (val: string) => {
                                                     const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, borderColor: val } };
                                                     updateStageBackgrounds(updatedBackgrounds);
-                                                }}
-                                                inputRef={borderColorRef}
-                                                sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, width: 120 }}
-                                                variant="outlined"
-                                            />
-                                        ) : (
-                                            <Button
-                                                variant="outlined"
-                                                color="primary"
-                                                onClick={() => {
-                                                    if (dialogContentRef.current) {
-                                                        lastScrollTop = dialogContentRef.current.scrollTop;
-                                                    }
-                                                    setEditMode('borderColor');
-                                                    setTimeout(() => {
-                                                        if (borderColorRef.current) {
-                                                            borderColorRef.current.focus({ preventScroll: true });
-                                                        }
-                                                        if (dialogContentRef.current) {
-                                                            dialogContentRef.current.scrollTop = lastScrollTop;
-                                                        }
-                                                    }, 0);
-                                                }}
-                                                sx={{ 
-                                                    background: currentBackground.borderColor || '#222', 
-                                                    borderRadius: 2, 
-                                                    minHeight: 36, 
-                                                    minWidth: 36, 
-                                                    maxWidth: 36, 
-                                                    p: 0.5, 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    justifyContent: 'center',
-                                                    border: `2px solid ${currentBackground.borderColor || '#666'}`
-                                                }}
-                                            >
-                                                <PaletteIcon fontSize="small" />
-                                            </Button>
-                                        )}
-
-                                        {/* Highlight Color */}
-                                        {editMode === 'highlightColor' ? (
-                                            <TextField
-                                                label="Highlight Color"
-                                                size="small"
-                                                value={currentBackground.highlightColor || ""}
-                                                onChange={e => {
-                                                    const val = e.target.value;
+                                                },
+                                                width: 'small'
+                                            },
+                                            {
+                                                type: 'highlightColor',
+                                                label: 'Highlight Color',
+                                                value: currentBackground.highlightColor || "",
+                                                onChange: (val: string) => {
                                                     const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, highlightColor: val } };
                                                     updateStageBackgrounds(updatedBackgrounds);
-                                                }}
-                                                inputRef={highlightColorRef}
-                                                sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, width: 120 }}
-                                                variant="outlined"
-                                            />
-                                        ) : (
-                                            <Button
-                                                variant="outlined"
-                                                color="primary"
-                                                onClick={() => {
-                                                    if (dialogContentRef.current) {
-                                                        lastScrollTop = dialogContentRef.current.scrollTop;
-                                                    }
-                                                    setEditMode('highlightColor');
-                                                    setTimeout(() => {
-                                                        if (highlightColorRef.current) {
-                                                            highlightColorRef.current.focus({ preventScroll: true });
-                                                        }
-                                                        if (dialogContentRef.current) {
-                                                            dialogContentRef.current.scrollTop = lastScrollTop;
-                                                        }
-                                                    }, 0);
-                                                }}
-                                                sx={{ 
-                                                    background: currentBackground.highlightColor || '#222', 
-                                                    borderRadius: 2, 
-                                                    minHeight: 36, 
-                                                    minWidth: 36, 
-                                                    maxWidth: 36, 
-                                                    p: 0.5, 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    justifyContent: 'center',
-                                                    border: `2px solid ${currentBackground.highlightColor || '#666'}`
-                                                }}
-                                            >
-                                                <PaletteIcon fontSize="small" />
-                                            </Button>
-                                        )}
-
-                                        {/* JSON */}
-                                        {editMode === 'json' ? (
-                                            <TextField
-                                                label="JSON for Import/Export"
-                                                fullWidth
-                                                size="small"
-                                                multiline
-                                                rows={4}
-                                                value={JSON.stringify(currentBackground, null, 2)}
-                                                onChange={e => {
-                                                    let val = e.target.value;
+                                                },
+                                                width: 'small'
+                                            },
+                                            {
+                                                type: 'json',
+                                                label: 'JSON for Import/Export',
+                                                value: JSON.stringify(currentBackground, null, 2),
+                                                onChange: (val: string) => {
                                                     try {
                                                         const data = JSON.parse(val);
                                                         if (typeof data === 'object' && data && 'id' in data && 'name' in data) {
@@ -510,51 +353,14 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                                         // Invalid JSON, don't update
                                                         console.error("Invalid JSON format", err);
                                                     }
-                                                }}
-                                                inputRef={jsonRef}
-                                                sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1, mt: 1 }}
-                                                variant="outlined"
-                                            />
-                                        ) : (
-                                            <Button
-                                                variant="outlined"
-                                                color="primary"
-                                                onClick={() => {
-                                                    if (dialogContentRef.current) {
-                                                        lastScrollTop = dialogContentRef.current.scrollTop;
-                                                    }
-                                                    setEditMode('json');
-                                                    setTimeout(() => {
-                                                        if (jsonRef.current) {
-                                                            jsonRef.current.focus({ preventScroll: true });
-                                                        }
-                                                        if (dialogContentRef.current) {
-                                                            dialogContentRef.current.scrollTop = lastScrollTop;
-                                                        }
-                                                    }, 0);
-                                                }}
-                                                sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                            >
-                                                <CodeIcon fontSize="small" />
-                                            </Button>
-                                        )}
-                                    </Box>
+                                                },
+                                            }
+                                        ] as EditModeFieldConfig[]}
+                                        editMode={editMode}
+                                        setEditMode={setEditMode}
+                                        dialogContentRef={dialogContentRef}
+                                    />
                                 </Box>
-                            </Box>
-                        )}
-
-                        
-
-                        {backgroundIds.length === 0 && (
-                            <Box sx={{ textAlign: 'center', mt: 4 }}>
-                                <Typography variant="body1" sx={{ mb: 2 }}>No backgrounds found.</Typography>
-                                <Button 
-                                    variant="contained" 
-                                    startIcon={<AddIcon />}
-                                    onClick={createNewBackground}
-                                >
-                                    Create First Background
-                                </Button>
                             </Box>
                         )}
                     </DialogContent>

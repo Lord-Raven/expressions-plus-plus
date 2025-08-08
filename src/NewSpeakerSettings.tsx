@@ -13,12 +13,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
-import CodeIcon from '@mui/icons-material/Code';
 import silhouetteUrl from './assets/silhouette.png'
 import { SpeakerSettingsHandle } from "./SpeakerSettings";
 import { Emotion, EMOTION_PROMPTS } from "./Emotion";
+import EditModeFields, { EditModeFieldConfig } from "./EditModeFields";
 
 type NewSpeakerSettingsProps = {
     register?: (handle: SpeakerSettingsHandle) => void;
@@ -73,12 +71,8 @@ const OutfitInfoIcon = ({
 const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
     // Ref for dialog content scroll
     const dialogContentRef = useRef<HTMLDivElement>(null);
-    let lastScrollTop = 0;
     // Refs for edit fields
     const MAX_OUTFIT_COUNT = 20;
-    const promptRef = useRef<HTMLInputElement>(null);
-    const keywordsRef = useRef<HTMLInputElement>(null);
-    const jsonRef = useRef<HTMLInputElement>(null);
     const [speaker, setSpeaker] = useState<Speaker|null>(null);
     const [selectedOutfit, setSelectedOutfit] = useState<string>("");
     const [editMode, setEditMode] = useState('json');
@@ -328,107 +322,37 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         })}
                         
                     </Grid>
-                    {/* Multiple collapsible fields side-by-side (only one section is visible at a time):  
-                    A prompt editing field for the selected outfits art prompt (if it is generated),
-                    a keyword editing field for the selected outfits keywords (if it is generated),
-                    and a JSON synced textfield for import/export (disabled but visible for non-generated) */}
                     
                     <Box sx={{ mt: 3 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center' }}>
-                            {/* Prompt (artPrompt) */}
-                            {editMode === 'artPrompt' ? (
-                                <TextField
-                                    label="Art Prompt"
-                                    fullWidth
-                                    size="small"
-                                    value={outfitMap[selectedOutfit]?.artPrompt || ""}
-                                    onChange={e => {
-                                        const val = e.target.value;
+                        <EditModeFields
+                            fields={[
+                                {
+                                    type: 'artPrompt',
+                                    label: 'Art Prompt',
+                                    value: outfitMap[selectedOutfit]?.artPrompt || "",
+                                    onChange: (val: string) => {
                                         const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], artPrompt: val } };
                                         updateStageWardrobeMap(updatedMap);
                                         stage.updateChatState();
-                                    }}
-                                    inputRef={promptRef}
-                                    sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
-                                    variant="outlined"
-                                />
-                            ) : outfitMap[selectedOutfit]?.generated && (
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    onClick={() => {
-                                        // Save scroll position
-                                        if (dialogContentRef.current) {
-                                            lastScrollTop = dialogContentRef.current.scrollTop;
-                                        }
-                                        setEditMode('artPrompt');
-                                        setTimeout(() => {
-                                            if (promptRef.current) {
-                                                promptRef.current.focus({ preventScroll: true });
-                                            }
-                                            // Restore scroll position
-                                            if (dialogContentRef.current) {
-                                                dialogContentRef.current.scrollTop = lastScrollTop;
-                                            }
-                                        }, 0);
-                                    }}
-                                    sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                >
-                                    <ChatBubbleOutlineIcon fontSize="small" />
-                                </Button>
-                            )}
-                            {/* Keywords */}
-                            {editMode === 'keywords' ? (
-                                <TextField
-                                    label="Comma-Delimitted Keywords"
-                                    fullWidth
-                                    size="small"
-                                    value={outfitMap[selectedOutfit]?.triggerWords || ""}
-                                    onChange={e => {
-                                        const val = e.target.value;
+                                    },
+                                    visible: outfitMap[selectedOutfit]?.generated
+                                },
+                                {
+                                    type: 'keywords',
+                                    label: 'Comma-Delimitted Keywords',
+                                    value: outfitMap[selectedOutfit]?.triggerWords || "",
+                                    onChange: (val: string) => {
                                         const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], triggerWords: val } };
                                         updateStageWardrobeMap(updatedMap);
                                         stage.updateChatState();
-                                    }}
-                                    inputRef={keywordsRef}
-                                    sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
-                                    variant="outlined"
-                                />
-                            ) : outfitMap[selectedOutfit]?.generated && (
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    onClick={() => {
-                                        if (dialogContentRef.current) {
-                                            lastScrollTop = dialogContentRef.current.scrollTop;
-                                        }
-                                        setEditMode('keywords');
-                                        setTimeout(() => {
-                                            if (keywordsRef.current) {
-                                                keywordsRef.current.focus({ preventScroll: true });
-                                            }
-                                            if (dialogContentRef.current) {
-                                                dialogContentRef.current.scrollTop = lastScrollTop;
-                                            }
-                                        }, 0);
-                                    }}
-                                    sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                >
-                                    <LocalOfferOutlinedIcon fontSize="small" />
-                                </Button>
-                            )}
-                            {/* JSON */}
-                            {editMode === 'json' ? (
-                                <TextField
-                                    label="JSON for Import/Export"
-                                    disabled={!outfitMap[selectedOutfit]?.generated}
-                                    fullWidth
-                                    size="small"
-                                    value={(() => {
-                                        return JSON.stringify(outfitMap[selectedOutfit], null, 2);
-                                    })()}
-                                    onChange={e => {
-                                        let val = e.target.value;
+                                    },
+                                    visible: outfitMap[selectedOutfit]?.generated
+                                },
+                                {
+                                    type: 'json',
+                                    label: 'JSON for Import/Export',
+                                    value: JSON.stringify(outfitMap[selectedOutfit], null, 2),
+                                    onChange: (val: string) => {
                                         try {
                                             const data = JSON.parse(val);
                                             if (typeof data === 'object' && data && 'images' in data && 'description' in data) {
@@ -440,35 +364,14 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             console.error("Invalid JSON format", err);
                                             stage.wrapPromise(null, "Invalid outfit update.");
                                         }
-                                    }}
-                                    inputRef={jsonRef}
-                                    sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
-                                    variant="outlined"
-                                />
-                            ) : (
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    onClick={() => {
-                                        if (dialogContentRef.current) {
-                                            lastScrollTop = dialogContentRef.current.scrollTop;
-                                        }
-                                        setEditMode('json');
-                                        setTimeout(() => {
-                                            if (jsonRef.current) {
-                                                jsonRef.current.focus({ preventScroll: true });
-                                            }
-                                            if (dialogContentRef.current) {
-                                                dialogContentRef.current.scrollTop = lastScrollTop;
-                                            }
-                                        }, 0);
-                                    }}
-                                    sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                >
-                                    <CodeIcon fontSize="small" />
-                                </Button>
-                            )}
-                        </Box>
+                                    },
+                                    disabled: !outfitMap[selectedOutfit]?.generated
+                                }
+                            ] as EditModeFieldConfig[]}
+                            editMode={editMode}
+                            setEditMode={setEditMode}
+                            dialogContentRef={dialogContentRef}
+                        />
                     </Box>
                 </DialogContent>
             </Dialog>
