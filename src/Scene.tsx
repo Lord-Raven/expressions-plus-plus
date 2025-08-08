@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FC, useState, useEffect, useMemo, useRef } from "react";
-import { DEFAULT_BORDER_COLOR, DEFAULT_HIGHLIGHT_COLOR, Expressions } from "./Expressions";
+import { Expressions } from "./Expressions";
 import SpeakerImage from "./SpeakerImage";
 import DepthPlane from "./DepthPlane";
 import { Canvas } from "@react-three/fiber";
+import { DEFAULT_BORDER_COLOR, DEFAULT_HIGHLIGHT_COLOR } from "./Background";
 
 interface SceneProps {
     imageUrl: string;

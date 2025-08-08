@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from "react";
-import {Emotion, EMOTION_PROMPTS, substitute, generateGuid} from "./Expressions";
+import {substitute, generateGuid} from "./Expressions";
 import { Speaker } from "@chub-ai/stages-ts";
 import {motion} from "framer-motion";
 import {
@@ -18,6 +18,7 @@ import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import CodeIcon from '@mui/icons-material/Code';
 import silhouetteUrl from './assets/silhouette.png'
 import { SpeakerSettingsHandle } from "./SpeakerSettings";
+import { Emotion, EMOTION_PROMPTS } from "./Emotion";
 
 type NewSpeakerSettingsProps = {
     register?: (handle: SpeakerSettingsHandle) => void;
