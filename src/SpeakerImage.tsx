@@ -15,6 +15,7 @@ interface SpeakerImageProps {
     zIndex: number;
     isTalking: boolean;
     alphaMode: boolean;
+    highlightColor: string;
     panX: number;
     panY: number;
 }
@@ -28,6 +29,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     zIndex, 
     isTalking, 
     alphaMode,
+    highlightColor,
     panX,
     panY
 }) => {
@@ -40,13 +42,13 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
 
     // Calculate final parallax position
     const tempY =  (isTalking ? 2 : (4 + yPosition));
-    const depth = (48 - tempY) / 60;
-    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (panX * depth) : 0)) * 100;
-    const finalY = tempY + ((alphaMode ? (-panY * depth) : 0)) * 100;
+    const depth = (48 - tempY) / 50;
+    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (panX * depth * 1.2) : 0)) * 100;
+    const finalY = tempY + ((alphaMode ? (-panY * depth * 1.2) : 0)) * 100;
 
     const variants: Variants = {
         absent: {
-            color: '#BBBBBB', 
+            color: highlightColor, 
             opacity: 0, 
             x: `150vw`, 
             bottom: `${finalY}vh`, 
@@ -60,7 +62,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             }
         },
         talking: {
-            color: '#FFFFFF', 
+            color: highlightColor, 
             opacity: 1, 
             x: `${finalX}vw`, 
             bottom: `${finalY}vh`, 
@@ -78,7 +80,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             }
         },
         idle: {
-            color: '#BBBBBB', 
+            color: highlightColor, 
             opacity: 1, 
             x: `${finalX}vw`,
             bottom: `${finalY}vh`, 

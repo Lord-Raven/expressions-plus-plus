@@ -135,6 +135,12 @@ config_schema:
       description: A brief description of the desired character art style.
       type: string
       default: "Bold, visual novel style illustration, clean lines"
+    useBackgroundDepth:
+      title: Background Depth
+      description: Enable depth effects for backgrounds.
+      type: string
+      default: "True"
+      enum: ["True", "False"]
     alphaMode:
       title: Alpha Mode
       description: Enable experimental stuff. Maybe don't use this if your username isn't Ravenok.

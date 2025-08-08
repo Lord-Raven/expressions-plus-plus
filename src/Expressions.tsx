@@ -50,6 +50,7 @@ type ConfigType = {
     generateBackgrounds?: string;
     selected?: {[key: string]: string} | null;
     alphaMode?: string;
+    useBackgroundDepth?: boolean;
 };
 
 type InitStateType = null;
@@ -58,6 +59,7 @@ type MessageStateType = {
     backgroundUrl: string;
     depthUrl: string;
     borderColor: string;
+    highlightColor: string;
     speakerEmotion: {[key: string]: string};
     activeSpeaker: string;
 };
@@ -147,6 +149,7 @@ const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), scenery, specia
 const BACKGROUND_ART_PROMPT: string = 'unpopulated, visual novel background scenery, background only, scenery only';
 
 export const DEFAULT_BORDER_COLOR: string = '#1e1e1edd';
+export const DEFAULT_HIGHLIGHT_COLOR: string = '#ffffff';
 export const DEFAULT_OUTFIT_NAME: string = 'Starter Outfit';
 
 // Replace trigger words with less triggering words, so image gen can succeed.
@@ -211,6 +214,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     depthPipeline: any = null;
     generateCharacters: boolean;
     generateBackgrounds: boolean;
+    useBackgroundDepth: boolean;
     artStyle: string;
     speakers: {[key: string]: Speaker};
     flagBackground: boolean = false;
@@ -242,6 +246,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             backgroundUrl: messageState?.backgroundUrl ?? '',
             depthUrl: messageState?.depthUrl ?? '',
             borderColor: messageState?.borderColor ?? DEFAULT_BORDER_COLOR,
+            highlightColor: messageState?.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR,
             speakerEmotion: messageState?.speakerEmotion ?? {},
             activeSpeaker: messageState?.activeSpeaker ?? ''
         }
@@ -255,9 +260,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         this.generateCharacters = (config?.generateCharacters ?? "True") == "True";
         this.generateBackgrounds = (config?.generateBackgrounds ?? "True") == "True";
+        this.useBackgroundDepth = (config?.useBackgroundDepth ?? "True") == "True";
         this.alphaMode = (config?.alphaMode ?? "False") == "True";
         this.artStyle = config?.artStyle ?? 'Bold, visual novel style illustration, clean lines';
-
 
         if (!this.alphaMode) {
             // Look at characters, set up packs, and initialize values that aren't present in message/chat state
@@ -362,6 +367,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 backgroundUrl: state?.backgroundUrl ?? '',
                 depthUrl: state?.depthUrl ?? '',
                 borderColor: state?.borderColor ?? DEFAULT_BORDER_COLOR,
+                highlightColor: state?.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR,
                 speakerEmotion: state?.speakerEmotion ?? {},
                 activeSpeaker: state?.activeSpeaker ?? ''
             }
@@ -760,12 +766,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             if (imageUrl == '') {
                 console.warn(`Failed to generate a background image.`);
             } else {
-                if (this.alphaMode) {
+                if (this.alphaMode && this.useBackgroundDepth) {
 
                     try {
                         // This endpoint takes actual image data and not a URL; need to load data from imageUrl
                         const response = await fetch(imageUrl);
                         const imageBlob = await response.blob();
+                        const depthPromise = this.depthPipeline.predict("/on_submit", {image: imageBlob});
+
                         // Need to get a HtmlImageElement for getPalette:
                         const imageElement = document.createElement('img');
                         imageElement.src = URL.createObjectURL(imageBlob);
@@ -773,10 +781,21 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         await new Promise((resolve) => {
                             imageElement.onload = resolve;
                         });
-                        const colors = this.colorThief.getPalette(imageElement, 10);
+
+                        // Get colors and sort by "brightness":
+                        const colors = this.colorThief.getPalette(imageElement, 10).sort((a, b) => {
+                            const brightnessA = a[0] * 0.299 + a[1] * 0.587 + a[2] * 0.114;
+                            const brightnessB = b[0] * 0.299 + b[1] * 0.587 + b[2] * 0.114;
+                            return brightnessB - brightnessA;
+                        });
+
                         console.log(`Color palette: ${colors}`);
+
+                        this.messageState.highlightColor = `rgb(${colors[0].map(c => Math.round(c * 255)).join(',')})`;
+                        this.messageState.borderColor = `rgb(${colors[Math.floor(colors.length / 2)].map(c => Math.round(c * 255)).join(',')})`;
+
                         this.messageState.depthUrl = '';
-                        const depthResponse = await this.depthPipeline.predict("/on_submit", {image: imageBlob});
+                        const depthResponse = await depthPromise;
                         console.log(depthResponse);
                         this.messageState.depthUrl = depthResponse.data[1].url;
                     } catch (err) {

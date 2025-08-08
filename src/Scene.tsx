@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FC, useState, useEffect, useMemo, useRef } from "react";
-import { DEFAULT_BORDER_COLOR, Expressions } from "./Expressions";
+import { DEFAULT_BORDER_COLOR, DEFAULT_HIGHLIGHT_COLOR, Expressions } from "./Expressions";
 import SpeakerImage from "./SpeakerImage";
 import DepthPlane from "./DepthPlane";
 import { Canvas } from "@react-three/fiber";
@@ -74,9 +74,9 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                 // Calculate interpolation speed based on distance
                 // Close distance: high responsiveness (lerp factor closer to 1)
                 // Far distance: slower movement (lerp factor closer to 0)
-                const minLerp = 0.02; // Minimum interpolation speed for far distances
+                const minLerp = 0.03; // Minimum interpolation speed for far distances
                 const maxLerp = 0.3;  // Maximum interpolation speed for close distances
-                const transitionDistance = 0.3; // Distance at which we transition from slow to fast
+                const transitionDistance = 0.5; // Distance at which we transition from slow to fast
                 
                 let lerpFactor;
                 if (distance > transitionDistance) {
@@ -118,6 +118,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
     }, [currentPosition]);
 
     const borderColor = stage.messageState.borderColor ?? DEFAULT_BORDER_COLOR;
+    const highlightColor = stage.messageState.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR;
 
     const speakerCount = Object.values(stage.speakers).filter(speaker => stage.isSpeakerDisplayed(speaker)).length;
     let speakerIndex = 0;
@@ -202,7 +203,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                             zIndex: 1,
                                             pointerEvents: 'none', // Allow events to pass through to elements below
                                         }}
-                                        camera={{ position: [0, 0, 3], fov: 120 }}
+                                        camera={{ position: [0, 0, 3], fov: 90 }}
                                     >
                                         <DepthPlane
                                             imageUrl={imageUrl}
@@ -255,6 +256,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                 zIndex={zIndex}
                                 imageUrl={stage.getSpeakerImage(character.anonymizedId, stage.chatState.selectedOutfit[character.anonymizedId], stage.getSpeakerEmotion(character.anonymizedId), '')}
                                 isTalking={stage.messageState.activeSpeaker == character.anonymizedId}
+                                highlightColor={highlightColor}
                                 alphaMode={stage.alphaMode}
                                 panX={panX}
                                 panY={panY}
