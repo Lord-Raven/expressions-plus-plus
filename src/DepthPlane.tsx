@@ -25,7 +25,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
     canvas.height = colorMap.image.height;
 
     // Apply blur filter
-    ctx.filter = 'blur(1px)';
+    ctx.filter = 'blur(0.5px)';
     ctx.drawImage(colorMap.image, 0, 0);
     
     const blurredTexture = new THREE.CanvasTexture(canvas);
@@ -46,7 +46,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
     canvas.height = depthMap.image.height;
     
     // Apply blur filter
-    ctx.filter = 'blur(1px)';
+    ctx.filter = 'blur(2px)';
     ctx.drawImage(depthMap.image, 0, 0);
     
     const blurredTexture = new THREE.CanvasTexture(canvas);
@@ -119,6 +119,31 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
 
           const int MAX_STEPS = 20;
           const float DEPTH_SCALE = 0.1;
+          const float BLUR_STRENGTH = 2.0;
+          const float FOCUS_DEPTH = 0.3; // Objects at this depth will be in focus
+
+          // Simple box blur function
+          vec4 blur(sampler2D tex, vec2 uv, float blurRadius) {
+            vec4 color = vec4(0.0);
+            float total = 0.0;
+            
+            // 3x3 blur kernel
+            for (int x = -1; x <= 1; x++) {
+              for (int y = -1; y <= 1; y++) {
+                vec2 offset = vec2(float(x), float(y)) * blurRadius;
+                vec2 sampleUV = uv + offset;
+                
+                // Only sample if within bounds
+                if (sampleUV.x >= 0.0 && sampleUV.x <= 1.0 && 
+                    sampleUV.y >= 0.0 && sampleUV.y <= 1.0) {
+                  color += texture2D(tex, sampleUV);
+                  total += 1.0;
+                }
+              }
+            }
+            
+            return color / total;
+          }
 
           void main() {
             vec2 currentUV = vUv;
@@ -146,13 +171,29 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
               }
             }
             
-            // Sample final color at the displaced UV
-            vec4 color = texture2D(uColorMap, currentUV);
+            // Sample depth for depth-of-field calculation
+            float finalDepth = texture2D(uDepthMap, currentUV).r;
+            
+            // Calculate blur amount based on distance from focus depth
+            float depthDifference = abs(finalDepth - FOCUS_DEPTH);
+            float blurAmount = depthDifference * BLUR_STRENGTH;
+            
+            // Calculate blur radius in texture space
+            float blurRadius = blurAmount * 0.002; // Fixed blur radius
+            
+            // Sample color with or without blur based on depth
+            vec4 color;
+            if (blurRadius > 0.001) {
+              color = blur(uColorMap, currentUV, blurRadius);
+            } else {
+              color = texture2D(uColorMap, currentUV);
+            }
+            
             gl_FragColor = color;
           }
       `,
       }),
-    [colorMap, depthMap]
+    [blurredColorMap, blurredDepthMap]
   );
 
   useFrame(() => {
