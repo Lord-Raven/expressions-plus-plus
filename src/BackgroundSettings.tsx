@@ -4,12 +4,16 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Box, Button, Typography, TextField, IconButton, Tooltip
 } from "@mui/material";
-import { Grid, Tabs, Tab } from "@mui/material";
+import { Tabs, Tab } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
+import CodeIcon from '@mui/icons-material/Code';
+import PaletteIcon from '@mui/icons-material/Palette';
 import { Background } from "./Background";
 
 export interface BackgroundSettingsHandle {
@@ -61,8 +65,19 @@ const BackgroundInfoIcon = ({
 };
 
 const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
+    // Ref for dialog content scroll
+    const dialogContentRef = useRef<HTMLDivElement>(null);
+    let lastScrollTop = 0;
+    // Refs for edit fields
+    const promptRef = useRef<HTMLInputElement>(null);
+    const keywordsRef = useRef<HTMLInputElement>(null);
+    const jsonRef = useRef<HTMLInputElement>(null);
+    const borderColorRef = useRef<HTMLInputElement>(null);
+    const highlightColorRef = useRef<HTMLInputElement>(null);
+    
     const [open, setOpen] = useState<boolean>(false);
     const [selectedBackground, setSelectedBackground] = useState<string>('');
+    const [editMode, setEditMode] = useState('json');
     const [confirmRegenerate, setConfirmRegenerate] = useState<Background | null>(null);
     const [backgrounds, setBackgrounds] = useState<{[key: string]: Background}>({});
     const [backgroundIds, setBackgroundIds] = useState<string[]>([]);
@@ -202,7 +217,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                             <CloseIcon />
                         </IconButton>
                     </DialogTitle>
-                    <DialogContent sx={{p: 1, backgroundColor: "#333", minWidth: 500}}>
+                    <DialogContent sx={{p: 1, backgroundColor: "#333", minWidth: 500}} ref={dialogContentRef}>
                         <Typography variant="body2" sx={{ mb: 2 }}>
                             Manage background images and their settings. Each background has an art prompt used for generation, visual colors for UI theming, and trigger words for automatic switching.
                         </Typography>
@@ -291,85 +306,244 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                     </Button>
                                 </Box>
 
-                                {/* Background settings */}
-                                <Grid container spacing={2}>
-                                    <Grid key="borderColor">
-                                        <TextField
-                                            label="Border Color"
-                                            fullWidth
-                                            value={currentBackground.borderColor}
-                                            onChange={(e) => {
-                                                const updatedBackgrounds = { ...backgrounds };
-                                                updatedBackgrounds[currentBackground.id] = { 
-                                                    ...updatedBackgrounds[currentBackground.id], 
-                                                    borderColor: e.target.value 
-                                                };
-                                                updateStageBackgrounds(updatedBackgrounds);
-                                            }}
-                                            sx={{ backgroundColor: '#222', borderRadius: 1 }}
-                                        />
-                                    </Grid>
-                                    <Grid key="highlightColor">
-                                        <TextField
-                                            label="Highlight Color"
-                                            fullWidth
-                                            value={currentBackground.highlightColor}
-                                            onChange={(e) => {
-                                                const updatedBackgrounds = { ...backgrounds };
-                                                updatedBackgrounds[currentBackground.id] = { 
-                                                    ...updatedBackgrounds[currentBackground.id], 
-                                                    highlightColor: e.target.value 
-                                                };
-                                                updateStageBackgrounds(updatedBackgrounds);
-                                            }}
-                                            sx={{ backgroundColor: '#222', borderRadius: 1 }}
-                                        />
-                                    </Grid>
-                                    <Grid key="triggerWords">
-                                        <TextField
-                                            label="Trigger Words (comma-separated)"
-                                            fullWidth
-                                            value={currentBackground.triggerWords}
-                                            onChange={(e) => {
-                                                const updatedBackgrounds = { ...backgrounds };
-                                                updatedBackgrounds[currentBackground.id] = { 
-                                                    ...updatedBackgrounds[currentBackground.id], 
-                                                    triggerWords: e.target.value 
-                                                };
-                                                updateStageBackgrounds(updatedBackgrounds);
-                                            }}
-                                            sx={{ backgroundColor: '#222', borderRadius: 1 }}
-                                        />
-                                    </Grid>
-                                </Grid>
-
-                                {/* JSON export/import field */}
+                                {/* Editing controls section */}
                                 <Box sx={{ mt: 3 }}>
-                                    <TextField
-                                        label="Background JSON (edit or copy/paste to export/import)"
-                                        fullWidth
-                                        multiline
-                                        rows={8}
-                                        value={JSON.stringify(currentBackground, null, 2)}
-                                        onChange={e => {
-                                            try {
-                                                const data = JSON.parse(e.target.value);
-                                                if (typeof data === 'object' && data && 'id' in data && 'name' in data) {
-                                                    const updatedBackgrounds = { ...backgrounds };
-                                                    updatedBackgrounds[currentBackground.id] = { ...data, id: currentBackground.id };
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                                        {/* Art Prompt */}
+                                        {editMode === 'artPrompt' ? (
+                                            <TextField
+                                                label="Art Prompt"
+                                                fullWidth
+                                                size="small"
+                                                value={currentBackground.artPrompt || ""}
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, artPrompt: val } };
                                                     updateStageBackgrounds(updatedBackgrounds);
-                                                }
-                                            } catch (err) {
-                                                console.error("Invalid JSON format", err);
-                                                stage.wrapPromise(null, "Invalid background update.");
-                                            }
-                                        }}
-                                        sx={{ backgroundColor: '#222', borderRadius: 1, fontFamily: 'monospace' }}
-                                        variant="outlined"
-                                    />
+                                                }}
+                                                inputRef={promptRef}
+                                                sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
+                                                variant="outlined"
+                                            />
+                                        ) : (
+                                            <Button
+                                                variant="outlined"
+                                                color="primary"
+                                                onClick={() => {
+                                                    if (dialogContentRef.current) {
+                                                        lastScrollTop = dialogContentRef.current.scrollTop;
+                                                    }
+                                                    setEditMode('artPrompt');
+                                                    setTimeout(() => {
+                                                        if (promptRef.current) {
+                                                            promptRef.current.focus({ preventScroll: true });
+                                                        }
+                                                        if (dialogContentRef.current) {
+                                                            dialogContentRef.current.scrollTop = lastScrollTop;
+                                                        }
+                                                    }, 0);
+                                                }}
+                                                sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            >
+                                                <ChatBubbleOutlineIcon fontSize="small" />
+                                            </Button>
+                                        )}
+
+                                        {/* Keywords */}
+                                        {editMode === 'keywords' ? (
+                                            <TextField
+                                                label="Comma-Delimited Trigger Words"
+                                                fullWidth
+                                                size="small"
+                                                value={currentBackground.triggerWords || ""}
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, triggerWords: val } };
+                                                    updateStageBackgrounds(updatedBackgrounds);
+                                                }}
+                                                inputRef={keywordsRef}
+                                                sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1 }}
+                                                variant="outlined"
+                                            />
+                                        ) : (
+                                            <Button
+                                                variant="outlined"
+                                                color="primary"
+                                                onClick={() => {
+                                                    if (dialogContentRef.current) {
+                                                        lastScrollTop = dialogContentRef.current.scrollTop;
+                                                    }
+                                                    setEditMode('keywords');
+                                                    setTimeout(() => {
+                                                        if (keywordsRef.current) {
+                                                            keywordsRef.current.focus({ preventScroll: true });
+                                                        }
+                                                        if (dialogContentRef.current) {
+                                                            dialogContentRef.current.scrollTop = lastScrollTop;
+                                                        }
+                                                    }, 0);
+                                                }}
+                                                sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            >
+                                                <LocalOfferOutlinedIcon fontSize="small" />
+                                            </Button>
+                                        )}
+
+                                        {/* Border Color */}
+                                        {editMode === 'borderColor' ? (
+                                            <TextField
+                                                label="Border Color"
+                                                size="small"
+                                                value={currentBackground.borderColor || ""}
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, borderColor: val } };
+                                                    updateStageBackgrounds(updatedBackgrounds);
+                                                }}
+                                                inputRef={borderColorRef}
+                                                sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, width: 120 }}
+                                                variant="outlined"
+                                            />
+                                        ) : (
+                                            <Button
+                                                variant="outlined"
+                                                color="primary"
+                                                onClick={() => {
+                                                    if (dialogContentRef.current) {
+                                                        lastScrollTop = dialogContentRef.current.scrollTop;
+                                                    }
+                                                    setEditMode('borderColor');
+                                                    setTimeout(() => {
+                                                        if (borderColorRef.current) {
+                                                            borderColorRef.current.focus({ preventScroll: true });
+                                                        }
+                                                        if (dialogContentRef.current) {
+                                                            dialogContentRef.current.scrollTop = lastScrollTop;
+                                                        }
+                                                    }, 0);
+                                                }}
+                                                sx={{ 
+                                                    background: currentBackground.borderColor || '#222', 
+                                                    borderRadius: 2, 
+                                                    minHeight: 36, 
+                                                    minWidth: 36, 
+                                                    maxWidth: 36, 
+                                                    p: 0.5, 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center',
+                                                    border: `2px solid ${currentBackground.borderColor || '#666'}`
+                                                }}
+                                            >
+                                                <PaletteIcon fontSize="small" />
+                                            </Button>
+                                        )}
+
+                                        {/* Highlight Color */}
+                                        {editMode === 'highlightColor' ? (
+                                            <TextField
+                                                label="Highlight Color"
+                                                size="small"
+                                                value={currentBackground.highlightColor || ""}
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, highlightColor: val } };
+                                                    updateStageBackgrounds(updatedBackgrounds);
+                                                }}
+                                                inputRef={highlightColorRef}
+                                                sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, width: 120 }}
+                                                variant="outlined"
+                                            />
+                                        ) : (
+                                            <Button
+                                                variant="outlined"
+                                                color="primary"
+                                                onClick={() => {
+                                                    if (dialogContentRef.current) {
+                                                        lastScrollTop = dialogContentRef.current.scrollTop;
+                                                    }
+                                                    setEditMode('highlightColor');
+                                                    setTimeout(() => {
+                                                        if (highlightColorRef.current) {
+                                                            highlightColorRef.current.focus({ preventScroll: true });
+                                                        }
+                                                        if (dialogContentRef.current) {
+                                                            dialogContentRef.current.scrollTop = lastScrollTop;
+                                                        }
+                                                    }, 0);
+                                                }}
+                                                sx={{ 
+                                                    background: currentBackground.highlightColor || '#222', 
+                                                    borderRadius: 2, 
+                                                    minHeight: 36, 
+                                                    minWidth: 36, 
+                                                    maxWidth: 36, 
+                                                    p: 0.5, 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center',
+                                                    border: `2px solid ${currentBackground.highlightColor || '#666'}`
+                                                }}
+                                            >
+                                                <PaletteIcon fontSize="small" />
+                                            </Button>
+                                        )}
+
+                                        {/* JSON */}
+                                        {editMode === 'json' ? (
+                                            <TextField
+                                                label="JSON for Import/Export"
+                                                fullWidth
+                                                size="small"
+                                                multiline
+                                                rows={4}
+                                                value={JSON.stringify(currentBackground, null, 2)}
+                                                onChange={e => {
+                                                    let val = e.target.value;
+                                                    try {
+                                                        const data = JSON.parse(val);
+                                                        if (typeof data === 'object' && data && 'id' in data && 'name' in data) {
+                                                            const updatedBackgrounds = { ...backgrounds, [selectedBackground]: data as Background };
+                                                            updateStageBackgrounds(updatedBackgrounds);
+                                                        }
+                                                    } catch (err) {
+                                                        // Invalid JSON, don't update
+                                                        console.error("Invalid JSON format", err);
+                                                    }
+                                                }}
+                                                inputRef={jsonRef}
+                                                sx={{ background: '#222', borderRadius: 2, fontFamily: 'monospace', p: 0.5, minHeight: 36, flex: 1, mt: 1 }}
+                                                variant="outlined"
+                                            />
+                                        ) : (
+                                            <Button
+                                                variant="outlined"
+                                                color="primary"
+                                                onClick={() => {
+                                                    if (dialogContentRef.current) {
+                                                        lastScrollTop = dialogContentRef.current.scrollTop;
+                                                    }
+                                                    setEditMode('json');
+                                                    setTimeout(() => {
+                                                        if (jsonRef.current) {
+                                                            jsonRef.current.focus({ preventScroll: true });
+                                                        }
+                                                        if (dialogContentRef.current) {
+                                                            dialogContentRef.current.scrollTop = lastScrollTop;
+                                                        }
+                                                    }, 0);
+                                                }}
+                                                sx={{ background: '#222', borderRadius: 2, minHeight: 36, minWidth: 36, maxWidth: 36, p: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            >
+                                                <CodeIcon fontSize="small" />
+                                            </Button>
+                                        )}
+                                    </Box>
                                 </Box>
                             </Box>
                         )}
+
+                        
 
                         {backgroundIds.length === 0 && (
                             <Box sx={{ textAlign: 'center', mt: 4 }}>

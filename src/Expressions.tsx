@@ -227,10 +227,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 id: defaultBackgroundId,
                 name: 'Default Background',
                 artPrompt: '',
-                backgroundUrl: this.messageState.backgroundUrl,
-                depthUrl: this.messageState.depthUrl,
-                borderColor: this.messageState.borderColor,
-                highlightColor: this.messageState.highlightColor,
+                backgroundUrl: this.messageState.backgroundUrl ?? '',
+                depthUrl: this.messageState.depthUrl ?? '',
+                borderColor: this.messageState.borderColor ?? DEFAULT_BORDER_COLOR,
+                highlightColor: this.messageState.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR,
                 triggerWords: ''
             };
             this.chatState.selectedBackground = defaultBackgroundId;
@@ -738,17 +738,17 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             imageElement.onload = resolve;
                         });
 
-                        // Get colors and sort by "brightness":
+                        // Get colors and sort by "brightness"; map to CSS hex color from rgb
                         const colors = this.colorThief.getPalette(imageElement, 10).sort((a, b) => {
                             const brightnessA = a[0] * 0.299 + a[1] * 0.587 + a[2] * 0.114;
                             const brightnessB = b[0] * 0.299 + b[1] * 0.587 + b[2] * 0.114;
                             return brightnessB - brightnessA;
-                        });
+                        }).map(c => `#${c.map(channel => channel.toString(16).padStart(2, '0')).join('')}`);
 
                         console.log(`Color palette: ${colors}`);
 
-                        this.messageState.highlightColor = `rgb(${colors[0].map(c => Math.round(c * 255)).join(',')})`;
-                        this.messageState.borderColor = `rgb(${colors[Math.floor(colors.length / 2)].map(c => Math.round(c * 255)).join(',')})`;
+                        this.messageState.highlightColor = colors[0];
+                        this.messageState.borderColor = colors[Math.floor(colors.length / 2)];
 
                         this.messageState.depthUrl = '';
                         const depthResponse = await depthPromise;
