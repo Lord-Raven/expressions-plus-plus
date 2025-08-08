@@ -48,7 +48,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
 
     const variants: Variants = {
         absent: {
-            color: highlightColor, 
+            backgroundColor: highlightColor, 
+            mixBlendMode: 'multiply',
             opacity: 0, 
             x: `150vw`, 
             bottom: `${finalY}vh`, 
@@ -62,7 +63,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             }
         },
         talking: {
-            color: highlightColor, 
+            backgroundColor: highlightColor, 
+            mixBlendMode: 'multiply',
             opacity: 1, 
             x: `${finalX}vw`, 
             bottom: `${finalY}vh`, 
@@ -80,7 +82,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             }
         },
         idle: {
-            color: highlightColor, 
+            backgroundColor: highlightColor, 
+            mixBlendMode: 'multiply',
             opacity: 1, 
             x: `${finalX}vw`,
             bottom: `${finalY}vh`, 

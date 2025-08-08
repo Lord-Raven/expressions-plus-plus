@@ -57,19 +57,11 @@ const getDefaultButtonSx = (type: EditFieldType, value?: string): SxProps<Theme>
         justifyContent: 'center'
     };
 
-    if (type === 'borderColor' || type === 'highlightColor') {
-        return {
-            ...baseSx,
-            background: value || '#222',
-            border: `2px solid ${value || '#666'}`
-        };
-    }
-
     return baseSx;
 };
 
 const getFieldWidth = (width: 'full' | 'small' | undefined, type: EditFieldType) => {
-    if (width === 'small' || type === 'borderColor' || type === 'highlightColor') {
+    if (width === 'small') {
         return { width: 120 };
     }
     return { flex: 1 };
