@@ -12,18 +12,25 @@ import { Client } from "@gradio/client";
 import {ReactElement} from "react";
 import Scene from "./Scene.tsx";
 import SpeakerButton from "./SpeakerButton.tsx";
+import BackgroundButton from "./BackgroundButton.tsx";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
 import {FastAverageColor} from "fast-average-color";
 import SpeakerSettings, {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
 import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
 import ColorThief from "colorthief";
+import { Emotion, EMOTION_MAPPING, EMOTION_PROMPTS, EmotionPack } from "./Emotion.tsx";
+import { Background, DEFAULT_BORDER_COLOR, DEFAULT_HIGHLIGHT_COLOR, BACKGROUND_ART_PROMPT } from "./Background.tsx";
+
+
 
 type ChatStateType = {
     generatedWardrobes:{[key: string]: {[key: string]: EmotionPack}};
     selectedOutfit:{[key: string]: string};
     generatedDescriptions:{[key: string]: string};
     speakerVisible:{[key: string]: boolean};
+    backgrounds:{[key: string]: Background};
+    selectedBackground: string;
 }
 
 type OutfitType = {
@@ -64,72 +71,6 @@ type MessageStateType = {
     activeSpeaker: string;
 };
 
-export enum Emotion {
-    neutral = 'neutral',
-    admiration = 'admiration',
-    amusement = 'amusement',
-    anger = 'anger',
-    annoyance = 'annoyance',
-    approval = 'approval',
-    caring = 'caring',
-    confusion = 'confusion',
-    curiosity = 'curiosity',
-    desire = 'desire',
-    disappointment = 'disappointment',
-    disapproval = 'disapproval',
-    disgust = 'disgust',
-    embarrassment = 'embarrassment',
-    excitement = 'excitement',
-    fear = 'fear',
-    gratitude = 'gratitude',
-    grief = 'grief',
-    joy = 'joy',
-    love = 'love',
-    nervousness = 'nervousness',
-    optimism = 'optimism',
-    pride = 'pride',
-    realization = 'realization',
-    relief = 'relief',
-    remorse = 'remorse',
-    sadness = 'sadness',
-    surprise = 'surprise',
-}
-
-export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
-    admiration: Emotion.joy,
-    approval: Emotion.amusement,
-    caring: Emotion.neutral,
-    curiosity: Emotion.neutral,
-    disapproval: Emotion.disappointment,
-    optimism: Emotion.gratitude,
-    realization: Emotion.surprise,
-    relief: Emotion.gratitude,
-    remorse: Emotion.sadness
-}
-
-export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
-    neutral: 'calm expression',
-    amusement: 'subtle smirk, amused expression',
-    anger: 'enraged, angry expression',
-    annoyance: 'annoyed, dismayed expression',
-    confusion: 'stunned, baffled, confused expression',
-    desire: 'sexy, alluring, seductive expression',
-    disappointment: 'unhappy, disappointed expression',
-    disgust: 'disgusted expression',
-    embarrassment: 'embarrassed, blushing, sheepish expression',
-    excitement: 'keen, excited expression',
-    fear: 'terrified expression',
-    gratitude: 'relieved, thankful expression',
-    grief: 'depressed, sobbing expression',
-    joy: 'happy, smiling',
-    love: 'adorable, grinning, blushing, lovestruck expression',
-    nervousness: 'nervous, uneasy expression',
-    pride: 'proud, haughty, puffed up expression',
-    sadness: 'sad, upset expression, teary-eyed',
-    surprise: 'shocked, surprised expression',
-}
-
-
 const darkTheme = createTheme({
     palette: {
         mode: 'dark',
@@ -146,10 +87,7 @@ const darkTheme = createTheme({
 
 const CHARACTER_ART_PROMPT: string = 'plain flat background, standing, full body, head-to-toe';
 const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), scenery, special effects, scene, dynamic angle, action, cut-off';
-const BACKGROUND_ART_PROMPT: string = 'unpopulated, visual novel background scenery, background only, scenery only';
 
-export const DEFAULT_BORDER_COLOR: string = '#1e1e1edd';
-export const DEFAULT_HIGHLIGHT_COLOR: string = '#ffffff';
 export const DEFAULT_OUTFIT_NAME: string = 'Starter Outfit';
 
 // Replace trigger words with less triggering words, so image gen can succeed.
@@ -190,8 +128,6 @@ export function generateGuid(): string {
         return value.toString(16);
     });
 }
-
-type EmotionPack = {[key: string]: string};
 
 export class Expressions extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
 
@@ -255,7 +191,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             generatedWardrobes: chatState?.generatedWardrobes ?? {},
             selectedOutfit: chatState?.selectedOutfit ?? {},
             generatedDescriptions: chatState?.generatedDescriptions ?? {},
-            speakerVisible: chatState?.speakerVisible ?? {}
+            speakerVisible: chatState?.speakerVisible ?? {},
+            backgrounds: chatState?.backgrounds ?? {},
+            selectedBackground: chatState?.selectedBackground ?? ''
         };
 
         this.generateCharacters = (config?.generateCharacters ?? "True") == "True";
@@ -278,6 +216,22 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     }
                 }
             });
+        }
+
+        // Initialize default background if none exists
+        if (Object.keys(this.chatState.backgrounds).length === 0) {
+            const defaultBackgroundId = 'default';
+            this.chatState.backgrounds[defaultBackgroundId] = {
+                id: defaultBackgroundId,
+                name: 'Default Background',
+                artPrompt: '',
+                backgroundUrl: this.messageState.backgroundUrl,
+                depthUrl: this.messageState.depthUrl,
+                borderColor: this.messageState.borderColor,
+                highlightColor: this.messageState.highlightColor,
+                triggerWords: ''
+            };
+            this.chatState.selectedBackground = defaultBackgroundId;
         }
     }
 
@@ -877,6 +831,44 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return this.isSpeakerActive(speaker) || (this.isSpeakerInUi(speaker) && this.isSpeakerVisible(speaker));
     }
 
+    getSelectedBackground(): Background | null {
+        return this.chatState.backgrounds[this.chatState.selectedBackground] || null;
+    }
+
+    async setSelectedBackground(backgroundId: string): Promise<void> {
+        if (this.chatState.backgrounds[backgroundId]) {
+            this.chatState.selectedBackground = backgroundId;
+            const background = this.chatState.backgrounds[backgroundId];
+            
+            // Update messageState to maintain compatibility
+            this.messageState.backgroundUrl = background.backgroundUrl;
+            this.messageState.depthUrl = background.depthUrl;
+            this.messageState.borderColor = background.borderColor;
+            this.messageState.highlightColor = background.highlightColor;
+            
+            await this.updateBackground();
+            await this.updateChatState();
+        }
+    }
+
+    generateBackgroundId(): string {
+        return generateGuid();
+    }
+
+    createNewBackground(name: string = 'New Background'): Background {
+        const backgroundId = this.generateBackgroundId();
+        return {
+            id: backgroundId,
+            name: name,
+            artPrompt: '',
+            backgroundUrl: '',
+            depthUrl: '',
+            borderColor: DEFAULT_BORDER_COLOR,
+            highlightColor: DEFAULT_HIGHLIGHT_COLOR,
+            triggerWords: ''
+        };
+    }
+
     render(): ReactElement {
 
         return(
@@ -921,6 +913,16 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                                 onOpenSettings={(sp) => this.speakerSettingsHandle?.setSpeaker(sp)}
                             />
                         ))}
+                        {/* Background button */}
+                        {this.alphaMode && <BackgroundButton
+                            key="background_options"
+                            stage={this}
+                            borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
+                            onOpenSettings={(bg) => {
+                                // TODO: Implement background settings dialog
+                                console.log('Open background settings for:', bg);
+                            }}
+                        />}
                     </div>
                     <Scene imageUrl={this.messageState.backgroundUrl} depthUrl={this.messageState.depthUrl} stage={this}/>
                 </ThemeProvider>

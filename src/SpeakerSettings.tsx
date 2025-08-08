@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from "react";
-import {DEFAULT_OUTFIT_NAME, Emotion, EMOTION_PROMPTS, substitute} from "./Expressions";
+import {DEFAULT_OUTFIT_NAME, substitute} from "./Expressions";
 import { Speaker } from "@chub-ai/stages-ts";
 import {motion} from "framer-motion";
 import {
@@ -13,6 +13,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import silhouetteUrl from './assets/silhouette.png'
+import { Emotion, EMOTION_PROMPTS } from "./Emotion";
 
 export interface SpeakerSettingsHandle {
     setSpeaker: (speaker: Speaker|null) => void;

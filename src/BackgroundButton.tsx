@@ -1,32 +1,28 @@
 import React, {useState} from "react";
-import {DEFAULT_OUTFIT_NAME} from "./Expressions";
-import { Speaker } from "@chub-ai/stages-ts";
 import {AnimatePresence, motion} from "framer-motion";
 import {Typography, IconButton, ButtonBase, Box} from "@mui/material";
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import SettingsIcon from '@mui/icons-material/Settings';
-import CheckroomIcon from '@mui/icons-material/Checkroom';
-import silhouetteUrl from './assets/silhouette.png'
-import { Emotion } from "./Emotion";
+import LandscapeIcon from '@mui/icons-material/Landscape';
+import AddIcon from '@mui/icons-material/Add';
+import { Background } from "./Background";
 
-
-type SpeakerButtonProps = {
-    speaker: Speaker;
+type BackgroundButtonProps = {
     stage: any;
     borderColor: string;
-    onOpenSettings: (speaker: Speaker) => void;
+    onOpenSettings: (background: Background) => void;
 };
 
-const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColor, onOpenSettings}) => {
-    const [showOutfits, setShowOutfits] = useState(false);
+const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, onOpenSettings}) => {
+    const [showBackgrounds, setShowBackgrounds] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
 
-    const handleToggleVisibility = () => {
-        const id = speaker.anonymizedId;
-        const prev = stage.isSpeakerVisible(speaker);
-        stage.chatState.speakerVisible[id] = !prev;
-        stage.updateChatState();
+    const selectedBackground = stage.getSelectedBackground();
+    const backgrounds: {[key: string]: Background} = stage.chatState.backgrounds;
+
+    const handleCreateNewBackground = () => {
+        const newBackground = stage.createNewBackground();
+        stage.chatState.backgrounds[newBackground.id] = newBackground;
+        stage.setSelectedBackground(newBackground.id);
     };
 
     const containerVariants = {
@@ -39,16 +35,29 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
         expanded: { opacity: 1, x: 0, pointerEvents: "auto" },
     };
 
+    const getBackgroundPreview = (background: Background): string => {
+        if (background.backgroundUrl) {
+            return background.backgroundUrl;
+        }
+        // Return a default background color or pattern
+        return `data:image/svg+xml,${encodeURIComponent(`
+            <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" fill="${background.borderColor || '#333'}"/>
+                <text x="20" y="25" text-anchor="middle" fill="white" font-size="12">BG</text>
+            </svg>
+        `)}`;
+    };
+
     return (
         <motion.div
             variants={containerVariants}
             animate={isExpanded ? "expanded" : "collapsed"}
             onMouseEnter={() => setIsExpanded(true)}
-            onMouseLeave={() => {setIsExpanded(false); setShowOutfits(false);}}
+            onMouseLeave={() => {setIsExpanded(false); setShowBackgrounds(false);}}
             style={{
                 position: "relative",
                 display: "flex",
-                flexDirection: "column",  // stack vertically
+                flexDirection: "column",
                 overflow: "hidden",
                 borderRadius: 23,
                 backgroundColor: "#333",
@@ -74,14 +83,15 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                         width: 40,
                         height: 40,
                         borderRadius: "50%",
-                        backgroundImage: `url(${stage.getSpeakerImage(speaker.anonymizedId, stage.chatState.selectedOutfit[speaker.anonymizedId] ?? DEFAULT_OUTFIT_NAME, Emotion.neutral, silhouetteUrl)})`,
-                        backgroundSize: "200% 356%",
-                        backgroundPosition: "center top",
+                        backgroundImage: selectedBackground ? `url(${getBackgroundPreview(selectedBackground)})` : undefined,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        backgroundColor: selectedBackground ? undefined : "#555",
                         pointerEvents: "none"
                     }}
                     onClick={() => {setIsExpanded(prev => !prev)}}
                 >
-                    {!stage.isSpeakerVisible(speaker) && (<VisibilityOffIcon fontSize="small" sx={{backgroundColor: "#00000033"}}/>)}
+                    {!selectedBackground && <LandscapeIcon fontSize="small" sx={{color: "white"}}/>}
                 </IconButton>
                 <motion.div
                     style={{display: "flex", gap: 4}}
@@ -89,29 +99,27 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                     transition={{duration: 0.3}}
                 >
                     <Typography color="text.primary" sx={{marginTop: "4px", fontWeight: 600, whiteSpace: "nowrap", textTransform: "capitalize" }}>
-                        {speaker.name}
+                        {selectedBackground?.name || 'No Background'}
                     </Typography>
-                    <IconButton size="small" onClick={() => onOpenSettings(speaker)}>
-                        <SettingsIcon fontSize="small"/>
+                    {selectedBackground && (
+                        <IconButton size="small" onClick={() => onOpenSettings(selectedBackground)}>
+                            <SettingsIcon fontSize="small"/>
+                        </IconButton>
+                    )}
+                    <IconButton size="small" onClick={() => setShowBackgrounds(prev => !prev)}>
+                        <LandscapeIcon fontSize="small"/>
                     </IconButton>
-                    <IconButton size="small" onClick={() => setShowOutfits(prev => !prev)}>
-                        <CheckroomIcon fontSize="small"/>
-                    </IconButton>
-                    <IconButton size="small" onClick={handleToggleVisibility}>
-                        {stage.isSpeakerVisible(speaker) ? (
-                            <VisibilityIcon fontSize="small" />
-                        ) : (
-                            <VisibilityOffIcon fontSize="small" />
-                        )}
+                    <IconButton size="small" onClick={handleCreateNewBackground}>
+                        <AddIcon fontSize="small"/>
                     </IconButton>
                 </motion.div>
             </div>
 
-            {/* Outfit List Row (separate line below capsule) */}
+            {/* Background List Row (separate line below capsule) */}
             <AnimatePresence>
-                {showOutfits && (
+                {showBackgrounds && (
                     <motion.div
-                        key="outfits"
+                        key="backgrounds"
                         initial={{opacity: 0, height: 0}}
                         animate={{opacity: 1, height: "auto"}}
                         exit={{opacity: 0, height: 0}}
@@ -119,12 +127,11 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                         style={{overflow: "hidden"}}
                     >
                         <motion.div style={{display: "flex", flexDirection: "column", gap: 6, width: "100%"}}>
-                            {(Object.keys(stage.alphaMode ? stage.wardrobes[speaker.anonymizedId].outfits : stage.chatState.generatedWardrobes[speaker.anonymizedId])).map((outfit) => (
+                            {Object.values(backgrounds).map((background) => (
                                 <ButtonBase
-                                    key={`outfit_option_${outfit}`}
+                                    key={`background_option_${background.id}`}
                                     onClick={() => {
-                                        stage.chatState.selectedOutfit[speaker.anonymizedId] = outfit;
-                                        stage.updateChatState();
+                                        stage.setSelectedBackground(background.id);
                                     }}
                                     sx={{
                                         display: "flex",
@@ -136,6 +143,8 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                                         borderRadius: 8,
                                         transition: "background-color 0.2s ease",
                                         textAlign: "left",
+                                        backgroundColor: background.id === stage.chatState.selectedBackground ? 
+                                            "rgba(255,255,255,0.15)" : "transparent",
                                         "&:hover": {
                                             backgroundColor: "rgba(255,255,255,0.08)",
                                         },
@@ -145,15 +154,16 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                                         sx={{
                                             width: 32,
                                             height: 32,
-                                            borderRadius: "50%",
-                                            backgroundImage: `url(${stage.getSpeakerImage(speaker.anonymizedId, outfit, Emotion.neutral, silhouetteUrl)})`,
-                                            backgroundSize: "200% 356%",
-                                            backgroundPosition: "center top",
+                                            borderRadius: 4,
+                                            backgroundImage: `url(${getBackgroundPreview(background)})`,
+                                            backgroundSize: "cover",
+                                            backgroundPosition: "center",
                                             flexShrink: 0,
+                                            border: "1px solid rgba(255,255,255,0.2)"
                                         }}
                                     />
                                     <Typography color="text.primary" sx={{ fontWeight: 600, textTransform: "capitalize" }}>
-                                        {stage.alphaMode ? stage.wardrobes[speaker.anonymizedId].outfits[outfit].name : outfit}
+                                        {background.name}
                                     </Typography>
                                 </ButtonBase>
                             ))}
@@ -165,4 +175,4 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
     );
 };
 
-export default SpeakerButton;
+export default BackgroundButton;
