@@ -21,6 +21,7 @@ import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
 import ColorThief from "colorthief";
 import { Emotion, EMOTION_MAPPING, EMOTION_PROMPTS, EmotionPack } from "./Emotion.tsx";
 import { Background, DEFAULT_BORDER_COLOR, DEFAULT_HIGHLIGHT_COLOR, BACKGROUND_ART_PROMPT } from "./Background.tsx";
+import BackgroundSettings, { BackgroundSettingsHandle } from "./BackgroundSettings.tsx";
 
 
 
@@ -160,6 +161,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     readonly colorThief = new ColorThief();
     private messageHandle?: MessageQueueHandle;
     private speakerSettingsHandle?: SpeakerSettingsHandle;
+    private backgroundSettingsHandle?: BackgroundSettingsHandle;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
         super(data);
@@ -887,7 +889,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         <NewSpeakerSettings
                             register={(handle) => {this.speakerSettingsHandle = handle;}}
                             stage={this}
-                            borderColor={this.messageState.borderColor}
+                            borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
                             onRegenerate={(char, outfit, emotion) => {
                                 this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${this.wardrobes[char.anonymizedId].outfits[outfit].name}).`);
                             }}
@@ -895,12 +897,17 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         <SpeakerSettings
                             register={(handle) => {this.speakerSettingsHandle = handle;}}
                             stage={this}
-                            borderColor={this.messageState.borderColor}
+                            borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
                             onRegenerate={(char, outfit, emotion) => {
                                 this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${outfit}).`);
                             }}
                         />)
                     }
+                    <BackgroundSettings
+                        register={(handle) => {this.backgroundSettingsHandle = handle;}}
+                        stage={this}
+                        borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
+                    />
                     <MessageQueue register={(handle) => {this.messageHandle = handle;}} borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}/>
                     {/* Regenerate buttons for each character */}
                     <div style={{display: "flex", flexDirection: "column", gap: 10, alignItems: "end"}}>
@@ -918,10 +925,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             key="background_options"
                             stage={this}
                             borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
-                            onOpenSettings={(bg) => {
-                                // TODO: Implement background settings dialog
-                                console.log('Open background settings for:', bg);
-                            }}
+                            onOpenSettings={(bg) => this.backgroundSettingsHandle?.setOpen(true)}
                         />}
                     </div>
                     <Scene imageUrl={this.messageState.backgroundUrl} depthUrl={this.messageState.depthUrl} stage={this}/>
