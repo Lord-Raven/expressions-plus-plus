@@ -120,7 +120,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
           const int MAX_STEPS = 16;
           const float DEPTH_SCALE = 0.1;
           const float BLUR_STRENGTH = 1.2;
-          const float FOCUS_DEPTH = 0.8; // Objects at this depth will be in focus
+          const float FOCUS_DEPTH = 0.75; // Objects at this depth will be in focus
 
           // Simple box blur function
           vec4 blur(sampler2D tex, vec2 uv, float blurRadius) {
@@ -199,7 +199,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
   useFrame(() => {
     if (shaderMaterial && meshRef.current) {
       // Increase the parallax sensitivity for better depth perception
-      shaderMaterial.uniforms.uParallax.value.set(panX, panY);
+      shaderMaterial.uniforms.uParallax.value.set(-panX, panY);
       
       // Apply panning offset to mesh position (reduced for more subtle movement)
       meshRef.current.position.set(
