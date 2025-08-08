@@ -17,7 +17,6 @@ const FRAME_END_LEFT = "6vw";
 const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [isMouseOver, setIsMouseOver] = useState(false);
-    const [currentPan, setCurrentPan] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
         const handleMouseMove = (event: MouseEvent) => {
@@ -42,45 +41,30 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
         };
     }, []);
 
-    // Calculate target pan values
-    const { targetPanX, targetPanY } = useMemo(() => {
-        //const canvasAspect = window.innerWidth / window.innerHeight;
-        //const imageAspect = 9 / 16; // Assuming standard aspect ratio, adjust if needed
-        
-        // Determine if we can pan in each axis
-        const canPanX = true; //imageAspect > canvasAspect;
-        const canPanY = true; // imageAspect <= canvasAspect;
+    // Gradually recenter mouse coordinates when mouse is not over the component
+    useEffect(() => {
+        if (!isMouseOver) {
+            const interval = setInterval(() => {
+                setMousePosition(prev => ({
+                    x: prev.x * 0.95, // Gradually move towards 0
+                    y: prev.y * 0.95
+                }));
+            }, 16); // ~60fps
+
+            return () => clearInterval(interval);
+        }
+    }, [isMouseOver]);
+
+    // Calculate pan values
+    const { panX, panY } = useMemo(() => {
         
         // Calculate panning offset
         const panStrength = 0.1;
-        const targetPanX = (stage.alphaMode && imageUrl && canPanX) ? -mousePosition.x * panStrength : 0;
-        const targetPanY = (stage.alphaMode && imageUrl && canPanY) ? mousePosition.y * panStrength : 0;
+        const panX = (stage.alphaMode && imageUrl) ? -mousePosition.x * panStrength : 0;
+        const panY = (stage.alphaMode && imageUrl) ? mousePosition.y * panStrength : 0;
 
-        return { targetPanX, targetPanY };
-    }, [mousePosition, stage.alphaMode, imageUrl]);
-
-    // Gradually interpolate pan values
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentPan(prev => {
-                if (isMouseOver) {
-                    // Gradually move towards target position when mouse is over
-                    return {
-                        x: prev.x + (targetPanX - prev.x) * 0.05, // Ease towards target
-                        y: prev.y + (targetPanY - prev.y) * 0.05
-                    };
-                } else {
-                    // Gradually move towards center when mouse is not over
-                    return {
-                        x: prev.x * 0.95,
-                        y: prev.y * 0.95
-                    };
-                }
-            });
-        }, 16); // ~60fps
-
-        return () => clearInterval(interval);
-    }, [isMouseOver, targetPanX, targetPanY]);
+        return { panX, panY };
+    }, [mousePosition]);
 
     const borderColor = stage.messageState.borderColor ?? DEFAULT_BORDER_COLOR;
 
@@ -172,8 +156,8 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                         <DepthPlane
                                             imageUrl={imageUrl}
                                             depthUrl={depthUrl}
-                                            panX={currentPan.x}
-                                            panY={currentPan.y}
+                                            panX={panX}
+                                            panY={panY}
                                         />
                                     </Canvas>
                                 ) : (
@@ -221,8 +205,8 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                 imageUrl={stage.getSpeakerImage(character.anonymizedId, stage.chatState.selectedOutfit[character.anonymizedId], stage.getSpeakerEmotion(character.anonymizedId), '')}
                                 isTalking={stage.messageState.activeSpeaker == character.anonymizedId}
                                 alphaMode={stage.alphaMode}
-                                panX={currentPan.x}
-                                panY={currentPan.y}
+                                panX={panX}
+                                panY={panY}
                             />
                         } else {
                             return <></>
