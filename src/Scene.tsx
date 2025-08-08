@@ -15,7 +15,8 @@ const FRAME_START_LEFT = "100vw";
 const FRAME_END_LEFT = "6vw";
 
 const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [targetPosition, setTargetPosition] = useState({ x: 0, y: 0 });
+    const [currentPosition, setCurrentPosition] = useState({ x: 0, y: 0 });
     const [isMouseOver, setIsMouseOver] = useState(false);
 
     useEffect(() => {
@@ -30,7 +31,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                 // Otherwise, image width is constrained, so multiply x by this ratio
                 x *= (window.innerHeight / window.innerWidth) / (9 / 16);
             }
-            setMousePosition({ x, y });
+            setTargetPosition({ x, y });
         };
 
         // Add event listeners to the entire document for mouse movement
@@ -41,30 +42,59 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
         };
     }, []);
 
-    // Gradually recenter mouse coordinates when mouse is not over the component
+    // Smoothly interpolate current position toward target position
     useEffect(() => {
-        if (!isMouseOver) {
-            const interval = setInterval(() => {
-                setMousePosition(prev => ({
-                    x: prev.x * 0.95, // Gradually move towards 0
-                    y: prev.y * 0.95
-                }));
-            }, 16); // ~60fps
+        const interval = setInterval(() => {
+            setCurrentPosition(prev => {
+                const deltaX = targetPosition.x - prev.x;
+                const deltaY = targetPosition.y - prev.y;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                // If mouse is not over the component, gradually move toward center (0, 0)
+                if (!isMouseOver) {
+                    return {
+                        x: prev.x * 0.95,
+                        y: prev.y * 0.95
+                    };
+                }
+                
+                // Calculate interpolation speed based on distance
+                // Close distance: high responsiveness (lerp factor closer to 1)
+                // Far distance: slower movement (lerp factor closer to 0)
+                const minLerp = 0.02; // Minimum interpolation speed for far distances
+                const maxLerp = 0.3;  // Maximum interpolation speed for close distances
+                const transitionDistance = 0.3; // Distance at which we transition from slow to fast
+                
+                let lerpFactor;
+                if (distance > transitionDistance) {
+                    // Far away: use slow interpolation
+                    lerpFactor = minLerp;
+                } else {
+                    // Close: interpolate between min and max based on distance
+                    const normalizedDistance = distance / transitionDistance;
+                    lerpFactor = minLerp + (maxLerp - minLerp) * (1 - normalizedDistance);
+                }
+                
+                return {
+                    x: prev.x + deltaX * lerpFactor,
+                    y: prev.y + deltaY * lerpFactor
+                };
+            });
+        }, 16); // ~60fps
 
-            return () => clearInterval(interval);
-        }
-    }, [isMouseOver]);
+        return () => clearInterval(interval);
+    }, [targetPosition, isMouseOver]);
 
     // Calculate pan values
     const { panX, panY } = useMemo(() => {
         
         // Calculate panning offset
         const panStrength = 0.1;
-        const panX = (stage.alphaMode && imageUrl) ? -mousePosition.x * panStrength : 0;
-        const panY = (stage.alphaMode && imageUrl) ? mousePosition.y * panStrength : 0;
+        const panX = (stage.alphaMode && imageUrl) ? -currentPosition.x * panStrength : 0;
+        const panY = (stage.alphaMode && imageUrl) ? currentPosition.y * panStrength : 0;
 
         return { panX, panY };
-    }, [mousePosition]);
+    }, [currentPosition]);
 
     const borderColor = stage.messageState.borderColor ?? DEFAULT_BORDER_COLOR;
 
