@@ -282,7 +282,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         try {
             this.emotionPipeline = await Client.connect("ravenok/emotions");
             this.zeroShotPipeline = await Client.connect("ravenok/statosphere-backend");
-            this.depthPipeline = await Client.connect("depth-anything/Depth-Anything-V2");
+            this.depthPipeline = await Client.connect("ravenok/Depth-Anything-V2");
         } catch (except: any) {
             console.error(`Error loading pipelines, error: ${except}`);
             return { success: false, error: except }

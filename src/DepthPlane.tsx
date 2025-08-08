@@ -118,9 +118,9 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
           uniform vec2 uParallax;
 
           const int MAX_STEPS = 16;
-          const float DEPTH_SCALE = 0.08;
-          const float BLUR_STRENGTH = 2.0;
-          const float FOCUS_DEPTH = 0.95; // Objects at this depth will be in focus
+          const float DEPTH_SCALE = 0.1;
+          const float BLUR_STRENGTH = 1.5;
+          const float FOCUS_DEPTH = 0.8; // Objects at this depth will be in focus
 
           // Simple box blur function
           vec4 blur(sampler2D tex, vec2 uv, float blurRadius) {

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { FC, useState, useEffect, useMemo } from "react";
+import { FC, useState, useEffect, useMemo, useRef } from "react";
 import { DEFAULT_BORDER_COLOR, Expressions } from "./Expressions";
 import SpeakerImage from "./SpeakerImage";
 import DepthPlane from "./DepthPlane";
@@ -18,6 +18,18 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
     const [targetPosition, setTargetPosition] = useState({ x: 0, y: 0 });
     const [currentPosition, setCurrentPosition] = useState({ x: 0, y: 0 });
     const [isMouseOver, setIsMouseOver] = useState(false);
+    const animationFrameRef = useRef<number>();
+    const targetPositionRef = useRef({ x: 0, y: 0 });
+    const isMouseOverRef = useRef(false);
+
+    // Update refs when state changes
+    useEffect(() => {
+        targetPositionRef.current = targetPosition;
+    }, [targetPosition]);
+
+    useEffect(() => {
+        isMouseOverRef.current = isMouseOver;
+    }, [isMouseOver]);
 
     useEffect(() => {
         const handleMouseMove = (event: MouseEvent) => {
@@ -44,14 +56,15 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
 
     // Smoothly interpolate current position toward target position
     useEffect(() => {
-        const interval = setInterval(() => {
+        const animate = () => {
             setCurrentPosition(prev => {
-                const deltaX = targetPosition.x - prev.x;
-                const deltaY = targetPosition.y - prev.y;
+                const target = targetPositionRef.current;
+                const deltaX = target.x - prev.x;
+                const deltaY = target.y - prev.y;
                 const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
                 
                 // If mouse is not over the component, gradually move toward center (0, 0)
-                if (!isMouseOver) {
+                if (!isMouseOverRef.current) {
                     return {
                         x: prev.x * 0.95,
                         y: prev.y * 0.95
@@ -80,10 +93,18 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                     y: prev.y + deltaY * lerpFactor
                 };
             });
-        }, 16); // ~60fps
+            
+            animationFrameRef.current = requestAnimationFrame(animate);
+        };
 
-        return () => clearInterval(interval);
-    }, [targetPosition, isMouseOver]);
+        animationFrameRef.current = requestAnimationFrame(animate);
+
+        return () => {
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, []); // Empty dependency array - this effect runs once and manages its own lifecycle
 
     // Calculate pan values
     const { panX, panY } = useMemo(() => {
