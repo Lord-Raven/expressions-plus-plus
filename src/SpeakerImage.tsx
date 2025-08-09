@@ -43,7 +43,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
 
     // Process image with color multiplication when in alpha mode
     useEffect(() => {
-        console.log(`setProcessedImageUrl: ${imageUrl}, ${alphaMode}`);
         if (!imageUrl || !alphaMode) {
             setProcessedImageUrl(imageUrl);
             return;
@@ -54,7 +53,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         img.onload = () => {
             const result = multiplyImageByColor(img, highlightColor);
             if (result) {
-                console.log(`Processed image URL: ${result}`);
                 setProcessedImageUrl(result);
             }
         };
@@ -174,14 +172,12 @@ const multiplyImageByColor = (img: HTMLImageElement, hex: string): string | null
 
     // Apply color multiplication
     ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = hex;
+    ctx.fillStyle = hex.toUpperCase();
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Preserve original alpha channel
     ctx.globalCompositeOperation = 'destination-in';
     ctx.drawImage(img, 0, 0);
-
-    console.log(`Multiply color: ${hex}`);
 
     return canvas.toDataURL();
 };

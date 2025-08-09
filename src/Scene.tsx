@@ -236,8 +236,8 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                     </>
                 )}
             </AnimatePresence>
-            <AnimatePresence>
-                <div style={{position: "absolute", top: 0, height: "100vh", width: "100vw", zIndex: 2}}>
+            <div style={{position: "absolute", top: 0, height: "100vh", width: "100vw", zIndex: 2}}>
+                <AnimatePresence>
                     {Object.values(stage.speakers).map(character => {
                         if (stage.isSpeakerDisplayed(character)) {
                             speakerIndex++;
@@ -268,8 +268,8 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                             return <></>
                         }
                     })}
-                </div>
-            </AnimatePresence>
+                </AnimatePresence>
+            </div>
         </div>
     );
 };
