@@ -53,6 +53,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         img.onload = () => {
             const result = multiplyImageByColor(img, highlightColor);
             if (result) {
+                console.log(`Processed image URL: ${result}`);
                 setProcessedImageUrl(result);
             }
         };
@@ -67,7 +68,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
 
     const variants: Variants = {
         absent: {
-            color: highlightColor, 
             opacity: 0, 
             x: `150vw`, 
             bottom: `${finalY}vh`, 
@@ -81,7 +81,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             }
         },
         talking: {
-            color: highlightColor, 
             opacity: 1, 
             x: `${finalX}vw`, 
             bottom: `${finalY}vh`, 
@@ -99,7 +98,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             }
         },
         idle: {
-            color: highlightColor, 
             opacity: 1, 
             x: `${finalX}vw`,
             bottom: `${finalY}vh`, 
@@ -181,6 +179,8 @@ const multiplyImageByColor = (img: HTMLImageElement, hex: string): string | null
     // Preserve original alpha channel
     ctx.globalCompositeOperation = 'destination-in';
     ctx.drawImage(img, 0, 0);
+
+    console.log(`Multiply color: ${hex}`);
 
     return canvas.toDataURL();
 };

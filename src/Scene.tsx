@@ -118,8 +118,8 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
         return { panX, panY };
     }, [currentPosition]);
 
-    const borderColor = stage.messageState.borderColor ?? DEFAULT_BORDER_COLOR;
-    const highlightColor = stage.messageState.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR;
+    const borderColor = stage.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR;
+    const highlightColor = stage.getSelectedBackground().highlightColor ?? DEFAULT_HIGHLIGHT_COLOR;
 
     const speakerCount = Object.values(stage.speakers).filter(speaker => stage.isSpeakerDisplayed(speaker)).length;
     let speakerIndex = 0;
