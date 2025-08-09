@@ -732,6 +732,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (imageUrl == '') {
             console.warn(`Failed to generate a background image.`);
         } else {
+            background.backgroundUrl = imageUrl;
             if (this.alphaMode && this.useBackgroundDepth) {
                 try {
                     // This endpoint takes actual image data and not a URL; need to load data from imageUrl
