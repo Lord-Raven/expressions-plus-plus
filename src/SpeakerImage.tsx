@@ -108,17 +108,15 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                     exit='absent'
                     animate={currentState}
                     style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
-                <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', filter: 'blur(2.5px)', transform: 'translate(-50%, 0)', zIndex: 4}} alt={`${speaker.name} (${emotion})`}/>
-                <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', opacity: 0.75, transform: 'translate(-50%, 0)', zIndex: 5}} alt={`${speaker.name} (${emotion})`}/>
+                <div style={{backgroundImage: `url(${imageUrl})`, position: 'absolute', top: 0, width: '100%', height: '100%', filter: 'blur(2.5px)', transform: 'translate(-50%, 0)', zIndex: 4}}/>
+                <div style={{backgroundImage: `url(${imageUrl})`, position: 'absolute', top: 0, width: '100%', height: '100%', opacity: 0.75, transform: 'translate(-50%, 0)', zIndex: 5}}/>
                 <div style={{
                     position: 'absolute',
                     top: 0,
-                    left: 0,
                     width: '100%',
                     height: '100%',
                     backgroundColor: highlightColor,
                     mixBlendMode: 'multiply',
-                    filter: 'blur(2.5px)',
                     transform: 'translate(-50%, 0)',
                     zIndex: 6
                 }} />
