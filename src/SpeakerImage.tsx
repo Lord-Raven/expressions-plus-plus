@@ -100,6 +100,50 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     };
 
     return imageUrl ? (
+        alphaMode ? (
+            <motion.div
+                key={`speaker_motion_div_${speaker.anonymizedId}`}
+                variants={variants}
+                initial="absent"
+                exit="absent"
+                animate={currentState}
+                style={{
+                    position: 'absolute',
+                    width: 'auto',
+                    aspectRatio: '9 / 16',
+                    overflow: 'hidden', // Important to clip the image within bounds
+                    backgroundColor: highlightColor, // Tint base
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
+            <img
+                src={imageUrl}
+                alt={`${speaker.name} (${emotion})`}
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    mixBlendMode: 'multiply',
+                    filter: 'blur(2.5px)',
+                    zIndex: 4,
+                }}
+            />
+            <img
+                src={imageUrl}
+                alt={`${speaker.name} (${emotion})`}
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    mixBlendMode: 'multiply',
+                    opacity: 0.75,
+                    zIndex: 5,
+                }}
+            />
+            </motion.div>
+         ) : (
         <motion.div
             key={`speaker_motion_div_${speaker.anonymizedId}`}
             variants={variants}
@@ -110,7 +154,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', filter: 'blur(2.5px)', transform: 'translate(-50%, 0)', zIndex: 4}} alt={`${speaker.name} (${emotion})`}/>
             <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', opacity: 0.75, transform: 'translate(-50%, 0)', zIndex: 5}} alt={`${speaker.name} (${emotion})`}/>
 
-        </motion.div>) : <></>
+        </motion.div>)) : <></>
 };
 
 export default SpeakerImage;
