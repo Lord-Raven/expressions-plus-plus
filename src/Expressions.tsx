@@ -233,7 +233,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 triggerWords: ''
             };
             this.chatState.selectedBackground = defaultBackgroundId;
-            this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], this.chatState.backgrounds[defaultBackgroundId], this.chatState.backgrounds[defaultBackgroundId].name), `Generating background for ${this.chatState.backgrounds[defaultBackgroundId].name}.`);
+            this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], this.chatState.backgrounds[defaultBackgroundId], ''), `Generating background for ${this.chatState.backgrounds[defaultBackgroundId].name}.`);
         }
     }
 
@@ -702,7 +702,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 prompt:
                     ((character && 'personality' in character) ? `Information about ${character.name}, for Flavor:\n${character.personality}` : '') +
                     `Chat History:\n{{messages}}\n\n` +
-                    `Current Instruction:\nThe goal of this task is to digest the flavor text and chat history to construct a comprehensive and concise visual description of the current scenery. ` +
+                    `Current Instruction:\nThe goal of this task is to digest the flavor text and chat history to construct a comprehensive and concise visual description of ` +
+                        (content ? `this background scenery: ${content}.` : `the current scenery. `) +
                     `This system response will be fed directly into an image generator, which is unfamiliar with the setting; ` +
                     `use tags and keywords to convey all essential details about the location, ambiance, weather, or time of day (as applicable), ` +
                     `presenting ample appearance notes. Fixate on the visual details of the surroundings, ignoring action or characters.\n\n` +
