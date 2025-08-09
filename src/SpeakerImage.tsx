@@ -1,6 +1,6 @@
 import {motion, Variants} from "framer-motion";
 import { Speaker } from "@chub-ai/stages-ts";
-import { FC, useState, useEffect, useMemo } from "react";
+import { FC, useState, useEffect } from "react";
 import { Emotion } from "./Emotion";
 
 const IDLE_HEIGHT: number = 70;
