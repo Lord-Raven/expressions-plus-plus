@@ -314,6 +314,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async updateBackground() {
+        await this.updateChatState();
         await this.messenger.updateEnvironment({background: this.getSelectedBackground().backgroundUrl});
     }
 
