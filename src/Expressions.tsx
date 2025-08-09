@@ -855,13 +855,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             await this.updateChatState();
         }
     }
-
-    generateBackgroundId(): string {
-        return generateGuid();
-    }
-
+    
     createNewBackground(name: string = 'New Background'): Background {
-        const backgroundId = this.generateBackgroundId();
+        const backgroundId = generateGuid();
         return {
             id: backgroundId,
             name: name,

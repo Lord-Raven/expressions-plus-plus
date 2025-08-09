@@ -22,7 +22,7 @@ const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, 
     const handleCreateNewBackground = () => {
         const newBackground = stage.createNewBackground();
         stage.chatState.backgrounds[newBackground.id] = newBackground;
-        stage.setSelectedBackground(newBackground.id);
+        stage.wrapPromise(stage.generateBackgroundImage(newBackground, Object.values(stage.speakers)[0], ''), `Generating background for ${newBackground.name}.`).then(() => {stage.setSelectedBackground(newBackground.id)});
     };
 
     const containerVariants = {

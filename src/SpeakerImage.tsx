@@ -43,6 +43,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
 
     // Process image with color multiplication when in alpha mode
     useEffect(() => {
+        console.log(`setProcessedImageUrl: ${imageUrl}, ${alphaMode}`);
         if (!imageUrl || !alphaMode) {
             setProcessedImageUrl(imageUrl);
             return;
