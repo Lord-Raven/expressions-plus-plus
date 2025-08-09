@@ -314,7 +314,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async updateBackground() {
-        await this.messenger.updateEnvironment({background: this.messageState.backgroundUrl});
+        await this.messenger.updateEnvironment({background: this.getSelectedBackground().backgroundUrl});
     }
 
     async setState(state: MessageStateType): Promise<void> {
@@ -756,25 +756,17 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
                     console.log(`Color palette: ${colors}`);
 
-                    this.messageState.highlightColor = colors[0];
-                    this.messageState.borderColor = colors[Math.floor(colors.length / 2)];
-
-                    this.messageState.depthUrl = '';
+                    background.highlightColor = colors[0];
+                    background.borderColor = colors[Math.floor(colors.length / 2)];
+                    background.depthUrl = '';
                     const depthResponse = await depthPromise;
                     console.log(depthResponse);
-                    this.messageState.depthUrl = depthResponse.data[1].url;
+                    background.depthUrl = depthResponse.data[1].url;
                 } catch (err) {
                     console.warn(`Failed to generate palette or depth map for background image: ${err}`);
                 }
-            } else {
-                try {
-                    this.messageState.borderColor = (await this.fac.getColorAsync(imageUrl)).rgba ?? DEFAULT_BORDER_COLOR;
-                } catch(err) {
-                    this.messageState.borderColor = DEFAULT_BORDER_COLOR;
-                }
             }
         }
-        this.messageState.backgroundUrl = imageUrl;
 
         await this.updateBackground();
     }
@@ -840,20 +832,22 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return this.isSpeakerActive(speaker) || (this.isSpeakerInUi(speaker) && this.isSpeakerVisible(speaker));
     }
 
-    getSelectedBackground(): Background | null {
-        return this.chatState.backgrounds[this.chatState.selectedBackground] || null;
+    getSelectedBackground(): Background {
+        return this.chatState.backgrounds[this.chatState.selectedBackground] || {
+            id: '',
+            name: 'Default Background',
+            artPrompt: '',
+            backgroundUrl: '',
+            depthUrl: '',
+            borderColor: DEFAULT_BORDER_COLOR,
+            highlightColor: DEFAULT_HIGHLIGHT_COLOR,
+            triggerWords: ''
+        };
     }
 
     async setSelectedBackground(backgroundId: string): Promise<void> {
         if (this.chatState.backgrounds[backgroundId]) {
             this.chatState.selectedBackground = backgroundId;
-            const background = this.chatState.backgrounds[backgroundId];
-            
-            // Update messageState to maintain compatibility
-            this.messageState.backgroundUrl = background.backgroundUrl;
-            this.messageState.depthUrl = background.depthUrl;
-            this.messageState.borderColor = background.borderColor;
-            this.messageState.highlightColor = background.highlightColor;
             
             await this.updateBackground();
             await this.updateChatState();
@@ -896,7 +890,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         <NewSpeakerSettings
                             register={(handle) => {this.speakerSettingsHandle = handle;}}
                             stage={this}
-                            borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
+                            borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}
                             onRegenerate={(char, outfit, emotion) => {
                                 this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${this.wardrobes[char.anonymizedId].outfits[outfit].name}).`);
                             }}
@@ -904,7 +898,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         <SpeakerSettings
                             register={(handle) => {this.speakerSettingsHandle = handle;}}
                             stage={this}
-                            borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
+                            borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}
                             onRegenerate={(char, outfit, emotion) => {
                                 this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${outfit}).`);
                             }}
@@ -913,12 +907,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     <BackgroundSettings
                         register={(handle) => {this.backgroundSettingsHandle = handle;}}
                         stage={this}
-                        borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
+                        borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}
                         onRegenerate={(background) => {
                             this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], background, background.name), `Generating background for ${background.name}.`);
                         }}
                     />
-                    <MessageQueue register={(handle) => {this.messageHandle = handle;}} borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}/>
+                    <MessageQueue register={(handle) => {this.messageHandle = handle;}} borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}/>
                     {/* Regenerate buttons for each character */}
                     <div style={{display: "flex", flexDirection: "column", gap: 10, alignItems: "end"}}>
                         {Object.values(this.speakers).filter(c => this.isSpeakerInUi(c)).map((speaker, i) => (
@@ -926,19 +920,19 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                                 key={`character_options_${speaker.anonymizedId}`}
                                 speaker={speaker}
                                 stage={this}
-                                borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
+                                borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}
                                 onOpenSettings={(sp) => this.speakerSettingsHandle?.setSpeaker(sp)}
                             />
                         ))}
                         {/* Background button */}
-                        {this.alphaMode && <BackgroundButton
+                        <BackgroundButton
                             key="background_options"
                             stage={this}
-                            borderColor={this.messageState.borderColor ?? DEFAULT_BORDER_COLOR}
+                            borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}
                             onOpenSettings={(bg) => this.backgroundSettingsHandle?.setOpen(true)}
-                        />}
+                        />
                     </div>
-                    <Scene imageUrl={this.messageState.backgroundUrl} depthUrl={this.messageState.depthUrl} stage={this}/>
+                    <Scene imageUrl={this.getSelectedBackground().backgroundUrl} depthUrl={this.getSelectedBackground().depthUrl} stage={this}/>
                 </ThemeProvider>
             </div>
 
