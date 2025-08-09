@@ -1,6 +1,6 @@
 import {motion, Variants} from "framer-motion";
 import { Speaker } from "@chub-ai/stages-ts";
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, useMemo } from "react";
 import { Emotion } from "./Emotion";
 
 const IDLE_HEIGHT: number = 70;
@@ -34,11 +34,30 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     panY
 }) => {
     const [previousState, setPreviousState] = useState<string>('absent');
+    const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
     const currentState = isTalking ? 'talking' : 'idle';
     
     useEffect(() => {
         setPreviousState(currentState);
     }, [currentState]);
+
+    // Process image with color multiplication when in alpha mode
+    useEffect(() => {
+        if (!imageUrl || !alphaMode) {
+            setProcessedImageUrl(imageUrl);
+            return;
+        }
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            const result = multiplyImageByColor(img, highlightColor);
+            if (result) {
+                setProcessedImageUrl(result);
+            }
+        };
+        img.src = imageUrl;
+    }, [imageUrl, highlightColor, alphaMode]);
 
     // Calculate final parallax position
     const tempY =  (isTalking ? 2 : (4 + yPosition));
@@ -99,41 +118,71 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         }
     };
 
-    return imageUrl ? (
-        alphaMode ? (
-            <motion.div
-                    key={`speaker_motion_div_${speaker.anonymizedId}`}
-                    variants={variants}
-                    initial='absent'
-                    exit='absent'
-                    animate={currentState}
-                    style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
-                <div style={{backgroundImage: `url(${imageUrl})`, position: 'absolute', top: 0, width: '100%', height: '100%', filter: 'blur(2.5px)', transform: 'translate(-50%, 0)', zIndex: 4}}/>
-                <div style={{backgroundImage: `url(${imageUrl})`, position: 'absolute', top: 0, width: '100%', height: '100%', opacity: 0.75, transform: 'translate(-50%, 0)', zIndex: 5}}/>
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: highlightColor,
-                    mixBlendMode: 'multiply',
-                    transform: 'translate(-50%, 0)',
-                    zIndex: 6
-                }} />
+    const imageToUse = alphaMode ? processedImageUrl : imageUrl;
 
-            </motion.div>
-         ) : (
-            <motion.div
-                    key={`speaker_motion_div_${speaker.anonymizedId}`}
-                    variants={variants}
-                    initial='absent'
-                    exit='absent'
-                    animate={currentState}
-                    style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
-                <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', filter: 'blur(2.5px)', transform: 'translate(-50%, 0)', zIndex: 4}} alt={`${speaker.name} (${emotion})`}/>
-                <img src={imageUrl} style={{position: 'absolute', top: 0, width: '100%', height: '100%', opacity: 0.75, transform: 'translate(-50%, 0)', zIndex: 5}} alt={`${speaker.name} (${emotion})`}/>
+    return imageToUse ? (
+        <motion.div
+            key={`speaker_motion_div_${speaker.anonymizedId}`}
+            variants={variants}
+            initial='absent'
+            exit='absent'
+            animate={currentState}
+            style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
+            
+            {/* Blurred background layer */}
+            <img 
+                src={imageToUse} 
+                style={{
+                    position: 'absolute', 
+                    top: 0, 
+                    width: '100%', 
+                    height: '100%', 
+                    filter: 'blur(2.5px)', 
+                    transform: 'translate(-50%, 0)', 
+                    zIndex: 4
+                }} 
+                alt={`${speaker.name} (${emotion}) background`}
+            />
+            
+            {/* Main image layer */}
+            <img 
+                src={imageToUse} 
+                style={{
+                    position: 'absolute', 
+                    top: 0, 
+                    width: '100%', 
+                    height: '100%', 
+                    opacity: 0.75, 
+                    transform: 'translate(-50%, 0)', 
+                    zIndex: 5
+                }} 
+                alt={`${speaker.name} (${emotion})`}
+            />
+        </motion.div>
+    ) : <></>;
+};
 
-            </motion.div>)) : <></>
+const multiplyImageByColor = (img: HTMLImageElement, hex: string): string | null => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+    
+    // Draw original image
+    ctx.drawImage(img, 0, 0);
+
+    // Apply color multiplication
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = hex;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Preserve original alpha channel
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(img, 0, 0);
+
+    return canvas.toDataURL();
 };
 
 export default SpeakerImage;
