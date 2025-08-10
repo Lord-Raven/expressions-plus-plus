@@ -33,18 +33,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     panX,
     panY
 }) => {
-    const [previousState, setPreviousState] = useState<string>('');
+    const [previousState, setPreviousState] = useState<string>('absent');
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
     const currentState = isTalking ? 'talking' : 'idle';
-    
-    useEffect(() => {
-        // Only set previous state if this is a change for currentState
-        if (previousState) {
-            setPreviousState(currentState);
-        } else {
-            setPreviousState('absent');
-        }
-    }, [currentState]);
 
     // Process image with color multiplication when in alpha mode
     useEffect(() => {
@@ -65,10 +56,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     }, [imageUrl, highlightColor, alphaMode]);
 
     // Calculate final parallax position
-    const tempY =  (isTalking ? 2 : (4 + yPosition));
-    const depth = (48 - tempY) / 50;
-    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (panX * depth * 1.2) : 0)) * 100;
-    const finalY = tempY + ((alphaMode ? (-panY * depth * 1.2) : 0)) * 100;
+    const tempY =  (isTalking ? 0 : (2 + yPosition));
+    const depth = (50 - tempY) / 50;
+    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (panX * depth * 1.5) : 0)) * 100;
+    const finalY = tempY + ((alphaMode ? (-panY * depth * 1.5) : 0)) * 100;
 
     const variants: Variants = {
         absent: {
@@ -129,6 +120,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             initial='absent'
             exit='absent'
             animate={currentState}
+            onAnimationComplete={() => setPreviousState(currentState)}
             style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
             
             {/* Blurred background layer */}
