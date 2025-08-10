@@ -33,12 +33,17 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     panX,
     panY
 }) => {
-    const [previousState, setPreviousState] = useState<string>('absent');
+    const [previousState, setPreviousState] = useState<string>('');
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
     const currentState = isTalking ? 'talking' : 'idle';
     
     useEffect(() => {
-        setPreviousState(currentState);
+        // Only set previous state if this is a change for currentState
+        if (previousState) {
+            setPreviousState(currentState);
+        } else {
+            setPreviousState('absent');
+        }
     }, [currentState]);
 
     // Process image with color multiplication when in alpha mode
