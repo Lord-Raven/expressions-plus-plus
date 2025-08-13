@@ -19,7 +19,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
     const [targetPosition, setTargetPosition] = useState({ x: 0, y: 0 });
     const [currentPosition, setCurrentPosition] = useState({ x: 0, y: 0 });
     const [isMouseOver, setIsMouseOver] = useState(false);
-    const animationFrameRef = useRef<number>();
+    const animationFrameRef = useRef<number>(0);
     const targetPositionRef = useRef({ x: 0, y: 0 });
     const isMouseOverRef = useRef(false);
 
