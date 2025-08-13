@@ -249,20 +249,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
         await this.updateBackground();
 
-        // Test whether userId has storage access to update canonical character data and update owns accordingly
-        for (const speakerId of Object.keys(this.speakers)) {
-            if (this.isSpeakerIdCharacterId(speakerId)) {
-                const response: any = await this.storage.set('dummy', "dummy data").forCharacterSensitive(speakerId);
-                console.log(response);
-                if (response.errors) {
-                    console.error(`Failed sensitive storage access for ${speakerId}: ${response.errors}`);
-                } else {
-                    console.log(`Successfully accessed sensitive storage for ${speakerId}`);
-                    this.owns.push(speakerId);
-                }
-            }
-        }
-
         try {
             this.emotionPipeline = await Client.connect("ravenok/emotions");
             this.zeroShotPipeline = await Client.connect("ravenok/statosphere-backend");
@@ -274,6 +260,22 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         if (this.alphaMode) {
             console.warn('Alpha mode enabled. This is experimental and may break things.');
+
+            
+            // Test whether userId has storage access to update canonical character data and update owns accordingly
+            for (const speakerId of Object.keys(this.speakers)) {
+                if (this.isSpeakerIdCharacterId(speakerId)) {
+                    const response: any = await this.storage.set('dummy', "dummy data").forCharacterSensitive(speakerId);
+                    console.log(response);
+                    if (response.errors) {
+                        console.error(`Failed sensitive storage access for ${speakerId}: ${response.errors}`);
+                    } else {
+                        console.log(`Successfully accessed sensitive storage for ${speakerId}`);
+                        this.owns.push(speakerId);
+                    }
+                }
+            }
+
             // Load wardrobes from storage API:
             this.wardrobes = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
             this.backupWardrobes = JSON.parse(JSON.stringify(this.wardrobes));
@@ -467,12 +469,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log('All fetched wardrobes:');
         console.log(allWardrobes);
 
-        // Reduce allWardrobes into a wardrobe[character_id] = WardrobeType (but with entries from all character_id WardrobeTypes combined):
-        return allWardrobes.map(response => response.data).flat().reduce((acc: {[key: string]: WardrobeType}, item) => {
+        const finalWardrobes = allWardrobes.map(response => response.data).flat().reduce((acc: {[key: string]: WardrobeType}, item) => {
             // Combine the wardrobes
             acc[item.character_id ?? ""] = { ...(acc[item.character_id ?? ""] || {}), ...item };
             return acc;
         }, {});
+
+        console.log(finalWardrobes);
+        // Ensure that all speakerIds have a record in finalWardrobes:
+        speakerIds.forEach(speakerId => {finalWardrobes[speakerId] = finalWardrobes[speakerId] || { speakerId, outfits: {} };});
+
+        // Reduce allWardrobes into a wardrobe[character_id] = WardrobeType (but with entries from all character_id WardrobeTypes combined):
+        return finalWardrobes;
     }
 
     async updateChatState() {
