@@ -251,12 +251,15 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Test whether userId has storage access to update canonical character data and update owns accordingly
         for (const speakerId of Object.keys(this.speakers)) {
-            try {
+            if (this.isSpeakerIdCharacterId(speakerId)) {
                 const response = await this.storage.set('dummy', "dummy data").forCharacterSensitive(speakerId);
                 console.log(response);
-                this.owns.push(speakerId);
-            } catch (error) {
-                console.error(`Failed sensitive storage access for ${speakerId}: ${error}`);
+                if (response.error) {
+                    console.error(`Failed sensitive storage access for ${speakerId}: ${response.error}`);
+                } else {
+                    console.log(`Successfully accessed sensitive storage for ${speakerId}`);
+                    this.owns.push(speakerId);
+                }
             }
         }
 
