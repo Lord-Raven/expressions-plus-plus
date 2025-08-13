@@ -477,7 +477,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         console.log(finalWardrobes);
         // Ensure that all speakerIds have a record in finalWardrobes:
-        speakerIds.forEach(speakerId => {finalWardrobes[speakerId] = finalWardrobes[speakerId] || { speakerId, outfits: {} };});
+        speakerIds.forEach(speakerId => {finalWardrobes[speakerId] = finalWardrobes[speakerId] || { speakerId, outfits: { [generateGuid()]: {
+                            name: DEFAULT_OUTFIT_NAME,
+                            artPrompt: '',
+                            images: {},
+                            triggerWords: '',
+                            generated: true,
+                            global: false
+                        }}}});
 
         // Reduce allWardrobes into a wardrobe[character_id] = WardrobeType (but with entries from all character_id WardrobeTypes combined):
         return finalWardrobes;
