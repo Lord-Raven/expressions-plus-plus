@@ -9,7 +9,7 @@ interface EditModeFieldsProps {
     fields: EditModeFieldConfig[];
     editMode: string;
     setEditMode: (mode: string) => void;
-    dialogContentRef?: React.RefObject<HTMLDivElement>;
+    dialogContentRef?: React.RefObject<HTMLDivElement|null>;
     onFocus?: () => void;
     containerSx?: object;
 }
