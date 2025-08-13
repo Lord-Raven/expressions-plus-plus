@@ -17,7 +17,7 @@ You can add this stage to any chat by searching for it under Stages in Chat Sett
 ### No Expression Pack Support 
 
 _Unlike_ that stage, this one doesn't actually support expression packs; they appear to currently be locked to the official stage. Write your congressperson. 
-When this changes, I'll update this stage to use the character's pack by default.  (Update: expression packs are now supported, but I am awaiting some new storage API features before integrating this.)  
+When this changes, I'll update this stage to use the character's pack by default.  (Update: expression packs are now supported; I am working to get this integrated.)  
 
 ### So, Uh, What Is This, Then? 
 
@@ -63,7 +63,7 @@ undoubtedly situations that will still fail. The character management UI will in
 
 2025.08.12:
 
-- I am building a bunch of functionality but also trying to push some changes to the way backgrounds are handled and managed, to make them more like outfits that you can prompt or swap between as you see fit. There's some unfinished and potentially broken stuff in here. 
+- The storage API is ready for use, so I am adapting my WIP alpha functionality to that; hopefully the experimental stuff will be stable and releasable soon. 
 
 2025.07.10: 
 
