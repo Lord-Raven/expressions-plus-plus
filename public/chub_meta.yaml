@@ -61,7 +61,7 @@ undoubtedly situations that will still fail. The character management UI will in
 
 ### Updates  
 
-2025.08.08:
+2025.08.12:
 
 - I am building a bunch of functionality but also trying to push some changes to the way backgrounds are handled and managed, to make them more like outfits that you can prompt or swap between as you see fit. There's some unfinished and potentially broken stuff in here. 
 

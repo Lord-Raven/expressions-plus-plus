@@ -169,7 +169,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             config,
             messageState,
             chatState,
-            users
+            users,
         } = data;
 
         console.log(config);
@@ -430,7 +430,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async readCharacterWardrobesFromStorage(speakerIds: string[]): Promise<{[key: string]: WardrobeType}> {
-        return this.storage.get('wardrobe').forCharacters(speakerIds.filter(speakerId => this.isSpeakerIdCharacterId(speakerId))).then((data) => {
+        return this.storage.get('wardrobe').forCharacters(speakerIds).then((data) => {
             console.log('Retrieved wardrobes from storage:');
             console.log(data);
             return data.data.reduce((acc: {[key: string]: WardrobeType}, item) => {
@@ -542,13 +542,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             await Promise.all(Object.keys(this.wardrobes).map(async (speakerId) => {
                 console.log(`Pushing wardrobe update for ${speakerId}`);
                 if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
-                    if (this.isSpeakerIdCharacterId(speakerId)) {
-                        const response = await this.storage.set('wardrobe', this.stripNonGeneratedOutfits(this.wardrobes[speakerId])).forCharacter(speakerId);
-                        console.log(response);
-                    } else {
-                        // Store for user/persona--not sure exactly what this will look like.
-                        // this.storage.set('wardrobe', this.wardrobes[speakerId]).forPersona(speakerId);
-                    }
+                    const response = await this.storage.set('wardrobe', this.stripNonGeneratedOutfits(this.wardrobes[speakerId])).forCharacter(speakerId);
+                    console.log(response);
                 }
             }));
 
