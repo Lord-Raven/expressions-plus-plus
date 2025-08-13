@@ -1,12 +1,13 @@
 import React, { useRef } from "react";
-import { TextField, Button, SxProps, Theme } from "@mui/material";
+import { TextField, Button, SxProps, Theme, FormControlLabel, Switch } from "@mui/material";
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import CodeIcon from '@mui/icons-material/Code';
 import BorderColorOutlineIcon from '@mui/icons-material/BorderColorOutlined';
 import HighlightOutlineIcon from '@mui/icons-material/HighlightOutlined';
+import PublicOutlineIcon from '@mui/icons-material/PublicOutlined';
 
-export type EditFieldType = 'artPrompt' | 'keywords' | 'json' | 'borderColor' | 'highlightColor';
+export type EditFieldType = 'artPrompt' | 'keywords' | 'json' | 'borderColor' | 'highlightColor' | 'global';
 
 export interface EditModeFieldConfig {
     type: EditFieldType;
@@ -35,6 +36,8 @@ const getIcon = (type: EditFieldType) => {
             return <LocalOfferOutlinedIcon fontSize="small" />;
         case 'json':
             return <CodeIcon fontSize="small" />;
+        case 'global':
+            return <PublicOutlineIcon fontSize="small" />;
         case 'borderColor':
             return <BorderColorOutlineIcon fontSize="small" />;
         case 'highlightColor':
@@ -112,22 +115,35 @@ export const EditModeField: React.FC<EditModeFieldProps> = ({
     const buttonSx = customButtonSx || getDefaultButtonSx(type, value);
 
     return editMode === type ? (
-        <TextField
-            label={label}
-            fullWidth={config.width !== 'small'}
-            size="small"
-            disabled={disabled}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            inputRef={fieldRef}
-            sx={fieldSx}
-            variant="outlined"
-        />
-    ) : (
-        <Button
-            variant="outlined"
-            color="primary"
-            disabled={disabled}
+        type == 'global' ? (
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={value === "true"}
+                            onChange={(_, checked) => onChange(checked ? "true" : "false")}
+                            disabled={disabled}
+                            color="primary"
+                        />
+                    }
+                    label={label || "Global"}
+                />
+            ) : (
+                <TextField
+                    label={label}
+                    fullWidth={config.width !== 'small'}
+                    size="small"
+                    disabled={disabled}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    inputRef={fieldRef}
+                    sx={fieldSx}
+                    variant="outlined"
+                />
+        )) : (
+            <Button
+                variant="outlined"
+                color="primary"
+                disabled={disabled}
             onClick={handleEditModeChange}
             sx={buttonSx}
         >

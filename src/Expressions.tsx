@@ -252,10 +252,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // Test whether userId has storage access to update canonical character data and update owns accordingly
         for (const speakerId of Object.keys(this.speakers)) {
             if (this.isSpeakerIdCharacterId(speakerId)) {
-                const response = await this.storage.set('dummy', "dummy data").forCharacterSensitive(speakerId);
+                const response: any = await this.storage.set('dummy', "dummy data").forCharacterSensitive(speakerId);
                 console.log(response);
-                if (response.error) {
-                    console.error(`Failed sensitive storage access for ${speakerId}: ${response.error}`);
+                if (response.errors) {
+                    console.error(`Failed sensitive storage access for ${speakerId}: ${response.errors}`);
                 } else {
                     console.log(`Successfully accessed sensitive storage for ${speakerId}`);
                     this.owns.push(speakerId);
@@ -309,7 +309,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             artPrompt: '',
                             images: {},
                             triggerWords: '',
-                            generated: true
+                            generated: true,
+                            global: false
                         }
                     }
                 } as WardrobeType;
@@ -441,11 +442,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return promise;
     }
 
-    stripNonGeneratedOutfits(wardrobe: WardrobeType): WardrobeType {
+    pickOutfits(wardrobe: WardrobeType, test: (outfit: OutfitType) => boolean): WardrobeType {
         return {
             speakerId: wardrobe.speakerId,
             outfits: Object.keys(wardrobe.outfits).reduce((acc: {[key: string]: OutfitType}, outfitKey: string) => {
-                if (wardrobe.outfits[outfitKey] && wardrobe.outfits[outfitKey].generated) {
+                if (wardrobe.outfits[outfitKey] && test(wardrobe.outfits[outfitKey])) {
                     acc[outfitKey] = wardrobe.outfits[outfitKey];
                 }
                 return acc;
@@ -454,14 +455,24 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async readCharacterWardrobesFromStorage(speakerIds: string[]): Promise<{[key: string]: WardrobeType}> {
-        return this.storage.get('wardrobe').forCharacters(speakerIds).then((data) => {
-            console.log('Retrieved wardrobes from storage:');
-            console.log(data);
-            return data.data.reduce((acc: {[key: string]: WardrobeType}, item) => {
-                acc[item.character_id ?? ""] = item.value as WardrobeType;
-                return acc;
-            }, {});
-        });
+        // A speakerId is either a character ID or a persona ID.
+        // A speakerId can have both per-chat and global wardrobes that need to be loaded and combined.
+        const wardrobeFetches = [
+            this.storage.get('wardrobe').forCharacters(speakerIds.filter(id => this.isSpeakerIdCharacterId(id))),
+            this.storage.get('wardrobe').forPersonas(speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))),
+        ];
+
+        // Load all wardrobes in parallel
+        const allWardrobes = await Promise.all(wardrobeFetches);
+        console.log('All fetched wardrobes:');
+        console.log(allWardrobes);
+
+        // Reduce allWardrobes into a wardrobe[character_id] = WardrobeType (but with entries from all character_id WardrobeTypes combined):
+        return allWardrobes.map(response => response.data).flat().reduce((acc: {[key: string]: WardrobeType}, item) => {
+            // Combine the wardrobes
+            acc[item.character_id ?? ""] = { ...(acc[item.character_id ?? ""] || {}), ...item };
+            return acc;
+        }, {});
     }
 
     async updateChatState() {
@@ -563,13 +574,20 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
             // Push current wardrobes
             console.log('Pushing wardrobe updates to storage.');
-            await Promise.all(Object.keys(this.wardrobes).map(async (speakerId) => {
-                console.log(`Pushing wardrobe update for ${speakerId}`);
+
+            const wardrobePromises = Object.keys(this.wardrobes).map(speakerId => {
                 if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
-                    const response = await this.storage.set('wardrobe', this.stripNonGeneratedOutfits(this.wardrobes[speakerId])).forCharacter(speakerId).forChat();
-                    console.log(response);
+                    if (this.isSpeakerIdCharacterId(speakerId)) {
+                        return [this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forChat(),
+                            this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && outfit.global)).forCharacter(speakerId)];
+                    } else {
+                        return [this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forPersona().forChat(),
+                            this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && outfit.global)).forCharacter(speakerId).forPersona()];
+                    }
                 }
-            }));
+            }).filter(promise => promise != null).flat();
+
+            await Promise.all(wardrobePromises);
 
             // With everything reconciled and updated, set backup to a copy of wardrobes.
             console.log('update backupWardrobes');

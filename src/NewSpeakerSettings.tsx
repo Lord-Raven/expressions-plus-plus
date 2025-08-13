@@ -160,7 +160,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                 {speaker && outfitMap[value] && (
                     <OutfitInfoIcon
                         description={stage.buildArtPrompt(speaker, value, Emotion.neutral)}
-                        isLocked={!generated}
+                        isLocked={!generated || !stage.canEdit(speaker.anonymizedId)}
                         isAltered={stage.buildArtPrompt(speaker, value, Emotion.neutral) != substitute(stage.buildArtPrompt(speaker, value, Emotion.neutral))}
                         isErrored={stage.getSpeakerImage(speaker.anonymizedId, value, Emotion.neutral, silhouetteUrl) == ''}/>
                 )}
@@ -236,12 +236,12 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             if (newValue === "__add_new__") {
                                 const newName = NEW_OUTFIT_NAME;
                                 const newGuid = generateGuid();
-                                updateStageWardrobeMap({...outfitMap, [newGuid]: {name: newName, generated: true, images: {}, artPrompt: "", triggerWords: ""}});
+                                updateStageWardrobeMap({...outfitMap, [newGuid]: {name: newName, generated: true, images: {}, artPrompt: "", triggerWords: "", global: false}});
                                 setSelectedOutfit(newGuid);
 
                             } else {
                                 setSelectedOutfit(newValue);
-                                setEditMode(outfitMap[newValue]?.generated ? editMode : 'json');
+                                setEditMode((outfitMap[newValue]?.generated && stage.canEdit(speaker.anonymizedId)) ? editMode : 'json');
                             }
                         }}
                     >
@@ -289,7 +289,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     <Button
                                         variant="outlined"
                                         sx={{
-                                            width: 120, height: 120,
+                                            width: 100, height: 100,
                                             p: 0,
                                             display: "flex",
                                             alignItems: "flex-end",
@@ -335,7 +335,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         updateStageWardrobeMap(updatedMap);
                                         stage.updateChatState();
                                     },
-                                    visible: outfitMap[selectedOutfit]?.generated
+                                    visible: outfitMap[selectedOutfit]?.generated && stage.canEdit.includes(speaker.anonymizedId)
                                 },
                                 {
                                     type: 'keywords',
@@ -346,7 +346,18 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         updateStageWardrobeMap(updatedMap);
                                         stage.updateChatState();
                                     },
-                                    visible: outfitMap[selectedOutfit]?.generated
+                                    visible: outfitMap[selectedOutfit]?.generated && stage.canEdit.includes(speaker.anonymizedId)
+                                },
+                                {
+                                    type: 'global',
+                                    label: 'Global Outfit',
+                                    value: outfitMap[selectedOutfit].global,
+                                    onChange: (val: string) => {
+                                        const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], global: val } };
+                                        updateStageWardrobeMap(updatedMap);
+                                        stage.updateChatState();
+                                    },
+                                    visible: outfitMap[selectedOutfit]?.generated && stage.owns.includes(speaker.anonymizedId)
                                 },
                                 {
                                     type: 'json',
@@ -366,7 +377,8 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         }
                                     },
                                     disabled: !outfitMap[selectedOutfit]?.generated
-                                }
+                                },
+
                             ] as EditModeFieldConfig[]}
                             editMode={editMode}
                             setEditMode={setEditMode}
