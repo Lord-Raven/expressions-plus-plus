@@ -471,7 +471,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         const finalWardrobes = allWardrobes.map(response => response.data).flat().reduce((acc: {[key: string]: WardrobeType}, item) => {
             // Combine the wardrobes
-            acc[item.character_id ?? ""] = { ...(acc[item.character_id ?? ""] || {}), ...item };
+            acc[item.character_id ?? ""] = { ...(acc[item.character_id ?? ""] || {}), ...item.value };
             return acc;
         }, {});
 
