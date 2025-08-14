@@ -304,19 +304,22 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             // Initialize wardrobes for characters with no loaded wardrobes
             
             for (let speakerId of Object.keys(this.speakers)) {
-                this.wardrobes[speakerId] = this.wardrobes[speakerId] ?? {
-                    speakerId: speakerId,
-                    outfits: {
-                        [generateGuid()]: {
-                            name: DEFAULT_OUTFIT_NAME,
-                            artPrompt: '',
-                            images: {},
-                            triggerWords: '',
-                            generated: true,
-                            global: false
+                if (!(speakerId in this.wardrobes) || this.wardrobes[speakerId].outfits == null || Object.keys(this.wardrobes[speakerId].outfits).length === 0) {
+                    console.log(`Initializing wardrobe for ${speakerId}.`);
+                    this.wardrobes[speakerId] = {
+                        speakerId: speakerId,
+                        outfits: {
+                            [generateGuid()]: {
+                                name: DEFAULT_OUTFIT_NAME,
+                                artPrompt: '',
+                                images: {},
+                                triggerWords: '',
+                                generated: true,
+                                global: false
+                            }
                         }
-                    }
-                } as WardrobeType;
+                    } as WardrobeType;
+                }
 
                 // Set a selected outfit if none exists.
                 if (this.chatState.selectedOutfit[speakerId] == null || this.chatState.selectedOutfit[speakerId] == '') {

@@ -95,7 +95,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
     const { panX, panY } = useMemo(() => {
         
         // Calculate panning offset
-        const panStrength = 0.1;
+        const panStrength = 0.05;
         const panX = (stage.alphaMode && imageUrl) ? -currentPosition.x * panStrength : 0;
         const panY = (stage.alphaMode && imageUrl) ? currentPosition.y * panStrength : 0;
 
