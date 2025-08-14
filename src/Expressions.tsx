@@ -605,7 +605,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }
             }).filter(promise => promise != null).flat();
 
-            await Promise.all(wardrobePromises);
+            // Need to await all wardrobePromises, but also want to log their results
+            await Promise.all(wardrobePromises.map(async (promise) => {
+                const response = await promise;
+                console.log(response);
+            }));
 
             // With everything reconciled and updated, set backup to a copy of wardrobes.
             console.log('update backupWardrobes');
