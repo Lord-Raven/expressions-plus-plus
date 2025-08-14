@@ -184,8 +184,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
         const {[key]: removed, ...rest} = outfitMap;
 
         if (selectedOutfit === key) {
-            const fallback = Object.keys(rest)[0];
-            setSelectedOutfit(fallback);
+            setSelectedOutfit(Object.keys(rest)[0]);
         }
         updateStageWardrobeMap(rest);
     };

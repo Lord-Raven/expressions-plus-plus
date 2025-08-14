@@ -459,6 +459,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             speakerId: wardrobe.speakerId,
             outfits: Object.keys(wardrobe.outfits).reduce((acc: {[key: string]: OutfitType}, outfitKey: string) => {
                 if (wardrobe.outfits[outfitKey] && test(wardrobe.outfits[outfitKey])) {
+                    console.log(`Picking outfit ${wardrobe.outfits[outfitKey].name} for ${wardrobe.speakerId}`);
                     acc[outfitKey] = wardrobe.outfits[outfitKey];
                 }
                 return acc;
@@ -489,7 +490,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         console.log(finalWardrobes);
 
-        // Reduce allWardrobes into a wardrobe[character_id] = WardrobeType (but with entries from all character_id WardrobeTypes combined):
         return finalWardrobes;
     }
 
