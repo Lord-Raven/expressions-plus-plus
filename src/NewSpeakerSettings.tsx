@@ -351,7 +351,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                 {
                                     type: 'global',
                                     label: 'Global Outfit',
-                                    value: outfitMap[selectedOutfit].global,
+                                    value: outfitMap[selectedOutfit]?.global || false,
                                     onChange: (val: string) => {
                                         const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], global: val } };
                                         updateStageWardrobeMap(updatedMap);
