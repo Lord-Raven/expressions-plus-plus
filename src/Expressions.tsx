@@ -302,6 +302,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }
 
             // Initialize wardrobes for characters with no loaded wardrobes
+            
             for (let speakerId of Object.keys(this.speakers)) {
                 this.wardrobes[speakerId] = this.wardrobes[speakerId] ?? {
                     speakerId: speakerId,
@@ -316,6 +317,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         }
                     }
                 } as WardrobeType;
+
+                // Set a selected outfit if none exists.
+                if (this.chatState.selectedOutfit[speakerId] == null || this.chatState.selectedOutfit[speakerId] == '') {
+                    this.chatState.selectedOutfit[speakerId] = Object.keys(this.wardrobes[speakerId].outfits)[0];
+                }
             }
         }
 
@@ -478,15 +484,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }, {});
 
         console.log(finalWardrobes);
-        // Ensure that all speakerIds have a record in finalWardrobes:
-        speakerIds.forEach(speakerId => {finalWardrobes[speakerId] = finalWardrobes[speakerId] || { speakerId, outfits: { [generateGuid()]: {
-                            name: DEFAULT_OUTFIT_NAME,
-                            artPrompt: '',
-                            images: {},
-                            triggerWords: '',
-                            generated: true,
-                            global: false
-                        }}}});
 
         // Reduce allWardrobes into a wardrobe[character_id] = WardrobeType (but with entries from all character_id WardrobeTypes combined):
         return finalWardrobes;
