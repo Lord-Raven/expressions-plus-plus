@@ -82,6 +82,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     const NEW_OUTFIT_NAME = 'Unnamed Outfit';
 
     useEffect(() => {
+        console.log(`setSpeaker: ${speaker?.name}, ${speaker?.anonymizedId}, ${stage.chatState.selectedOutfit[speaker?.anonymizedId ?? '']}`);
         setSelectedOutfit((speaker ? stage.chatState.selectedOutfit[speaker.anonymizedId] : null) ?? "");
         setOutfitMap((speaker ? stage.wardrobes[speaker.anonymizedId].outfits : {}) ?? {});
         setOutfitKeys(Object.keys(speaker ? stage.wardrobes[speaker.anonymizedId].outfits : []) ?? []);
