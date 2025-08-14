@@ -160,7 +160,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                 {speaker && outfitMap[value] && (
                     <OutfitInfoIcon
                         description={stage.buildArtPrompt(speaker, value, Emotion.neutral)}
-                        isLocked={!generated || !stage.canEdit(speaker.anonymizedId)}
+                        isLocked={!generated || !stage.canEdit.includes(speaker.anonymizedId)}
                         isAltered={stage.buildArtPrompt(speaker, value, Emotion.neutral) != substitute(stage.buildArtPrompt(speaker, value, Emotion.neutral))}
                         isErrored={stage.getSpeakerImage(speaker.anonymizedId, value, Emotion.neutral, silhouetteUrl) == ''}/>
                 )}
@@ -241,7 +241,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
 
                             } else {
                                 setSelectedOutfit(newValue);
-                                setEditMode((outfitMap[newValue]?.generated && stage.canEdit(speaker.anonymizedId)) ? editMode : 'json');
+                                setEditMode((outfitMap[newValue]?.generated && stage.canEdit.includes(speaker.anonymizedId)) ? editMode : 'json');
                             }
                         }}
                     >

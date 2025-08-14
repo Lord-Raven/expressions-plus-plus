@@ -70,9 +70,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(0.8)', 
             zIndex: zIndex, 
             transition: {
-                x: { ease: "easeOut", duration: 1.0 }, 
-                bottom: { ease: "linear", duration: 1.0 }, 
-                opacity: { ease: "easeOut", duration: 1.0 }
+                x: { ease: "easeOut", duration: 0.3 }, 
+                bottom: { ease: "linear", duration: 0.3 }, 
+                opacity: { ease: "easeOut", duration: 0.3 }
             }
         },
         talking: {
@@ -83,9 +83,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(1)', 
             zIndex: 100, 
             transition: previousState === 'absent' ? {
-                x: { ease: "easeOut", duration: 1.0 }, 
-                bottom: { ease: "linear", duration: 1.0 }, 
-                opacity: { ease: "easeOut", duration: 1.0 }
+                x: { ease: "easeOut", duration: 0.3 }, 
+                bottom: { ease: "linear", duration: 0.3 }, 
+                opacity: { ease: "easeOut", duration: 0.3 }
             } : {
                 x: { ease: "linear", duration: 0.01 }, 
                 bottom: { ease: "linear", duration: 0.01 }, 
@@ -100,9 +100,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(0.8)', 
             zIndex: zIndex,
             transition: previousState === 'absent' ? {
-                x: { ease: "easeOut", duration: 1.0 }, 
-                bottom: { ease: "linear", duration: 1.0 }, 
-                opacity: { ease: "easeOut", duration: 1.0 }
+                x: { ease: "easeOut", duration: 0.3 }, 
+                bottom: { ease: "linear", duration: 0.3 }, 
+                opacity: { ease: "easeOut", duration: 0.3 }
             } : {
                 x: { ease: "linear", duration: 0.01 }, 
                 bottom: { ease: "linear", duration: 0.01 }, 
