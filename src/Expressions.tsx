@@ -322,7 +322,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }
 
                 // Set a selected outfit if none exists.
-                if (this.chatState.selectedOutfit[speakerId] == null || this.chatState.selectedOutfit[speakerId] == '') {
+                if (!this.chatState.selectedOutfit[speakerId] || this.chatState.selectedOutfit[speakerId] == '' || this.chatState.selectedOutfit[speakerId] in this.wardrobes[speakerId].outfits) {
+                    console.log(`Setting selectedOutfit for ${speakerId}.`);
                     this.chatState.selectedOutfit[speakerId] = Object.keys(this.wardrobes[speakerId].outfits)[0];
                 }
             }
