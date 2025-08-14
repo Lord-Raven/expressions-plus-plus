@@ -476,9 +476,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         ];
 
         // Load all wardrobes in parallel
-        const allWardrobes = await Promise.all(wardrobeFetches);
         console.log('All fetched wardrobes:');
-        console.log(allWardrobes);
+        const allWardrobes = await Promise.all(wardrobeFetches.map(async promise => {const response = await promise; console.log(response); return response}));
 
         const finalWardrobes = allWardrobes.map(response => response.data).flat().filter(item => item.character_id).reduce((acc: {[key: string]: WardrobeType}, item) => {
             // Combine the wardrobes
@@ -488,6 +487,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             return acc;
         }, {});
 
+        console.log('Final, assembled wardrobes:');
         console.log(finalWardrobes);
 
         return finalWardrobes;
@@ -596,11 +596,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             const wardrobePromises = Object.keys(this.wardrobes).map(speakerId => {
                 if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
                     if (this.isSpeakerIdCharacterId(speakerId)) {
-                        return [this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forChat(),
-                            this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && outfit.global)).forCharacter(speakerId)];
+                        return [this.canEdit.includes(speakerId) && this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forChat(),
+                            this.owns.includes(speakerId) && this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && outfit.global)).forCharacter(speakerId)];
                     } else {
-                        return [this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forPersona().forChat(),
-                            this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && outfit.global)).forCharacter(speakerId).forPersona()];
+                        return [this.owns.includes(speakerId) && this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forPersona().forChat(),
+                            this.owns.includes(speakerId) && this.storage.set('wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && outfit.global)).forCharacter(speakerId).forPersona()];
                     }
                 }
             }).filter(promise => promise != null).flat();
