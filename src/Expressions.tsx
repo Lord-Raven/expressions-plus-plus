@@ -468,8 +468,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async readCharacterWardrobesFromStorage(speakerIds: string[]): Promise<{[key: string]: WardrobeType}> {
         // A speakerId is either a character ID or a persona ID.
         // A speakerId can have both per-chat and global wardrobes that need to be loaded and combined.
-        const everything = await this.storage.get(null).forCharacters(speakerIds);
-        console.log(everything);
 
 
         const wardrobeFetches = [
