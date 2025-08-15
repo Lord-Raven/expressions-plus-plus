@@ -482,24 +482,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 {
                     keys: ['local_wardrobe'],
                     chat_local: true,
-                    persona_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
-                }),
-                // garbo:
-            this.storage.query(
-                {
-                    keys: ['local_wardrobe'],
-                    chat_local: false,
-                    persona_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
-                }),
-                // garbo:
-            this.storage.query(
-                {
-                    keys: ['local_wardrobe'],
-                    chat_local: true,
-                    character_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
+                    user_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
                 }),
             this.storage.get('global_wardrobe').forCharacters(speakerIds.filter(id => this.isSpeakerIdCharacterId(id))),
-            this.storage.get('global_wardrobe').forPersonas(speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))),
+            this.storage.get('global_wardrobe').forUsers(speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))),
         ];
 
         // Load all wardrobes in parallel
@@ -621,7 +607,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log('Pushing wardrobe updates to storage.');
 
             // Build updates for this persona's stuff:
-            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forCharacter(this.userId).forPersona().forChat();
+            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forCharacter(this.userId).forUser().forChat();
 //                    .set('global_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && outfit.global)).forCharacter(this.userId).forPersona();
 
             // Add updates for editable or owned characters:
