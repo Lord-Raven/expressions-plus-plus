@@ -116,6 +116,12 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
         }
     };
 
+    const checkIsLocked: (key: string) => boolean = key => {
+        return !outfitMap[key]?.generated || // Non-generated outfits are ineditable
+            !stage.canEdit.includes(speaker?.anonymizedId || "") || // Outfits belonging to characters this user can't edit
+            (stage.wardrobes[speaker?.anonymizedId || ""].outfits[key]?.global === true && !stage.owns.includes(speaker?.anonymizedId || "")); // Global outfits not owned by user are ineditable
+    };
+
     const EditableTabLabel = ({
                                   outfitKey,
                                   onRename,
@@ -127,7 +133,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     }) => {
         const [editing, setEditing] = useState(false);
         const [value, setValue] = useState(outfitMap[outfitKey]?.name || outfitKey);
-        const generated = outfitMap[outfitKey]?.generated ?? false;
+        const locked = checkIsLocked(outfitKey);
 
         return editing ? (
             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -157,17 +163,16 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                 </IconButton>
             </Box>
         ) : (
-            <span onDoubleClick={() => setEditing(generated)}>
+            <span onDoubleClick={() => setEditing(!locked)}>
                 {value}
                 {speaker && outfitMap[value] && (
                     <OutfitInfoIcon
                         description={stage.buildArtPrompt(speaker, value, Emotion.neutral)}
-                        isLocked={!generated || !stage.canEdit.includes(speaker.anonymizedId) || (stage.wardrobes[speaker.anonymizedId].outfits[value]?.global === true && !stage.owns.includes(speaker.anonymizedId))}
+                        isLocked={locked}
                         isAltered={stage.buildArtPrompt(speaker, value, Emotion.neutral) != substitute(stage.buildArtPrompt(speaker, value, Emotion.neutral))}
                         isErrored={stage.getSpeakerImage(speaker.anonymizedId, value, Emotion.neutral, silhouetteUrl) == ''}/>
                 )}
             </span>
-
         );
     };
 
@@ -214,7 +219,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                 </DialogTitle>
                 <DialogContent sx={{p: 1, backgroundColor: "#333"}} ref={dialogContentRef}>
                     <Typography variant="body2">
-                        For each outfit, a physical description and neutral image are generated and all other emotions are created from the neutral base image. Rename or remove additional outfits by double-clicking their tabs; an outfit's name will help steer its generation.
+                        For each outfit, a physical description and neutral image are generated and other emotions are created from the neutral base image. Rename or remove additional outfits by double-clicking their tabs; an outfit's name will help steer its generation.
                     </Typography>
                     <Tabs
                         value={selectedOutfit || outfitKeys[0]}
@@ -242,7 +247,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
 
                             } else {
                                 setSelectedOutfit(newValue);
-                                setEditMode((outfitMap[newValue]?.generated && stage.canEdit.includes(speaker.anonymizedId)) ? editMode : 'json');
+                                setEditMode(!checkIsLocked(selectedOutfit) ? editMode : 'json');
                             }
                         }}
                     >
@@ -270,7 +275,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                     </Tabs>
                     <Grid container spacing={1} justifyContent="center" sx={{mt: 2, overflow: "hidden"}}>
                         {Object.keys(EMOTION_PROMPTS).map((emotion, index) => {
-                            const generated: boolean = outfitMap[selectedOutfit]?.generated || false;
                             const image = stage.getSpeakerImage(
                                 speaker.anonymizedId,
                                 selectedOutfit ?? "",
@@ -279,9 +283,10 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             );
 
                             const isDefault = (emotion != Emotion.neutral && image == stage.getSpeakerImage(speaker.anonymizedId, selectedOutfit, Emotion.neutral)) || (image == silhouetteUrl);
+                            const locked = checkIsLocked(selectedOutfit);
 
                             return (
-                                (!isDefault || generated ? (
+                                (!isDefault || !locked ? (
                                 <Grid key={emotion} component={motion.div}
                                       initial={{opacity: 0, x: 50}}
                                       whileHover={{scale: 1.1, zIndex: 2000}}
@@ -305,7 +310,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             textShadow: "0 1px 2px #fff",
                                             border: `3px solid ${borderColor}`,
                                         }}
-                                        onClick={() => generated && setConfirmEmotion(emotion as Emotion)}
+                                        onClick={() => !locked && setConfirmEmotion(emotion as Emotion)}
                                     >
                                       <span style={{
                                           background: "rgba(255,255,255,0.7)",
@@ -337,7 +342,8 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         // TODO: Don't call this here later; I'm using it for testing.
                                         stage.updateChatState();
                                     },
-                                    visible: outfitMap[selectedOutfit]?.generated && stage.canEdit.includes(speaker.anonymizedId)
+                                    visible: outfitMap[selectedOutfit]?.generated,
+                                    disabled: checkIsLocked(selectedOutfit),
                                 },
                                 {
                                     type: 'keywords',
@@ -347,7 +353,8 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                         const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], triggerWords: val } };
                                         updateStageWardrobeMap(updatedMap);
                                     },
-                                    visible: outfitMap[selectedOutfit]?.generated && stage.canEdit.includes(speaker.anonymizedId)
+                                    visible: outfitMap[selectedOutfit]?.generated,
+                                    disabled: checkIsLocked(selectedOutfit),
                                 },
                                 {
                                     type: 'global',
@@ -375,7 +382,8 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             stage.wrapPromise(null, "Invalid outfit update.");
                                         }
                                     },
-                                    disabled: !outfitMap[selectedOutfit]?.generated
+                                    disabled:  checkIsLocked(selectedOutfit),
+
                                 },
 
                             ] as EditModeFieldConfig[]}
