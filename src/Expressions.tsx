@@ -473,7 +473,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Load all wardrobes in parallel
         console.log('All fetched wardrobes:');
-        const allWardrobes = await Promise.all(wardrobeFetches.map(async promise => {const response = await promise; console.log(response); return response}));
+        const allWardrobes = await Promise.all(wardrobeFetches.map(async promise => {const response = await promise.execute(); console.log(response); return response}));
 
         const finalWardrobes = allWardrobes.map(response => response.data).flat().filter(item => item.character_id).reduce((acc: {[key: string]: WardrobeType}, item) => {
             // Combine the wardrobes
