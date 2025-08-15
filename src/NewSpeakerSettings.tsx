@@ -333,6 +333,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     onChange: (val: string) => {
                                         const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], artPrompt: val } };
                                         updateStageWardrobeMap(updatedMap);
+                                        // TODO: Don't call this here later; I'm using it for testing.
                                         stage.updateChatState();
                                     },
                                     visible: outfitMap[selectedOutfit]?.generated && stage.canEdit.includes(speaker.anonymizedId)
@@ -344,7 +345,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     onChange: (val: string) => {
                                         const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], triggerWords: val } };
                                         updateStageWardrobeMap(updatedMap);
-                                        stage.updateChatState();
                                     },
                                     visible: outfitMap[selectedOutfit]?.generated && stage.canEdit.includes(speaker.anonymizedId)
                                 },
@@ -355,7 +355,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     onChange: (val: string) => {
                                         const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], global: val } };
                                         updateStageWardrobeMap(updatedMap);
-                                        stage.updateChatState();
                                     },
                                     visible: outfitMap[selectedOutfit]?.generated && stage.owns.includes(speaker.anonymizedId)
                                 },
@@ -369,7 +368,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                             if (typeof data === 'object' && data && 'images' in data && 'description' in data) {
                                                 const updatedMap = { ...outfitMap, [selectedOutfit]: data };
                                                 updateStageWardrobeMap(updatedMap);
-                                                stage.updateChatState();
                                             }
                                         } catch (err) {
                                             console.error("Invalid JSON format", err);

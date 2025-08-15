@@ -480,7 +480,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 {
                     keys: ['local_wardrobe'],
                     chat_local: true,
-                    persona_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
+                    character_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
                 }),
             this.storage.get('global_wardrobe').forCharacters(speakerIds.filter(id => this.isSpeakerIdCharacterId(id))),
             this.storage.get('global_wardrobe').forPersonas(speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))),
