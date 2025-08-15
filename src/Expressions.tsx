@@ -605,11 +605,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log('Pushing wardrobe updates to storage.');
 
             // Build updates for this persona's stuff:
-            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forCharacter(this.userId).forPersona().forChat()
-                    .set('global_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && outfit.global)).forCharacter(this.userId).forPersona();
+            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forCharacter(this.userId).forPersona().forChat();
+//                    .set('global_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && outfit.global)).forCharacter(this.userId).forPersona();
 
             // Add updates for editable or owned characters:
-            for (let speakerId of Object.keys(this.wardrobes)) {
+            /*for (let speakerId of Object.keys(this.wardrobes)) {
                 if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
                     if (this.isSpeakerIdCharacterId(speakerId)) {
                         if (this.canEdit.includes(speakerId)) {
@@ -620,7 +620,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         }
                     }
                 }
-            }
+            }*/
 
             // Need to await all wardrobePromises, but also want to log their results
             const response = await updateBuilder;
