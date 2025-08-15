@@ -482,8 +482,21 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 {
                     keys: ['local_wardrobe'],
                     chat_local: true,
-                    character_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id)),
                     persona_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
+                }),
+                // garbo:
+            this.storage.query(
+                {
+                    keys: ['local_wardrobe'],
+                    chat_local: false,
+                    persona_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
+                }),
+                // garbo:
+            this.storage.query(
+                {
+                    keys: ['local_wardrobe'],
+                    chat_local: true,
+                    character_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
                 }),
             this.storage.get('global_wardrobe').forCharacters(speakerIds.filter(id => this.isSpeakerIdCharacterId(id))),
             this.storage.get('global_wardrobe').forPersonas(speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))),
