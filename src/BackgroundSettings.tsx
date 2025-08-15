@@ -330,7 +330,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                             },
                                             {
                                                 type: 'highlightColor',
-                                                label: 'Highlight Color',
+                                                label: 'Lighting Color',
                                                 value: currentBackground.highlightColor || "",
                                                 onChange: (val: string) => {
                                                     const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, highlightColor: val } };
