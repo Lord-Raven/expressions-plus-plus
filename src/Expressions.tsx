@@ -600,27 +600,27 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             // Push current wardrobes
             console.log('Pushing wardrobe updates to storage.');
 
-            const wardrobePromises = Object.keys(this.wardrobes).map(speakerId => {
+            // Build updates for this persona's stuff:
+            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.wardrobes[this.userId], outfit => outfit.generated && !outfit.global)).forPersona().forChat()
+                    .set('global_wardrobe', this.pickOutfits(this.wardrobes[this.userId], outfit => outfit.generated && outfit.global)).forPersona();
+
+            // Add updates for editable or owned characters:
+            for (let speakerId of Object.keys(this.wardrobes)) {
                 if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
                     if (this.isSpeakerIdCharacterId(speakerId)) {
-                        return [this.canEdit.includes(speakerId) && 
-                                this.storage.set('local_wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forChat(),
-                            this.owns.includes(speakerId) && 
-                                this.storage.set('global_wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && outfit.global)).forCharacter(speakerId)];
-                    } else {
-                        return [this.owns.includes(speakerId) && 
-                                this.storage.set('local_wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forPersona().forChat(),
-                            this.owns.includes(speakerId) && 
-                                this.storage.set('global_wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && outfit.global)).forCharacter(speakerId).forPersona()];
+                        if (this.canEdit.includes(speakerId)) {
+                            updateBuilder = updateBuilder.set('local_wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forChat();
+                        }
+                        if (this.owns.includes(speakerId)) {
+                            updateBuilder = updateBuilder.set('global_wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && outfit.global)).forCharacterSensitive(speakerId);
+                        }
                     }
                 }
-            }).filter(promise => promise != null).flat();
+            }
 
             // Need to await all wardrobePromises, but also want to log their results
-            await Promise.all(wardrobePromises.map(async (promise) => {
-                const response = await promise;
-                console.log(response);
-            }));
+            const response = await updateBuilder;
+            console.log(response);
 
             // With everything reconciled and updated, set backup to a copy of wardrobes.
             console.log('update backupWardrobes');
