@@ -12,8 +12,8 @@ export type EditFieldType = 'artPrompt' | 'keywords' | 'json' | 'borderColor' | 
 export interface EditModeFieldConfig {
     type: EditFieldType;
     label: string;
-    value: string;
-    onChange: (value: string) => void;
+    value: any;
+    onChange: (value: any) => void;
     disabled?: boolean;
     visible?: boolean;
     width?: 'full' | 'small';
@@ -119,8 +119,8 @@ export const EditModeField: React.FC<EditModeFieldProps> = ({
                 <FormControlLabel
                     control={
                         <Switch
-                            checked={value === "true"}
-                            onChange={(_, checked) => onChange(checked ? "true" : "false")}
+                            checked={value}
+                            onChange={(_, checked) => onChange(checked ? true : false)}
                             disabled={disabled}
                             color="primary"
                         />
