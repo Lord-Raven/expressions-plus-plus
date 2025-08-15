@@ -293,6 +293,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     if (character.partial_extensions?.chub?.expressions?.expressions != null) {
                         console.log(`Character ${charAnonId} has an expressions pack.`);
                         // Generate outfit entries for each expressions pack, marked non-generated.
+                        if (!this.wardrobes[charAnonId]) {
+                            this.wardrobes[charAnonId] = {
+                                speakerId: charAnonId,
+                                outfits: {}
+                            };
+                        }
                         for (let expressionPack of Object.values([character.partial_extensions.chub.expressions])) {
                             this.wardrobes[charAnonId].outfits[expressionPack.version] = {
                                 images: expressionPack.expressions,
