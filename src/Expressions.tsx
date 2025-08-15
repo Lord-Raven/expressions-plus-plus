@@ -449,15 +449,19 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return promise;
     }
 
-    pickOutfits(wardrobe: WardrobeType, test: (outfit: OutfitType) => boolean): WardrobeType {
-        return {
-            speakerId: wardrobe.speakerId,
+    pickOutfits(speakerId: string, test: (outfit: OutfitType) => boolean): WardrobeType {
+        const wardrobe = this.wardrobes[speakerId];
+        return wardrobe ? {
+            speakerId: speakerId,
             outfits: Object.keys(wardrobe.outfits).reduce((acc: {[key: string]: OutfitType}, outfitKey: string) => {
                 if (wardrobe.outfits[outfitKey] && test(wardrobe.outfits[outfitKey])) {
                     acc[outfitKey] = wardrobe.outfits[outfitKey];
                 }
                 return acc;
             }, {})
+        } : {
+            speakerId: speakerId,
+            outfits: {}
         };
     }
 
@@ -601,18 +605,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log('Pushing wardrobe updates to storage.');
 
             // Build updates for this persona's stuff:
-            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.wardrobes[this.userId], outfit => outfit.generated && !outfit.global)).forPersona().forChat()
-                    .set('global_wardrobe', this.pickOutfits(this.wardrobes[this.userId], outfit => outfit.generated && outfit.global)).forPersona();
+            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forPersona().forChat()
+                    .set('global_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && outfit.global)).forPersona();
 
             // Add updates for editable or owned characters:
             for (let speakerId of Object.keys(this.wardrobes)) {
                 if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
                     if (this.isSpeakerIdCharacterId(speakerId)) {
                         if (this.canEdit.includes(speakerId)) {
-                            updateBuilder = updateBuilder.set('local_wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forChat();
+                            updateBuilder = updateBuilder.set('local_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forChat();
                         }
                         if (this.owns.includes(speakerId)) {
-                            updateBuilder = updateBuilder.set('global_wardrobe', this.pickOutfits(this.wardrobes[speakerId], outfit => outfit.generated && outfit.global)).forCharacterSensitive(speakerId);
+                            updateBuilder = updateBuilder.set('global_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && outfit.global)).forCharacterSensitive(speakerId);
                         }
                     }
                 }
