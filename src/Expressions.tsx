@@ -265,13 +265,17 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             // Test whether userId has storage access to update canonical character data and update owns accordingly
             for (const speakerId of Object.keys(this.speakers)) {
                 if (this.isSpeakerIdCharacterId(speakerId)) {
-                    const response: any = await this.storage.set('dummy', "dummy data").forCharacterSensitive(speakerId);
-                    console.log(response);
-                    if (response.errors) {
-                        console.error(`Failed sensitive storage access for ${speakerId}: ${response.errors}`);
-                    } else {
-                        console.log(`Successfully accessed sensitive storage for ${speakerId}`);
-                        this.owns.push(speakerId);
+                    try {
+                        const response: any = await this.storage.set('dummy', {data: "dummy data"}).forCharacterSensitive(speakerId);
+                        console.log(response);
+                        if (response.errors) {
+                            console.error(`Failed sensitive storage access for ${speakerId}: ${response.errors}`);
+                        } else {
+                            console.log(`Successfully accessed sensitive storage for ${speakerId}`);
+                            this.owns.push(speakerId);
+                        }
+                    } catch (error) {
+                        console.error(`Error accessing sensitive storage for ${speakerId}: ${error}`);
                     }
                 }
             }
@@ -619,7 +623,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             updateBuilder = updateBuilder.set('local_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forChat();
                         }
                         if (this.owns.includes(speakerId)) {
-                            updateBuilder = updateBuilder.set('global_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && outfit.global)).forCharacterSensitive(speakerId);
+                            updateBuilder = updateBuilder.set('global_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && outfit.global)).forCharacter(speakerId);
                         }
                     }
                 }
