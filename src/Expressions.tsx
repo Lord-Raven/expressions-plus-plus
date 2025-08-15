@@ -482,6 +482,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 {
                     keys: ['local_wardrobe'],
                     chat_local: true,
+                    character_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id)),
                     user_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
                 }),
             this.storage.get('global_wardrobe').forCharacters(speakerIds.filter(id => this.isSpeakerIdCharacterId(id))),
@@ -607,11 +608,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log('Pushing wardrobe updates to storage.');
 
             // Build updates for this persona's stuff:
-            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forCharacter(this.userId).forUser().forChat();
-//                    .set('global_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && outfit.global)).forCharacter(this.userId).forPersona();
+            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forCharacter(this.userId).forUser().forChat()
+                    .set('global_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && outfit.global)).forCharacter(this.userId).forUser();
 
             // Add updates for editable or owned characters:
-            /*for (let speakerId of Object.keys(this.wardrobes)) {
+            for (let speakerId of Object.keys(this.wardrobes)) {
                 if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
                     if (this.isSpeakerIdCharacterId(speakerId)) {
                         if (this.canEdit.includes(speakerId)) {
@@ -622,7 +623,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         }
                     }
                 }
-            }*/
+            }
 
             // Need to await all wardrobePromises, but also want to log their results
             const response = await updateBuilder;
