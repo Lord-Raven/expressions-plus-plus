@@ -91,12 +91,12 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                     <Typography color="text.primary" sx={{marginTop: "4px", fontWeight: 600, whiteSpace: "nowrap", textTransform: "capitalize" }}>
                         {speaker.name}
                     </Typography>
-                    <IconButton size="small" onClick={() => onOpenSettings(speaker)}>
+                    {stage.canEdit.includes(speaker.anonymizedId) && <IconButton size="small" onClick={() => onOpenSettings(speaker)}>
                         <SettingsIcon fontSize="small"/>
-                    </IconButton>
-                    <IconButton size="small" onClick={() => setShowOutfits(prev => !prev)}>
+                    </IconButton>}
+                    {stage.canEdit.includes(speaker.anonymizedId) && <IconButton size="small" onClick={() => setShowOutfits(prev => !prev)}>
                         <CheckroomIcon fontSize="small"/>
-                    </IconButton>
+                    </IconButton>}
                     <IconButton size="small" onClick={handleToggleVisibility}>
                         {stage.isSpeakerVisible(speaker) ? (
                             <VisibilityIcon fontSize="small" />
