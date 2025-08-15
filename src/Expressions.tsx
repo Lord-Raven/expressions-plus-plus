@@ -465,15 +465,26 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // A speakerId is either a character ID or a persona ID.
         // A speakerId can have both per-chat and global wardrobes that need to be loaded and combined.
         const wardrobeFetches = [
-            this.storage.get('local_wardrobe').forCharacters(speakerIds.filter(id => this.isSpeakerIdCharacterId(id))),
+            this.storage.query(
+                {
+                    keys: ['local_wardrobe'],
+                    chat_local: true,
+                    character_ids: speakerIds.filter(id => this.isSpeakerIdCharacterId(id))
+                }),
+            this.storage.query(
+                {
+                    keys: ['local_wardrobe'],
+                    chat_local: true,
+                    persona_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
+                })
             //this.storage.get('global_wardrobe').forCharacters(speakerIds.filter(id => this.isSpeakerIdCharacterId(id))),
-            this.storage.get('local_wardrobe').forPersonas(speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))),
+            //this.storage.get('local_wardrobe').forPersonas(speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))),
             //this.storage.get('global_wardrobe').forPersonas(speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))),
         ];
 
         // Load all wardrobes in parallel
         console.log('All fetched wardrobes:');
-        const allWardrobes = await Promise.all(wardrobeFetches.map(async promise => {const response = await promise.execute(); console.log(response); return response}));
+        const allWardrobes = await Promise.all(wardrobeFetches.map(async promise => {const response = await promise; console.log(response); return response}));
 
         const finalWardrobes = allWardrobes.map(response => response.data).flat().filter(item => item.character_id).reduce((acc: {[key: string]: WardrobeType}, item) => {
             // Combine the wardrobes
