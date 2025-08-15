@@ -83,6 +83,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
 
     useEffect(() => {
         console.log(`setSpeaker: ${speaker?.name}, ${speaker?.anonymizedId}, ${stage.chatState.selectedOutfit[speaker?.anonymizedId ?? '']}`);
+        stage.updateChatState();
         setSelectedOutfit((speaker ? stage.chatState.selectedOutfit[speaker.anonymizedId] : null) ?? "");
         setOutfitMap((speaker ? stage.wardrobes[speaker.anonymizedId].outfits : {}) ?? {});
         setOutfitKeys(Object.keys(speaker ? stage.wardrobes[speaker.anonymizedId].outfits : []) ?? []);
@@ -103,7 +104,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         Object.keys(stage.wardrobes[speaker.anonymizedId].outfits)[0] : 
                         "";
             }
-            stage.updateChatState();
         }
     }
 
