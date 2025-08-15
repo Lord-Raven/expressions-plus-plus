@@ -605,8 +605,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log('Pushing wardrobe updates to storage.');
 
             // Build updates for this persona's stuff:
-            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forPersona().forChat()
-                    .set('global_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && outfit.global)).forPersona();
+            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forCharacter(this.userId).forPersona().forChat()
+                    .set('global_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && outfit.global)).forCharacter(this.userId).forPersona();
 
             // Add updates for editable or owned characters:
             for (let speakerId of Object.keys(this.wardrobes)) {
