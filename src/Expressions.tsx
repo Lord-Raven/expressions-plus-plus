@@ -503,7 +503,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             // Combine the wardrobes
             const key = item.character_id ?? '';
             const value = item.value as WardrobeType;
-            console.log(`Found ${key}: ${JSON.stringify(value)}: ${acc[key]}`);
             acc[key] = acc[key] ? {...acc[key], outfits: {...acc[key].outfits, ...value.outfits } } : value;
             return acc;
         }, {});
@@ -514,8 +513,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return finalWardrobes;
     }
 
-    async updateChatState() {
-        // This function is temporarily doing double duty to set/reconcile wardrobes and update chat state:
+    async updateStorage() {
         if (this.alphaMode) {
 
             const remoteWardrobes: {[key: string]: WardrobeType} = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
@@ -641,6 +639,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             this.backupWardrobes = JSON.parse(JSON.stringify(this.wardrobes));
         }
 
+    }
+
+    async updateChatState() {
         await this.messenger.updateChatState(this.chatState);
     }
 
