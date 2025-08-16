@@ -14,7 +14,35 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const { camera, size } = useThree();
   const colorMap = useLoader(TextureLoader, imageUrl);
-  const depthMap = useLoader(TextureLoader, depthUrl);
+  // If depthUrl is null, create a flat depth texture (all pixels = 0.5)
+  const depthMap = useMemo(() => {
+    if (depthUrl) {
+      return useLoader(TextureLoader, depthUrl);
+    } else {
+      // Create a 2x2 canvas with all pixels = 0.5
+      const canvas = document.createElement('canvas');
+      canvas.width = 2;
+      canvas.height = 2;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const imageData = ctx.createImageData(2, 2);
+        for (let i = 0; i < imageData.data.length; i += 4) {
+          // RGBA, set R=G=B=128 (0.5*255), A=255
+          imageData.data[i] = 128;
+          imageData.data[i+1] = 128;
+          imageData.data[i+2] = 128;
+          imageData.data[i+3] = 255;
+        }
+        ctx.putImageData(imageData, 0, 0);
+      }
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      return texture;
+    }
+  }, [depthUrl]);
 
   const blurredColorMap = useMemo(() => {
     const canvas = document.createElement('canvas');
@@ -46,7 +74,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
     canvas.height = depthMap.image.height;
     
     // Apply blur filter
-    ctx.filter = 'blur(2px)';
+    ctx.filter = 'blur(5px)';
     ctx.drawImage(depthMap.image, 0, 0);
     
     const blurredTexture = new THREE.CanvasTexture(canvas);
