@@ -16,9 +16,6 @@ const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, 
     const [showBackgrounds, setShowBackgrounds] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
 
-    const selectedBackground = stage.getSelectedBackground();
-    const backgrounds: {[key: string]: Background} = stage.backgrounds;
-
     const handleCreateNewBackground = () => {
         const newBackground = stage.createNewBackground();
         stage.backgrounds[newBackground.id] = newBackground;
@@ -83,15 +80,15 @@ const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, 
                         width: 40,
                         height: 40,
                         borderRadius: "50%",
-                        backgroundImage: selectedBackground ? `url(${getBackgroundPreview(selectedBackground)})` : undefined,
+                        backgroundImage: stage.getSelectedBackground() ? `url(${getBackgroundPreview(stage.getSelectedBackground())})` : undefined,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
-                        backgroundColor: selectedBackground ? undefined : "#555",
+                        backgroundColor: stage.getSelectedBackground() ? undefined : "#555",
                         pointerEvents: "none"
                     }}
                     onClick={() => {setIsExpanded(prev => !prev)}}
                 >
-                    {!selectedBackground && <LandscapeIcon fontSize="small" sx={{color: "white"}}/>}
+                    {!stage.getSelectedBackground() && <LandscapeIcon fontSize="small" sx={{color: "white"}}/>}
                 </IconButton>
                 <motion.div
                     style={{display: "flex", gap: 4}}
@@ -99,10 +96,10 @@ const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, 
                     transition={{duration: 0.3}}
                 >
                     <Typography color="text.primary" sx={{marginTop: "4px", fontWeight: 600, whiteSpace: "nowrap", textTransform: "capitalize" }}>
-                        {selectedBackground?.name || 'No Background'}
+                        {stage.getSelectedBackground()?.name || 'No Background'}
                     </Typography>
-                    {selectedBackground && (
-                        <IconButton size="small" onClick={() => onOpenSettings(selectedBackground)}>
+                    {stage.getSelectedBackground() && (
+                        <IconButton size="small" onClick={() => onOpenSettings(stage.getSelectedBackground())}>
                             <SettingsIcon fontSize="small"/>
                         </IconButton>
                     )}
@@ -127,46 +124,49 @@ const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, 
                         style={{overflow: "hidden"}}
                     >
                         <motion.div style={{display: "flex", flexDirection: "column", gap: 6, width: "100%"}}>
-                            {Object.values(backgrounds).map((background) => (
-                                <ButtonBase
-                                    key={`background_option_${background.id}`}
-                                    onClick={() => {
-                                        stage.setSelectedBackground(background.id);
-                                    }}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "flex-start",
-                                        gap: 1.5,
-                                        width: "100%",
-                                        padding: "6px 12px",
-                                        borderRadius: 8,
-                                        transition: "background-color 0.2s ease",
-                                        textAlign: "left",
-                                        backgroundColor: background.id === stage.chatState.selectedBackground ? 
-                                            "rgba(255,255,255,0.15)" : "transparent",
-                                        "&:hover": {
-                                            backgroundColor: "rgba(255,255,255,0.08)",
-                                        },
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            width: 32,
-                                            height: 32,
-                                            borderRadius: 4,
-                                            backgroundImage: `url(${getBackgroundPreview(background)})`,
-                                            backgroundSize: "cover",
-                                            backgroundPosition: "center",
-                                            flexShrink: 0,
-                                            border: "1px solid rgba(255,255,255,0.2)"
+                            {Object.values(stage.backgrounds).map((background) => {
+                                const bg = background as Background;
+                                return (
+                                    <ButtonBase
+                                        key={`background_option_${bg.id}`}
+                                        onClick={() => {
+                                            stage.setSelectedBackground(bg.id);
                                         }}
-                                    />
-                                    <Typography color="text.primary" sx={{ fontWeight: 600, textTransform: "capitalize" }}>
-                                        {background.name}
-                                    </Typography>
-                                </ButtonBase>
-                            ))}
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "flex-start",
+                                            gap: 1.5,
+                                            width: "100%",
+                                            padding: "6px 12px",
+                                            borderRadius: 8,
+                                            transition: "background-color 0.2s ease",
+                                            textAlign: "left",
+                                            backgroundColor: bg.id === stage.chatState.selectedBackground ? 
+                                                "rgba(255,255,255,0.15)" : "transparent",
+                                            "&:hover": {
+                                                backgroundColor: "rgba(255,255,255,0.08)",
+                                            },
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: 32,
+                                                height: 32,
+                                                borderRadius: 4,
+                                                backgroundImage: `url(${getBackgroundPreview(bg)})`,
+                                                backgroundSize: "cover",
+                                                backgroundPosition: "center",
+                                                flexShrink: 0,
+                                                border: "1px solid rgba(255,255,255,0.2)"
+                                            }}
+                                        />
+                                        <Typography color="text.primary" sx={{ fontWeight: 600, textTransform: "capitalize" }}>
+                                            {bg.name}
+                                        </Typography>
+                                    </ButtonBase>
+                                );
+                            })}
                         </motion.div>
                     </motion.div>
                 )}
