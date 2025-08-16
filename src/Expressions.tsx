@@ -247,7 +247,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
-        await this.updateBackground();
 
         try {
             this.emotionPipeline = await Client.connect("ravenok/emotions");
@@ -257,6 +256,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.error(`Error loading pipelines, error: ${except}`);
             return { success: false, error: except }
         }
+
+        // Sets background image but also updates depth and other elements of incomplete backgrounds.
+        await this.updateBackground();
 
         if (this.alphaMode) {
             console.warn('Alpha mode enabled. This is experimental and may break things.');
