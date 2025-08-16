@@ -363,6 +363,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async updateBackground() {
+        console.log('updateBackground()');
         if (this.alphaMode) {
             await this.generateBackgroundProperties(this.getSelectedBackground());
         }
@@ -826,6 +827,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.warn(`Failed to generate a background description. Cannot generate background image.`);
             return;
         }
+        console.log('Should kick off art generation');
         const imageUrl = (await this.generator.makeImage({
             prompt: substitute(`(Art style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${background.artPrompt})`),
             aspect_ratio: AspectRatio.CINEMATIC_HORIZONTAL,
@@ -833,6 +835,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (imageUrl == '') {
             console.warn(`Failed to generate a background image.`);
         } else {
+            console.log(`Setting background: ${imageUrl}`);
             background.backgroundUrl = imageUrl;
         }
 
@@ -841,9 +844,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async generateBackgroundProperties(background: Background) {
         if (!background.backgroundUrl) {
+            console.log('BackgroundURL is empty');
             return;
         }
         if (this.alphaMode) {
+            console.log('Set background properties');
             if (this.useBackgroundDepth) {
                 try {
                     // This endpoint takes actual image data and not a URL; need to load data from imageUrl
@@ -909,11 +914,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         for (const [id, background] of Object.entries(remoteBackgrounds)) {
             // Remote change, but no change between backup and current local background; override local background
             if (this.backupBackgrounds[id] !== background && this.backgrounds[id] === this.backupBackgrounds[id]) {
+                console.log(`Remote background ${id} has changed; updating local background.`);
                 this.backgrounds[id] = background;
             }
         }
 
         // Differences have been reconciled: push changes to remote and updated backupBackgrounds
+        console.log('Pushing background changes.');
         await this.storage.set('backgrounds', this.backgrounds).forCharacter('1').forChat();
         this.backupBackgrounds = {...this.backgrounds};
     }
