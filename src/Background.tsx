@@ -1,6 +1,6 @@
 export const BACKGROUND_ART_PROMPT: string = 'unpopulated, visual novel background scenery, background only, scenery only';
 
-export const DEFAULT_BORDER_COLOR: string = '#1e1e1edd';
+export const DEFAULT_BORDER_COLOR: string = '#999999dd';
 export const DEFAULT_HIGHLIGHT_COLOR: string = '#ffffff';
 
 export type Background = {

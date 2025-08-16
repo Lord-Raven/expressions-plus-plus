@@ -358,6 +358,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async updateBackground() {
+        if (this.alphaMode) {
+            await this.generateBackgroundProperties(this.getSelectedBackground());
+        }
         await this.updateChatState();
         await this.messenger.updateEnvironment({background: this.getSelectedBackground().backgroundUrl});
     }
@@ -825,10 +828,20 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.warn(`Failed to generate a background image.`);
         } else {
             background.backgroundUrl = imageUrl;
-            if (this.alphaMode && this.useBackgroundDepth) {
+        }
+
+        await this.updateBackground();
+    }
+
+    async generateBackgroundProperties(background: Background) {
+        if (!background.backgroundUrl) {
+            return;
+        }
+        if (this.alphaMode) {
+            if (this.useBackgroundDepth) {
                 try {
                     // This endpoint takes actual image data and not a URL; need to load data from imageUrl
-                    const response = await fetch(imageUrl);
+                    const response = await fetch(background.backgroundUrl);
                     const imageBlob = await response.blob();
                     const depthPromise = this.depthPipeline.predict("/on_submit", {image: imageBlob});
 
@@ -849,19 +862,29 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
                     console.log(`Color palette: ${colors}`);
 
-                    background.highlightColor = colors[0];
-                    background.borderColor = colors[Math.floor(colors.length / 2)];
+                    background.highlightColor = background.highlightColor == DEFAULT_HIGHLIGHT_COLOR ? colors[0] : background.highlightColor;
+                    background.borderColor = background.borderColor == DEFAULT_BORDER_COLOR ? colors[Math.floor(colors.length / 2)] : background.borderColor;
                     background.depthUrl = '';
                     const depthResponse = await depthPromise;
                     console.log(depthResponse);
-                    background.depthUrl = depthResponse.data[1].url;
+                    // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
+                    const imageFile: File = new File([await (await fetch(depthResponse.data[1].url)).blob()], `${background.id}_depth.png`, {type: 'image/png'});
+                    const updateResponse = await this.storage.set(`${background.id}_depth.png`, imageFile).forUser();
+                    console.log('Pushed depth URL to Chub:');
+                    console.log(updateResponse);
+
+                    // Swap this to Chub URL once I know what this looks like.
+                    background.depthUrl = updateResponse.data[0].value;
                 } catch (err) {
                     console.warn(`Failed to generate palette or depth map for background image: ${err}`);
                 }
             }
         }
+    }
 
-        await this.updateBackground();
+    async saveBackground(background: Background) {
+
+        //let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forCharacter(this.userId).forUser().forChat()
     }
 
     async singleSpeakerCheck(speaker: Speaker) {
@@ -941,9 +964,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async setSelectedBackground(backgroundId: string): Promise<void> {
         if (this.chatState.backgrounds[backgroundId]) {
             this.chatState.selectedBackground = backgroundId;
+
+
             
             await this.updateBackground();
-            await this.updateChatState();
         }
     }
     
