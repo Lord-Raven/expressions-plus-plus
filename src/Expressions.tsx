@@ -361,11 +361,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async updateBackground() {
-        console.log('updateBackground()');
-        if (this.alphaMode) {
-            console.log(this.backgrounds);
-            await this.generateBackgroundProperties(this.getSelectedBackground());
-        }
         await this.updateBackgroundsStorage();
         await this.updateChatState();
         await this.messenger.updateEnvironment({background: this.getSelectedBackground().backgroundUrl});
@@ -836,7 +831,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             background.backgroundUrl = imageUrl;
         }
 
-        await this.updateBackground();
+        await this.generateBackgroundProperties(background);
     }
 
     async generateBackgroundProperties(background: Background) {
