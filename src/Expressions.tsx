@@ -894,7 +894,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             keys: ['backgrounds']
         });
 
-        if (response.data) {
+        if (response.data && response.data.length > 0 && response.data[0].value) {
             return response.data[0].value;
         }
         return {};
