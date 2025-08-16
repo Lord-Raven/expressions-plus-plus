@@ -884,7 +884,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // Similar to updating wardrobes, we compare remoteBackgrounds against backupBackgrounds to determine remote changes and apply those to this.backgrounds
         for (const [id, background] of Object.entries(remoteBackgrounds)) {
             // Remote change, but no change between backup and current local background; override local background
-            if (this.backupBackgrounds[id] !== background && this.backgrounds[id] === this.backupBackgrounds[id]) {
+            if (JSON.stringify(this.backupBackgrounds[id]) !== JSON.stringify(background) && JSON.stringify(this.backgrounds[id]) === JSON.stringify(this.backupBackgrounds[id])) {
                 console.log(`Remote background ${id} has changed; updating local background.`);
                 this.backgrounds[id] = background;
             }
@@ -893,7 +893,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // Differences have been reconciled: push changes to remote and updated backupBackgrounds
         console.log('Pushing background changes.');
         await this.storage.set('backgrounds', this.backgrounds).forCharacter('1').forChat();
-        this.backupBackgrounds = {...this.backgrounds};
+        this.backupBackgrounds = JSON.parse(JSON.stringify(this.backgrounds));
     }
 
     async singleSpeakerCheck(speaker: Speaker) {
