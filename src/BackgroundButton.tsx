@@ -17,11 +17,10 @@ const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, 
     const [isExpanded, setIsExpanded] = useState(false);
 
     const selectedBackground = stage.getSelectedBackground();
-    const backgrounds: {[key: string]: Background} = stage.alphaMode ? stage.backgrounds : stage.chatState.backgrounds;
+    const backgrounds: {[key: string]: Background} = stage.backgrounds;
 
     const handleCreateNewBackground = () => {
         const newBackground = stage.createNewBackground();
-        stage.chatState.backgrounds[newBackground.id] = newBackground;
         stage.backgrounds[newBackground.id] = newBackground;
         stage.wrapPromise(stage.generateBackgroundImage(newBackground, Object.values(stage.speakers)[0], ''), `Generating background for ${newBackground.name}.`).then(() => {stage.setSelectedBackground(newBackground.id)});
     };

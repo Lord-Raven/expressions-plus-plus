@@ -74,10 +74,10 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
     const NEW_BACKGROUND_NAME = 'New Background';
 
     useEffect(() => {
-        setBackgrounds((stage.alphaMode ? stage.backgrounds : stage.chatState.backgrounds) ?? {});
-        setBackgroundIds(Object.keys(stage.alphaMode ? stage.backgrounds : stage.chatState.backgrounds ?? {}));
-        setSelectedBackground(stage.chatState.selectedBackground ?? Object.keys((stage.alphaMode ? stage.backgrounds : stage.chatState.backgrounds) ?? {})[0] ?? '');
-    }, [open, stage.alphaMode ? stage.backgrounds : stage.chatState.backgrounds, stage.chatState.selectedBackground]);
+        setBackgrounds( stage.backgrounds ?? {});
+        setBackgroundIds(Object.keys(stage.backgrounds ?? {}));
+        setSelectedBackground(stage.chatState.selectedBackground ?? Object.keys(stage.backgrounds ?? {})[0] ?? '');
+    }, [open, stage.backgrounds, stage.chatState.selectedBackground]);
 
     useEffect(() => {
         register?.({ setOpen });
@@ -85,11 +85,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
     }, [register]);
 
     const updateStageBackgrounds = (newBackgrounds: {[key: string]: Background}) => {
-        if (stage.alphaMode) {
-            stage.backgrounds = newBackgrounds;
-        } else {
-            stage.chatState.backgrounds = newBackgrounds;
-        }
+        stage.backgrounds = newBackgrounds;
         setBackgrounds(newBackgrounds);
         setBackgroundIds(Object.keys(newBackgrounds));
         // If selected background no longer exists, select the first available one
@@ -99,9 +95,9 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                 stage.chatState.selectedBackground = firstId;
                 setSelectedBackground(firstId);
                 stage.setSelectedBackground(firstId);
+                stage.updateChatState();
             }
         }
-        stage.updateChatState();
         stage.updateBackgrounds();
         stage.updateBackgroundsStorage();
     }

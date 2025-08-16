@@ -31,7 +31,6 @@ type ChatStateType = {
     selectedOutfit:{[key: string]: string};
     generatedDescriptions:{[key: string]: string};
     speakerVisible:{[key: string]: boolean};
-    backgrounds:{[key: string]: Background};
     selectedBackground: string;
 }
 
@@ -197,7 +196,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             selectedOutfit: chatState?.selectedOutfit ?? {},
             generatedDescriptions: chatState?.generatedDescriptions ?? {},
             speakerVisible: chatState?.speakerVisible ?? {},
-            backgrounds: chatState?.backgrounds ?? {},
             selectedBackground: chatState?.selectedBackground ?? ''
         };
 
@@ -222,23 +220,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }
             });
         }
-
-        // Initialize default background if none exists
-        if (!this.alphaMode && Object.keys(this.chatState.backgrounds).length === 0) {
-            const defaultBackgroundId = generateUUID();
-            this.chatState.backgrounds[defaultBackgroundId] = {
-                id: defaultBackgroundId,
-                name: 'Default Background',
-                artPrompt: '',
-                backgroundUrl: '',
-                depthUrl: this.messageState.depthUrl ?? '',
-                borderColor: this.messageState.borderColor ?? DEFAULT_BORDER_COLOR,
-                highlightColor: this.messageState.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR,
-                triggerWords: ''
-            };
-            this.chatState.selectedBackground = defaultBackgroundId;
-            this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], this.chatState.backgrounds[defaultBackgroundId], ''), `Generating background for ${this.chatState.backgrounds[defaultBackgroundId].name}.`);
-        }
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
@@ -252,11 +233,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             return { success: false, error: except }
         }
 
-        if (this.alphaMode) {
-            // Load backgrounds
-            this.backgrounds = await this.readBackgroundsFromStorage();
-            this.backupBackgrounds = {...this.backgrounds};
-        }
+        // Load backgrounds
+        this.backgrounds = await this.readBackgroundsFromStorage();
+        this.backupBackgrounds = {...this.backgrounds};
 
         // Sets background image but also updates depth and other elements of incomplete backgrounds.
         await this.updateBackground();
@@ -895,7 +874,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (response.data && response.data.length > 0 && response.data[0].value) {
             return response.data[0].value;
         }
-        return {};
+        const background = this.createNewBackground('Default Background');
+        return {[background.id]: background};
     }
 
     async updateBackgroundsStorage() {
@@ -979,24 +959,19 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getSelectedBackground(): Background {
-        return (this.alphaMode ? this.backgrounds : this.chatState.backgrounds)[this.chatState.selectedBackground] || {
-            id: '',
-            name: 'Default Background',
-            artPrompt: '',
-            backgroundUrl: '',
-            depthUrl: '',
-            borderColor: DEFAULT_BORDER_COLOR,
-            highlightColor: DEFAULT_HIGHLIGHT_COLOR,
-            triggerWords: ''
-        };
+        if (!this.backgrounds[this.chatState.selectedBackground]) {
+            this.chatState.selectedBackground = Object.keys(this.backgrounds)[0];
+        }
+        return this.backgrounds[this.chatState.selectedBackground];
     }
 
     async setSelectedBackground(backgroundId: string): Promise<void> {
-        if ((this.alphaMode ? this.backgrounds : this.chatState.backgrounds)[backgroundId]) {
+        if (this.backgrounds[backgroundId]) {
             this.chatState.selectedBackground = backgroundId;
-
-            await this.updateBackground();
+        } else {
+            this.chatState.selectedBackground = Object.keys(this.backgrounds)[0];
         }
+        await this.updateBackground();
     }
     
     createNewBackground(name: string = 'New Background'): Background {
