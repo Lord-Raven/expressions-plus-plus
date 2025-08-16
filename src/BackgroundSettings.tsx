@@ -100,7 +100,6 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                 stage.updateChatState();
             }
         }
-        stage.updateBackgrounds();
         stage.updateBackgroundsStorage();
     }
 
