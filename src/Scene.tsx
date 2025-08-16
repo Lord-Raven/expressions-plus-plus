@@ -44,13 +44,6 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                 // Otherwise, image width is constrained, so multiply x by this ratio
                 x *= (window.innerHeight / window.innerWidth) / (9 / 16);
             }
-                // Clamp the vector to a maximum radius of 0.5
-                const length = Math.sqrt(x * x + y * y);
-                if (length > 0.5) {
-                    const scale = 0.5 / length;
-                    x *= scale;
-                    y *= scale;
-                }
             setTargetPosition({ x, y });
         };
 
@@ -184,7 +177,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                     height: "100vh",
                                 }}
                             >
-                                {depthUrl ? (
+                                {stage.alphaMode ? (
                                     <Canvas
                                         style={{
                                             position: 'absolute',
