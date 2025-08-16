@@ -67,7 +67,6 @@ type ConfigType = {
 type InitStateType = null;
 
 type MessageStateType = {
-    backgroundUrl: string;
     depthUrl: string;
     borderColor: string;
     highlightColor: string;
@@ -186,7 +185,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Set states or default them.
         this.messageState = {
-            backgroundUrl: messageState?.backgroundUrl ?? '',
             depthUrl: messageState?.depthUrl ?? '',
             borderColor: messageState?.borderColor ?? DEFAULT_BORDER_COLOR,
             highlightColor: messageState?.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR,
@@ -232,7 +230,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 id: defaultBackgroundId,
                 name: 'Default Background',
                 artPrompt: '',
-                backgroundUrl: this.messageState.backgroundUrl ?? '',
+                backgroundUrl: '',
                 depthUrl: this.messageState.depthUrl ?? '',
                 borderColor: this.messageState.borderColor ?? DEFAULT_BORDER_COLOR,
                 highlightColor: this.messageState.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR,
@@ -365,6 +363,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async updateBackground() {
         console.log('updateBackground()');
         if (this.alphaMode) {
+            console.log(this.backgrounds);
             await this.generateBackgroundProperties(this.getSelectedBackground());
         }
         await this.updateBackgroundsStorage();
@@ -375,14 +374,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async setState(state: MessageStateType): Promise<void> {
         if (state != null) {
             this.messageState = {
-                backgroundUrl: state?.backgroundUrl ?? '',
                 depthUrl: state?.depthUrl ?? '',
                 borderColor: state?.borderColor ?? DEFAULT_BORDER_COLOR,
                 highlightColor: state?.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR,
                 speakerEmotion: state?.speakerEmotion ?? {},
                 activeSpeaker: state?.activeSpeaker ?? ''
             }
-            await this.updateBackground();
         }
     }
 
