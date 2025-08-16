@@ -77,6 +77,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
         setBackgrounds(stage.chatState.backgrounds ?? {});
         setBackgroundIds(Object.keys(stage.chatState.backgrounds ?? {}));
         setSelectedBackground(stage.chatState.selectedBackground ?? Object.keys(stage.chatState.backgrounds ?? {})[0] ?? '');
+        stage.updateBackgroundsStorage();
     }, [open, stage.chatState.backgrounds, stage.chatState.selectedBackground]);
 
     useEffect(() => {
@@ -309,7 +310,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                                     updateStageBackgrounds(updatedBackgrounds);
                                                 }
                                             },
-                                            {
+                                            /*{
                                                 type: 'keywords',
                                                 label: 'Comma-Delimited Trigger Words',
                                                 value: currentBackground.triggerWords || "",
@@ -317,7 +318,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                                     const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, triggerWords: val } };
                                                     updateStageBackgrounds(updatedBackgrounds);
                                                 }
-                                            },
+                                            },*/
                                             {
                                                 type: 'borderColor',
                                                 label: 'Border Color',

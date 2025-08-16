@@ -207,7 +207,7 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
             float blurAmount = depthDifference * BLUR_STRENGTH;
             
             // Calculate blur radius in texture space
-            float blurRadius = blurAmount * 0.002; // Fixed blur radius
+            float blurRadius = blurAmount * 0.001; // Fixed blur radius
             
             // Sample color with or without blur based on depth
             vec4 color;

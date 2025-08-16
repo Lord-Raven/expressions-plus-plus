@@ -94,12 +94,18 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
     // Calculate pan values
     const { panX, panY } = useMemo(() => {
         
-        // Calculate panning offset
-        const panStrength = 0.05;
-        const panX = (stage.alphaMode && imageUrl) ? -currentPosition.x * panStrength : 0;
-        const panY = (stage.alphaMode && imageUrl) ? currentPosition.y * panStrength : 0;
+    // Calculate panning offset with quadratic decay
+    const panStrength = 0.05;
+    // Distance from center (0,0)
+    const distance = Math.sqrt(currentPosition.x * currentPosition.x + currentPosition.y * currentPosition.y);
+    // Quadratic decay: scale = distance^2 (normalized to max 1)
+    const maxDistance = Math.sqrt(1 * 1 + 1 * 1); // max possible distance in normalized coords
+    const scale = Math.pow(distance / maxDistance, 2); // quadratic decay
+    // Alternatively, for exponential decay: const scale = 1 - Math.exp(-distance * 3);
+    const panX = (stage.alphaMode && imageUrl) ? -currentPosition.x * panStrength * scale : 0;
+    const panY = (stage.alphaMode && imageUrl) ? currentPosition.y * panStrength * scale : 0;
 
-        return { panX, panY };
+    return { panX, panY };
     }, [currentPosition]);
 
     const borderColor = stage.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR;

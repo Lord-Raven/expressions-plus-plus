@@ -22,6 +22,7 @@ import ColorThief from "colorthief";
 import { Emotion, EMOTION_MAPPING, EMOTION_PROMPTS, EmotionPack } from "./Emotion.tsx";
 import { Background, DEFAULT_BORDER_COLOR, DEFAULT_HIGHLIGHT_COLOR, BACKGROUND_ART_PROMPT } from "./Background.tsx";
 import BackgroundSettings, { BackgroundSettingsHandle } from "./BackgroundSettings.tsx";
+import { generateUUID } from "three/src/math/MathUtils.js";
 
 
 
@@ -124,14 +125,6 @@ export function substitute(input: string) {
     return input;
 }
 
-export function generateGuid(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
-        const random = (Math.random() * 16) | 0;
-        const value = char === 'x' ? random : (random & 0x3) | 0x8;
-        return value.toString(16);
-    });
-}
-
 export class Expressions extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
 
     // Chat state:
@@ -146,6 +139,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     // so that those changes can be reconciled against a potentially modified wardrobes above.
     // Should be set after a successful load/reconciliation.
     backupWardrobes: {[key: string]: WardrobeType} = {};
+    
+    backgrounds: {[key: string]: Background} = {};
+    // Should be set after a successful load/reconciliation.
+    backupBackgrounds: {[key: string]: Background} = {};
 
     // Not saved:
     emotionPipeline: any = null;
@@ -229,8 +226,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
 
         // Initialize default background if none exists
-        if (Object.keys(this.chatState.backgrounds).length === 0) {
-            const defaultBackgroundId = generateGuid();
+        if (!this.alphaMode && Object.keys(this.chatState.backgrounds).length === 0) {
+            const defaultBackgroundId = generateUUID();
             this.chatState.backgrounds[defaultBackgroundId] = {
                 id: defaultBackgroundId,
                 name: 'Default Background',
@@ -255,6 +252,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } catch (except: any) {
             console.error(`Error loading pipelines, error: ${except}`);
             return { success: false, error: except }
+        }
+
+        if (this.alphaMode) {
+            // Load backgrounds
+            this.backgrounds = await this.readBackgroundsFromStorage();
+            this.backupBackgrounds = {...this.backgrounds};
         }
 
         // Sets background image but also updates depth and other elements of incomplete backgrounds.
@@ -323,7 +326,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     this.wardrobes[speakerId] = {
                         speakerId: speakerId,
                         outfits: {
-                            [generateGuid()]: {
+                            [generateUUID()]: {
                                 name: DEFAULT_OUTFIT_NAME,
                                 artPrompt: '',
                                 images: {},
@@ -363,6 +366,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (this.alphaMode) {
             await this.generateBackgroundProperties(this.getSelectedBackground());
         }
+        await this.updateBackgroundsStorage();
         await this.updateChatState();
         await this.messenger.updateEnvironment({background: this.getSelectedBackground().backgroundUrl});
     }
@@ -524,7 +528,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return finalWardrobes;
     }
 
-    async updateStorage() {
+    async updateWardrobeStorage() {
         if (this.alphaMode) {
 
             const remoteWardrobes: {[key: string]: WardrobeType} = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
@@ -884,9 +888,33 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
     }
 
-    async saveBackground(background: Background) {
+    async readBackgroundsFromStorage(): Promise<{[key: string]: Background}> {
+        const response = await this.storage.query({
+            chat_local: true,
+            keys: ['backgrounds']
+        });
 
-        //let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forCharacter(this.userId).forUser().forChat()
+        if (response.data) {
+            return response.data[0].value;
+        }
+        return {};
+    }
+
+    async updateBackgroundsStorage() {
+        // Read backgrounds from remote storage:
+        const remoteBackgrounds = await this.readBackgroundsFromStorage();
+
+        // Similar to updating wardrobes, we compare remoteBackgrounds against backupBackgrounds to determine remote changes and apply those to this.backgrounds
+        for (const [id, background] of Object.entries(remoteBackgrounds)) {
+            // Remote change, but no change between backup and current local background; override local background
+            if (this.backupBackgrounds[id] !== background && this.backgrounds[id] === this.backupBackgrounds[id]) {
+                this.backgrounds[id] = background;
+            }
+        }
+
+        // Differences have been reconciled: push changes to remote and updated backupBackgrounds
+        await this.storage.set('backgrounds', this.backgrounds).forChat();
+        this.backupBackgrounds = {...this.backgrounds};
     }
 
     async singleSpeakerCheck(speaker: Speaker) {
@@ -951,7 +979,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getSelectedBackground(): Background {
-        return this.chatState.backgrounds[this.chatState.selectedBackground] || {
+        return (this.alphaMode ? this.backgrounds : this.chatState.backgrounds)[this.chatState.selectedBackground] || {
             id: '',
             name: 'Default Background',
             artPrompt: '',
@@ -964,17 +992,15 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async setSelectedBackground(backgroundId: string): Promise<void> {
-        if (this.chatState.backgrounds[backgroundId]) {
+        if ((this.alphaMode ? this.backgrounds : this.chatState.backgrounds)[backgroundId]) {
             this.chatState.selectedBackground = backgroundId;
 
-
-            
             await this.updateBackground();
         }
     }
     
     createNewBackground(name: string = 'New Background'): Background {
-        const backgroundId = generateGuid();
+        const backgroundId = generateUUID();
         return {
             id: backgroundId,
             name: name,
@@ -988,7 +1014,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     render(): ReactElement {
-
         return(
             <div className="big-stacker"
                 key={'big-over-stacker'}

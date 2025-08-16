@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from "react";
-import {substitute, generateGuid} from "./Expressions";
+import {substitute} from "./Expressions";
 import { Speaker } from "@chub-ai/stages-ts";
 import {motion} from "framer-motion";
 import {
@@ -17,6 +17,7 @@ import silhouetteUrl from './assets/silhouette.png'
 import { SpeakerSettingsHandle } from "./SpeakerSettings";
 import { Emotion, EMOTION_PROMPTS } from "./Emotion";
 import EditModeFields, { EditModeFieldConfig } from "./EditModeFields";
+import { generateUUID } from "three/src/math/MathUtils.js";
 
 type NewSpeakerSettingsProps = {
     register?: (handle: SpeakerSettingsHandle) => void;
@@ -242,7 +243,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         onChange={(_, newValue) => {
                             if (newValue === "__add_new__") {
                                 const newName = NEW_OUTFIT_NAME;
-                                const newGuid = generateGuid();
+                                const newGuid = generateUUID();
                                 updateStageWardrobeMap({...outfitMap, [newGuid]: {name: newName, generated: true, images: {}, artPrompt: "", triggerWords: "", global: false}});
                                 setSelectedOutfit(newGuid);
 
@@ -346,7 +347,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     visible: outfitMap[selectedOutfit]?.generated,
                                     disabled: checkIsLocked(selectedOutfit),
                                 },
-                                {
+                                /*{
                                     type: 'keywords',
                                     label: 'Comma-Delimitted Keywords',
                                     value: outfitMap[selectedOutfit]?.triggerWords || "",
@@ -356,7 +357,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     },
                                     visible: outfitMap[selectedOutfit]?.generated,
                                     disabled: checkIsLocked(selectedOutfit),
-                                },
+                                },*/
                                 {
                                     type: 'global',
                                     label: 'Global Outfit',
