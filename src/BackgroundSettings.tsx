@@ -231,8 +231,6 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                         createNewBackground();
                                     } else {
                                         setSelectedBackground(newValue);
-                                        stage.chatState.selectedBackground = newValue;
-                                        stage.setSelectedBackground(newValue);
                                     }
                                 }}
                             >
