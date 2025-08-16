@@ -74,11 +74,11 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
     const NEW_BACKGROUND_NAME = 'New Background';
 
     useEffect(() => {
-        setBackgrounds(stage.chatState.backgrounds ?? {});
-        setBackgroundIds(Object.keys(stage.chatState.backgrounds ?? {}));
-        setSelectedBackground(stage.chatState.selectedBackground ?? Object.keys(stage.chatState.backgrounds ?? {})[0] ?? '');
+        setBackgrounds((stage.alphaMode ? stage.backgrounds : stage.chatState.backgrounds) ?? {});
+        setBackgroundIds(Object.keys(stage.alphaMode ? stage.backgrounds : stage.chatState.backgrounds ?? {}));
+        setSelectedBackground(stage.alphaMode ? stage.backgrounds[0] : stage.chatState.selectedBackground ?? Object.keys(stage.chatState.backgrounds ?? {})[0] ?? '');
         stage.updateBackgroundsStorage();
-    }, [open, stage.chatState.backgrounds, stage.chatState.selectedBackground]);
+    }, [open, stage.alphaMode ? stage.backgrounds : stage.chatState.backgrounds, stage.chatState.selectedBackground]);
 
     useEffect(() => {
         register?.({ setOpen });
@@ -86,7 +86,11 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
     }, [register]);
 
     const updateStageBackgrounds = (newBackgrounds: {[key: string]: Background}) => {
-        stage.chatState.backgrounds = newBackgrounds;
+        if (stage.alphaMode) {
+            stage.backgrounds = newBackgrounds;
+        } else {
+            stage.chatState.backgrounds = newBackgrounds;
+        }
         setBackgrounds(newBackgrounds);
         setBackgroundIds(Object.keys(newBackgrounds));
         // If selected background no longer exists, select the first available one
