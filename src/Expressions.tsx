@@ -891,6 +891,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async readBackgroundsFromStorage(): Promise<{[key: string]: Background}> {
         const response = await this.storage.query({
             chat_local: true,
+            character_ids: ['1'],
             keys: ['backgrounds']
         });
 
@@ -913,7 +914,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
 
         // Differences have been reconciled: push changes to remote and updated backupBackgrounds
-        await this.storage.set('backgrounds', this.backgrounds).forChat();
+        await this.storage.set('backgrounds', this.backgrounds).forCharacter('1').forChat();
         this.backupBackgrounds = {...this.backgrounds};
     }
 
