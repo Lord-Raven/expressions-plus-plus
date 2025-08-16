@@ -94,16 +94,10 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
     // Calculate pan values
     const { panX, panY } = useMemo(() => {
         
-    // Calculate panning offset with quadratic tapering (strongest at edges, weakest at center)
+    // Calculate panning offset
     const panStrength = 0.05;
-    const distance = Math.sqrt(currentPosition.x * currentPosition.x + currentPosition.y * currentPosition.y);
-    const maxDistance = Math.sqrt(1 * 1 + 1 * 1); // max possible distance in normalized coords
-    // Quadratic taper: scale = 1 - (distance / maxDistance) ** 2
-    const scale = 1 - Math.pow(distance / maxDistance, 2);
-    // Clamp scale to [0,1]
-    const clampedScale = Math.max(0, Math.min(1, scale));
-    const panX = (stage.alphaMode && imageUrl) ? -currentPosition.x * panStrength * clampedScale : 0;
-    const panY = (stage.alphaMode && imageUrl) ? currentPosition.y * panStrength * clampedScale : 0;
+    const panX = (stage.alphaMode && imageUrl) ? -currentPosition.x * panStrength : 0;
+    const panY = (stage.alphaMode && imageUrl) ? currentPosition.y * panStrength : 0;
 
     return { panX, panY };
     }, [currentPosition]);

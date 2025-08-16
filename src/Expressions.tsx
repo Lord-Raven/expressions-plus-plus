@@ -854,9 +854,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     const updateResponse = await this.storage.set(`${background.id}_depth.png`, imageFile).forUser();
                     console.log('Pushed depth URL to Chub:');
                     console.log(updateResponse);
-
-                    // Swap this to Chub URL once I know what this looks like.
                     background.depthUrl = updateResponse.data[0].value;
+                    await this.updateBackgroundsStorage();
                 } catch (err) {
                     console.warn(`Failed to generate palette or depth map for background image: ${err}`);
                 }
