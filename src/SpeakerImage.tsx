@@ -38,18 +38,23 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     // Determine current state, including 'absent' for initial and exit
     const [currentState, setCurrentState] = useState<'absent' | 'talking' | 'idle'>('absent');
 
-    // Timer to drop transition duration after 0.5s on mount
-    useEffect(() => {
-        timerRef.current = setTimeout(() => setTransitionDuration(0.01), 500);
-        return () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
-        };
-    }, []);
-
     // Update currentState when isTalking changes
     useEffect(() => {
         setCurrentState(isTalking ? 'talking' : 'idle');
     }, [isTalking]);
+
+    // Timer to drop transition duration after 0.5s when entering talking/idle
+    useEffect(() => {
+        if (currentState === 'talking' || currentState === 'idle') {
+            setTransitionDuration(0.5);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => setTransitionDuration(0.01), 500);
+        }
+        if (currentState === 'absent') {
+            setTransitionDuration(0.5);
+            if (timerRef.current) clearTimeout(timerRef.current);
+        }
+    }, [currentState]);
 
     // Process image with color multiplication
     useEffect(() => {
