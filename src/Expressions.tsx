@@ -439,7 +439,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // A speakerId is either a character ID or a persona ID.
         // A speakerId can have both per-chat and global wardrobes that need to be loaded and combined.
 
-
         const wardrobeFetches = [
             // TODO: get() needs a forChat()
             this.storage.query(
@@ -460,7 +459,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         ];
 
         // Load all wardrobes in parallel
-        console.log('All fetched wardrobes:');
         const allWardrobes = await Promise.all(wardrobeFetches.map(async promise => {const response = await promise; console.log(response); return response}));
 
         const finalWardrobes = allWardrobes.map(response => response.data).flat().filter(item => item.character_id).reduce((acc: {[key: string]: WardrobeType}, item) => {
@@ -471,7 +469,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             return acc;
         }, {});
 
-        console.log('Final, assembled wardrobes:');
+        console.log('Final, assembled, fetched wardrobes:');
         console.log(finalWardrobes);
 
         return finalWardrobes;
@@ -482,8 +480,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const remoteWardrobes: {[key: string]: WardrobeType} = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
         // Should check for differences in wardrobes between existingWardrobes and this.backupWardrobes, then apply non-conflicting changes to this.wardrobes before saving.
         // Bear in mind that this.backupWardrobes will have non-generated outfits, while we expect existingWardrobes to have only generated outfits.
-        console.log('Existing wardrobes from storage:');
-        console.log(remoteWardrobes);
         // Compare existingWardrobes against this.backupWardrobes to find differences in generated outfits:
         Object.keys(remoteWardrobes).forEach((speakerId) => {
             if (this.backupWardrobes[speakerId]) {
@@ -598,7 +594,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log(response);
 
         // With everything reconciled and updated, set backup to a copy of wardrobes.
-        console.log('update backupWardrobes');
         this.backupWardrobes = JSON.parse(JSON.stringify(this.wardrobes));
 
     }
@@ -652,7 +647,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async generateSpeakerImage(speaker: Speaker, outfitKey: string, emotion: Emotion): Promise<void> {
-        console.log(`Current generated description: ${this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt}`);
         const outfitName = (this.wardrobes[speaker.anonymizedId].outfits[outfitKey]?.name ?? outfitKey);
 
         if (!this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt) {
@@ -730,7 +724,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.warn(`Failed to generate a background description. Cannot generate background image.`);
             return;
         }
-        console.log('Should kick off art generation');
         const imageUrl = (await this.generator.makeImage({
             prompt: substitute(`(Art style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${background.artPrompt})`),
             aspect_ratio: AspectRatio.CINEMATIC_HORIZONTAL,
@@ -738,7 +731,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (imageUrl == '') {
             console.warn(`Failed to generate a background image.`);
         } else {
-            console.log(`Setting background: ${imageUrl}`);
             background.backgroundUrl = imageUrl;
         }
 
@@ -747,11 +739,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async generateBackgroundProperties(background: Background) {
         if (!background.backgroundUrl) {
-            console.log('BackgroundURL is empty');
             return;
         }
 
-        console.log('Set background properties');
         if (this.useBackgroundDepth) {
             try {
                 // This endpoint takes actual image data and not a URL; need to load data from imageUrl
@@ -775,17 +765,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }).map(c => `#${c.map(channel => channel.toString(16).padStart(2, '0')).join('')}`);
 
                 console.log(`Color palette: ${colors}`);
-
                 background.highlightColor = background.highlightColor == DEFAULT_HIGHLIGHT_COLOR ? colors[0] : background.highlightColor;
                 background.borderColor = background.borderColor == DEFAULT_BORDER_COLOR ? colors[Math.floor(colors.length / 2)] : background.borderColor;
                 background.depthUrl = '';
                 const depthResponse = await depthPromise;
-                console.log(depthResponse);
                 // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
                 const imageFile: File = new File([await (await fetch(depthResponse.data[1].url)).blob()], `${background.id}_depth.png`, {type: 'image/png'});
                 const updateResponse = await this.storage.set(`${background.id}_depth.png`, imageFile).forUser();
-                console.log('Pushed depth URL to Chub:');
-                console.log(updateResponse);
                 background.depthUrl = updateResponse.data[0].value;
                 await this.updateBackgroundsStorage();
             } catch (err) {
