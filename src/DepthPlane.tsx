@@ -146,8 +146,8 @@ const DepthPlane = ({ imageUrl, depthUrl, panX, panY }: DepthPlaneProps) => {
           uniform vec2 uParallax;
 
           const int MAX_STEPS = 16;
-          const float DEPTH_SCALE = 0.2;
-          const float BLUR_STRENGTH = 1.5;
+          const float DEPTH_SCALE = 0.25;
+          const float BLUR_STRENGTH = 2;
           const float FOCUS_DEPTH = 0.75; // Objects at this depth will be in focus
 
           // Simple box blur function
