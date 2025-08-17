@@ -32,13 +32,13 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     panY
 }) => {
     // Timer-based transition duration
-    const [transitionDuration, setTransitionDuration] = useState(0.3);
+    const [transitionDuration, setTransitionDuration] = useState(0.5);
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
     const currentState = isTalking ? 'talking' : 'idle';
 
-    // Timer to drop transition duration after 0.3s
+    // Timer to drop transition duration after 0.5s
     useEffect(() => {
-        const timer = setTimeout(() => setTransitionDuration(0.01), 300);
+        const timer = setTimeout(() => setTransitionDuration(0.01), 500);
         return () => clearTimeout(timer);
     }, []);
 
@@ -75,9 +75,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(0.8)',
             zIndex: zIndex,
             transition: {
-                x: { ease: "easeOut", duration: transitionDuration },
-                bottom: { ease: "linear", duration: transitionDuration },
-                opacity: { ease: "easeOut", duration: transitionDuration }
+                x: { ease: "easeOut", duration: 0.5 },
+                bottom: { ease: "linear", duration: 0.5 },
+                opacity: { ease: "easeOut", duration: 0.5 }
             }
         },
         talking: {
