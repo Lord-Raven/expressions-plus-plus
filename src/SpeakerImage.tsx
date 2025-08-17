@@ -1,6 +1,6 @@
 import {motion, Variants} from "framer-motion";
 import { Speaker } from "@chub-ai/stages-ts";
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, useRef } from "react";
 import { Emotion } from "./Emotion";
 
 const IDLE_HEIGHT: number = 70;
@@ -34,13 +34,22 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     // Timer-based transition duration
     const [transitionDuration, setTransitionDuration] = useState(0.5);
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
-    const currentState = isTalking ? 'talking' : 'idle';
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    // Determine current state, including 'absent' for initial and exit
+    const [currentState, setCurrentState] = useState<'absent' | 'talking' | 'idle'>('absent');
 
-    // Timer to drop transition duration after 0.5s
+    // Timer to drop transition duration after 0.5s on mount
     useEffect(() => {
-        const timer = setTimeout(() => setTransitionDuration(0.01), 500);
-        return () => clearTimeout(timer);
+        timerRef.current = setTimeout(() => setTransitionDuration(0.01), 500);
+        return () => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
     }, []);
+
+    // Update currentState when isTalking changes
+    useEffect(() => {
+        setCurrentState(isTalking ? 'talking' : 'idle');
+    }, [isTalking]);
 
     // Process image with color multiplication
     useEffect(() => {
@@ -59,6 +68,15 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         };
         img.src = imageUrl;
     }, [imageUrl, highlightColor]);
+    
+    // Reset timer and duration when state becomes 'absent'
+    useEffect(() => {
+        if (currentState === 'absent') {
+            setTransitionDuration(0.5);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => setTransitionDuration(0.01), 500);
+        }
+    }, [currentState]);
 
     // Calculate final parallax position
     const tempY =  (isTalking ? 0 : (2 + yPosition));
@@ -75,9 +93,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             filter: 'brightness(0.8)',
             zIndex: zIndex,
             transition: {
-                x: { ease: "easeOut", duration: 0.5 },
-                bottom: { ease: "linear", duration: 0.5 },
-                opacity: { ease: "easeOut", duration: 0.5 }
+                x: { ease: "easeOut", duration: transitionDuration },
+                bottom: { ease: "linear", duration: transitionDuration },
+                opacity: { ease: "easeOut", duration: transitionDuration }
             }
         },
         talking: {
@@ -115,6 +133,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             initial='absent'
             exit='absent'
             animate={currentState}
+            onAnimationComplete={(def) => {
+                if (def === 'absent') setCurrentState('absent');
+            }}
             style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
             {/* Blurred background layer */}
             <img 
