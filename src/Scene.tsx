@@ -122,7 +122,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
             onMouseLeave={() => setIsMouseOver(false)}
         >
             <AnimatePresence>
-                {imageUrl && (
+                {imageUrl && stage.generateBackgrounds && (
                     <>
                         <motion.div
                             key="background-blur"
@@ -191,7 +191,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                 >
                                     <DepthPlane
                                         imageUrl={imageUrl}
-                                        depthUrl={depthUrl}
+                                        depthUrl={stage.useBackgroundDepth ? depthUrl : ''}
                                         panX={panX}
                                         panY={panY}
                                     />

@@ -9,28 +9,16 @@ tagline: "Shows character emotions based on a set of images.++"
 
 # A longer explanation. Supports Markdown format.
 creator_notes: "
-_Apologies as I transition alpha features into regular usage. There is a good chance I spoil existing content, and I'm very sorry if that occurs to you._
+_Apologies as I transition alpha features into regular use. There is a good chance I spoil existing content, and I'm very sorry if that occurs to you._
 <br>
 <br>
-This is a shameless knock-off of the [official Expression Packs stage](https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d). 
-You can add this stage to any chat by searching for it under Stages in Chat Settings, but you may want to read some of this beforehand.  
+This is a shameless knock-off of the [official Expression Packs stage](https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d), 
+except better in almost every conceivable way. You can add this stage to any chat by searching for it under Stages in Chat Settings, but you may want to read some of this beforehand. 
 <br>
 <br>
-In addition to pulling official expression packs, this stage can generate expression and background art for any character (and even personae) using Chub's generative endpoints. 
+In addition to displaying official expression packs, this stage can generate expression and background art for any character (and even personae) using Chub's generative endpoints. 
 <br>
 <br>
-The system works with any single-character bot or even personae, but _it uses lots of image generation credits_ (unless you have a Mars subscription, which is unlimited), and your mileage may vary quality-wise. 
-Images may initially take time to appear as they must be generated; they are lazy loaded, so they don't hold up the chat so much. 
-You can regenerate individual images and create different \"outfits\" using the characters' settings in the upper-right corner.  
-<br>
-<br>
-This stage also generates background images based on the scene. These are not lazy loaded because it causes saving issues, and they can easily become out of sync. 
-They can add quite a bit of load time to responses when they occur, but they can also be disabled from the stage's configuration menu. 
-<br>
-<br>
-From the configuration menu, you can also alter the basic art style element of the stage's image prompts, to taylor the style to suit your aesthetic.  
-<br>
-
 ### Improvements Over the Original 
 
 <li>This stage can be used with any character, without manual effort by the author.<br>
@@ -39,6 +27,7 @@ From the configuration menu, you can also alter the basic art style element of t
 <li>This stage supports multiplayer.<br>
 <li>This stage allows you to toggle character outfits or visibility from within the stage UI itself.<br>
 <li>This stage includes backgrounds.<br>
+<li>This stage supports global content across chats using Chub's new storage API.<br>
 <li>This stage discards neutral emotion determinations when a secondary emotion is over a certain threshold, which causes characters to appear more expressive.<br>
 
 ### Disimprovements Under the Original 
@@ -49,8 +38,9 @@ That's it! If you have a Mars subscription and you want some expression images, 
 
 ### External Dependencies 
 
-This stage leverages [SamLowe/roberta-base-go_emotions](https://huggingface.co/SamLowe/roberta-base-go_emotions) for emotion inference ([my HF space for this](https://huggingface.co/spaces/Ravenok/emotions)) 
-and [MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0) for zero-shot classification ([my HF space for that](https://huggingface.co/spaces/Ravenok/statosphere-backend)).
+This stage leverages [SamLowe/roberta-base-go_emotions](https://huggingface.co/SamLowe/roberta-base-go_emotions) for emotion inference ([my HF space for this](https://huggingface.co/spaces/Ravenok/emotions)), 
+[MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0) for zero-shot classification ([my HF space for that](https://huggingface.co/spaces/Ravenok/statosphere-backend)),
+and [Depth Anything V2](https://depth-anything-v2.github.io/) for depthmap generation ([my HF space for this, too](https://huggingface.co/spaces/Ravenok/depth-anything-v2)).
 
 ### Image Generation and Sensitive Material 
 
@@ -62,10 +52,14 @@ undoubtedly situations that will still fail. The character management UI will in
 
 ### Updates  
 
+2025.08.17:
+
+- I am continuing to fix issues and update documentation. There are a few alpha features that I withheld for further testing, but the most disruptive stuff should be out of the way. Thank you for your patience!
+
 2025.08.16:
 
 - Swapped over to the new storage API for outfit and background content. Official expression packs are also accessible now. A lot of past content has probably been lost, but the new storage allows for content to be 
-shared across instances of the stage; for instance, player outfits can be marked global to persist across chats. If you own a character, you can mark outfits global for other users to leverage.
+shared across instances of the stage; for example, player outfits can be marked global to persist across chats. If you own a character, you can mark outfits global for other users to leverage.
 
 2025.07.10: 
 
@@ -122,21 +116,21 @@ config_schema:
   properties:
     generateCharacters:
       title: Generate Character Art
-      description: Automatically generate an expression pack for characters (will expend daily credits); this is basically all the stage currently does, so maybe leave this one on.
+      description: Generate an expression pack for characters (will expend daily credits); this is basically all the stage currently does, so maybe leave this one on.
       type: string
       default: "True"
       enum: ["True", "False"]
     generateBackgrounds:
       title: Generate Background Art
-      description: Automatically generate backgrounds during scene changes.
+      description: Generate and apply background art.
       type: string
       default: "True"
       enum: ["True", "False"]
     artStyle:
       title: Art Style
-      description: A brief description of the desired character art style.
+      description: A brief description of the desired art style.
       type: string
-      default: "Bold, visual novel style illustration, clean lines"
+      default: "Vibrant, visual novel style illustration, clean lines"
     useBackgroundDepth:
       title: Background Depth
       description: Enable depth effects for backgrounds.

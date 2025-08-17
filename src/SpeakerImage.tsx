@@ -31,9 +31,16 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     panX,
     panY
 }) => {
-    const [previousState, setPreviousState] = useState<string>('absent');
+    // Timer-based transition duration
+    const [transitionDuration, setTransitionDuration] = useState(0.3);
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
     const currentState = isTalking ? 'talking' : 'idle';
+
+    // Timer to drop transition duration after 0.3s
+    useEffect(() => {
+        const timer = setTimeout(() => setTransitionDuration(0.01), 300);
+        return () => clearTimeout(timer);
+    }, []);
 
     // Process image with color multiplication
     useEffect(() => {
@@ -61,50 +68,42 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
 
     const variants: Variants = {
         absent: {
-            opacity: 0, 
-            x: `150vw`, 
-            bottom: `${finalY}vh`, 
-            height: `${IDLE_HEIGHT - yPosition * 2}vh`, 
-            filter: 'brightness(0.8)', 
-            zIndex: zIndex, 
+            opacity: 0,
+            x: `150vw`,
+            bottom: `${finalY}vh`,
+            height: `${IDLE_HEIGHT - yPosition * 2}vh`,
+            filter: 'brightness(0.8)',
+            zIndex: zIndex,
             transition: {
-                x: { ease: "easeOut", duration: 0.3 }, 
-                bottom: { ease: "linear", duration: 0.3 }, 
-                opacity: { ease: "easeOut", duration: 0.3 }
+                x: { ease: "easeOut", duration: transitionDuration },
+                bottom: { ease: "linear", duration: transitionDuration },
+                opacity: { ease: "easeOut", duration: transitionDuration }
             }
         },
         talking: {
-            opacity: 1, 
-            x: `${finalX}vw`, 
-            bottom: `${finalY}vh`, 
-            height: `${SPEAKING_HEIGHT}vh`, 
-            filter: 'brightness(1)', 
-            zIndex: 100, 
-            transition: previousState === 'absent' ? {
-                x: { ease: "easeOut", duration: 0.3 }, 
-                bottom: { ease: "linear", duration: 0.3 }, 
-                opacity: { ease: "easeOut", duration: 0.3 }
-            } : {
-                x: { ease: "linear", duration: 0.01 }, 
-                bottom: { ease: "linear", duration: 0.01 }, 
-                opacity: { ease: "easeOut", duration: 0.01 }
+            opacity: 1,
+            x: `${finalX}vw`,
+            bottom: `${finalY}vh`,
+            height: `${SPEAKING_HEIGHT}vh`,
+            filter: 'brightness(1)',
+            zIndex: 100,
+            transition: {
+                x: { ease: "easeOut", duration: transitionDuration },
+                bottom: { ease: "linear", duration: transitionDuration },
+                opacity: { ease: "easeOut", duration: transitionDuration }
             }
         },
         idle: {
-            opacity: 1, 
+            opacity: 1,
             x: `${finalX}vw`,
-            bottom: `${finalY}vh`, 
-            height: `${IDLE_HEIGHT - yPosition * 2}vh`, 
-            filter: 'brightness(0.8)', 
+            bottom: `${finalY}vh`,
+            height: `${IDLE_HEIGHT - yPosition * 2}vh`,
+            filter: 'brightness(0.8)',
             zIndex: zIndex,
-            transition: previousState === 'absent' ? {
-                x: { ease: "easeOut", duration: 0.3 }, 
-                bottom: { ease: "linear", duration: 0.3 }, 
-                opacity: { ease: "easeOut", duration: 0.3 }
-            } : {
-                x: { ease: "linear", duration: 0.01 }, 
-                bottom: { ease: "linear", duration: 0.01 }, 
-                opacity: { ease: "easeOut", duration: 0.01 }
+            transition: {
+                x: { ease: "easeOut", duration: transitionDuration },
+                bottom: { ease: "linear", duration: transitionDuration },
+                opacity: { ease: "easeOut", duration: transitionDuration }
             }
         }
     };
@@ -116,9 +115,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             initial='absent'
             exit='absent'
             animate={currentState}
-            onAnimationComplete={() => setPreviousState(currentState)}
             style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
-            
             {/* Blurred background layer */}
             <img 
                 src={processedImageUrl} 
@@ -133,7 +130,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                 }} 
                 alt={`${speaker.name} (${emotion}) background`}
             />
-            
             {/* Main image layer */}
             <img 
                 src={processedImageUrl} 

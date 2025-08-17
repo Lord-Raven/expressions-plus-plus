@@ -66,9 +66,6 @@ type ConfigType = {
 type InitStateType = null;
 
 type MessageStateType = {
-    depthUrl: string;
-    borderColor: string;
-    highlightColor: string;
     speakerEmotion: {[key: string]: string};
     activeSpeaker: string;
 };
@@ -183,9 +180,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Set states or default them.
         this.messageState = {
-            depthUrl: messageState?.depthUrl ?? '',
-            borderColor: messageState?.borderColor ?? DEFAULT_BORDER_COLOR,
-            highlightColor: messageState?.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR,
             speakerEmotion: messageState?.speakerEmotion ?? {},
             activeSpeaker: messageState?.activeSpeaker ?? ''
         }
@@ -202,7 +196,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         this.generateBackgrounds = (config?.generateBackgrounds ?? "True") == "True";
         this.useBackgroundDepth = (config?.useBackgroundDepth ?? "True") == "True";
         //this.alphaMode = (config?.alphaMode ?? "False") == "True";
-        this.artStyle = config?.artStyle ?? 'Bold, visual novel style illustration, clean lines';
+        this.artStyle = config?.artStyle ?? 'Vibrant, visual novel style illustration, clean lines';
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
@@ -217,8 +211,15 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
 
         // Load backgrounds
-        this.backgrounds = await this.readBackgroundsFromStorage();
-        this.backupBackgrounds = {...this.backgrounds};
+        if (this.generateBackgrounds) {
+            this.backgrounds = await this.readBackgroundsFromStorage();
+            if (Object.keys(this.backgrounds).length == 0) {
+                const background = this.createNewBackground('Default Background');
+                this.backgrounds[background.id] = background;
+                this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], background, ''), `Generating background for ${background.name}.`).then(() => {this.setSelectedBackground(background.id)});
+            }
+            this.backupBackgrounds = {...this.backgrounds};
+        }
 
         // Sets background image but also updates depth and other elements of incomplete backgrounds.
         await this.updateBackground();
@@ -318,17 +319,16 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async updateBackground() {
-        await this.updateBackgroundsStorage();
-        await this.updateChatState();
-        await this.messenger.updateEnvironment({background: this.getSelectedBackground().backgroundUrl});
+        if (this.generateBackgrounds) {
+            await this.updateBackgroundsStorage();
+            await this.updateChatState();
+            await this.messenger.updateEnvironment({background: this.getSelectedBackground().backgroundUrl});
+        }
     }
 
     async setState(state: MessageStateType): Promise<void> {
         if (state != null) {
             this.messageState = {
-                depthUrl: state?.depthUrl ?? '',
-                borderColor: state?.borderColor ?? DEFAULT_BORDER_COLOR,
-                highlightColor: state?.highlightColor ?? DEFAULT_HIGHLIGHT_COLOR,
                 speakerEmotion: state?.speakerEmotion ?? {},
                 activeSpeaker: state?.activeSpeaker ?? ''
             }
@@ -790,11 +790,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (response.data && response.data.length > 0 && response.data[0].value) {
             return response.data[0].value;
         }
-        const background = this.createNewBackground('Default Background');
-        return {[background.id]: background};
+        return {};
     }
 
     async updateBackgroundsStorage() {
+        if (!this.generateBackgrounds) return;
         // Read backgrounds from remote storage:
         const remoteBackgrounds = await this.readBackgroundsFromStorage();
 
@@ -943,12 +943,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             />
                         ))}
                         {/* Background button */}
-                        <BackgroundButton
+                        {this.generateBackgrounds && <BackgroundButton
                             key="background_options"
                             stage={this}
                             borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}
                             onOpenSettings={(bg) => this.backgroundSettingsHandle?.setOpen(true)}
-                        />
+                        />}
                     </div>
                     <Scene imageUrl={this.getSelectedBackground().backgroundUrl} depthUrl={this.getSelectedBackground().depthUrl} stage={this}/>
                 </ThemeProvider>
