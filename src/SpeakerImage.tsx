@@ -109,10 +109,12 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             exit='absent'
             onAnimationStart={(def) => {
                 if (def === 'absent') {
-                    setTransitionDuration(0.5);
+                    console.log('Absent animation: flip to slow.');
+                    setTransitionDuration(0.3);
                 }
             }}
-            onAnimationEnd={(def) => {
+            onAnimationComplete={(def) => {
+                console.log('Complete animation: flip to fast.');
                 setTransitionDuration(0.01);
             }}
             animate={isTalking ? 'talking' : 'idle'}
