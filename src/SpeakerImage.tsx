@@ -74,13 +74,11 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         img.src = imageUrl;
     }, [imageUrl, highlightColor]);
     
-    // Reset timer and duration when state becomes 'absent'
+    // Reset timer and duration when state changes
     useEffect(() => {
-        if (currentState === 'absent') {
-            setTransitionDuration(0.5);
-            if (timerRef.current) clearTimeout(timerRef.current);
-            timerRef.current = setTimeout(() => setTransitionDuration(0.01), 500);
-        }
+        setTransitionDuration(0.4);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setTransitionDuration(0.01), 500);
     }, [currentState]);
 
     // Calculate final parallax position
@@ -138,8 +136,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             initial='absent'
             exit='absent'
             animate={currentState}
-            onAnimationComplete={(def) => {
-                if (def === 'absent') setCurrentState('absent');
+            onAnimationStart={(def) => {
+                if (def === 'absent' || def === 'talking' || def === 'idle') {
+                    setCurrentState(def);
+                }
             }}
             style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
             {/* Blurred background layer */}
