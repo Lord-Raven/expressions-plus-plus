@@ -74,11 +74,17 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         img.src = imageUrl;
     }, [imageUrl, highlightColor]);
     
-    // Reset timer and duration when state changes
+    // Timer to drop transition duration after 0.5s when entering talking/idle
     useEffect(() => {
-        setTransitionDuration(0.4);
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => setTransitionDuration(0.01), 500);
+        if (currentState === 'talking' || currentState === 'idle') {
+            setTransitionDuration(0.5);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => setTransitionDuration(0.01), 500);
+        }
+        if (currentState === 'absent') {
+            setTransitionDuration(0.5);
+            if (timerRef.current) clearTimeout(timerRef.current);
+        }
     }, [currentState]);
 
     // Calculate final parallax position
