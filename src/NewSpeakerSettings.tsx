@@ -118,7 +118,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     };
 
     const checkIsLocked: (key: string) => boolean = key => {
-        console.log(`Checking if outfit "${key}" is locked: ${!outfitMap[key]?.generated} || ${!stage.canEdit.includes(speaker?.anonymizedId || "")} || (${stage.wardrobes[speaker?.anonymizedId || ""].outfits[key]?.global === true} && ${!stage.owns.includes(speaker?.anonymizedId || "")})`);
         return !outfitMap[key]?.generated || // Non-generated outfits are ineditable
             !stage.canEdit.includes(speaker?.anonymizedId || "") || // Outfits belonging to characters this user can't edit
             (stage.wardrobes[speaker?.anonymizedId || ""].outfits[key]?.global === true && !stage.owns.includes(speaker?.anonymizedId || "")); // Global outfits not owned by user are ineditable

@@ -96,8 +96,8 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
         
     // Calculate panning offset
     const panStrength = 0.05;
-    const panX = (stage.alphaMode && imageUrl) ? -currentPosition.x * panStrength : 0;
-    const panY = (stage.alphaMode && imageUrl) ? currentPosition.y * panStrength : 0;
+    const panX = imageUrl ? -currentPosition.x * panStrength : 0;
+    const panY = imageUrl ? currentPosition.y * panStrength : 0;
 
     return { panX, panY };
     }, [currentPosition]);
@@ -177,44 +177,25 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                     height: "100vh",
                                 }}
                             >
-                                {stage.alphaMode ? (
-                                    <Canvas
-                                        style={{
-                                            position: 'absolute',
-                                            left: '0',
-                                            bottom: '13vh',
-                                            width: '100vw',
-                                            height: '85vh',
-                                            zIndex: 1,
-                                            pointerEvents: 'none', // Allow events to pass through to elements below
-                                        }}
-                                        camera={{ position: [0, 0, 3], fov: 90 }}
-                                    >
-                                        <DepthPlane
-                                            imageUrl={imageUrl}
-                                            depthUrl={depthUrl}
-                                            panX={panX}
-                                            panY={panY}
-                                        />
-                                    </Canvas>
-                                ) : (
-                                    <img
-                                        src={imageUrl}
-                                        alt="Background"
-                                        crossOrigin="anonymous"
-                                        style={{
-                                            position: "absolute",
-                                            left: 0,
-                                            bottom: "13vh",
-                                            width: "100vw",
-                                            height: "85vh",
-                                            objectFit: "cover",
-                                            objectPosition: "center bottom",
-                                            filter: "blur(1px)",
-                                            zIndex: 1,
-                                        }}
+                                <Canvas
+                                    style={{
+                                        position: 'absolute',
+                                        left: '0',
+                                        bottom: '13vh',
+                                        width: '100vw',
+                                        height: '85vh',
+                                        zIndex: 1,
+                                        pointerEvents: 'none', // Allow events to pass through to elements below
+                                    }}
+                                    camera={{ position: [0, 0, 3], fov: 90 }}
+                                >
+                                    <DepthPlane
+                                        imageUrl={imageUrl}
+                                        depthUrl={depthUrl}
+                                        panX={panX}
+                                        panY={panY}
                                     />
-                                )}
+                                </Canvas>
                             </motion.div>
                         </motion.div>
                     </>
@@ -244,7 +225,6 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                 imageUrl={stage.getSpeakerImage(character.anonymizedId, stage.chatState.selectedOutfit[character.anonymizedId], stage.getSpeakerEmotion(character.anonymizedId), '')}
                                 isTalking={stage.messageState.activeSpeaker == character.anonymizedId}
                                 highlightColor={highlightColor}
-                                alphaMode={stage.alphaMode}
                                 panX={panX}
                                 panY={panY}
                             />

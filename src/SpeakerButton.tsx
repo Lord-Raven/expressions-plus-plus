@@ -119,7 +119,7 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                         style={{overflow: "hidden"}}
                     >
                         <motion.div style={{display: "flex", flexDirection: "column", gap: 6, width: "100%"}}>
-                            {(Object.keys(stage.alphaMode ? stage.wardrobes[speaker.anonymizedId].outfits : stage.chatState.generatedWardrobes[speaker.anonymizedId])).map((outfit) => (
+                            {(Object.keys(stage.wardrobes[speaker.anonymizedId].outfits).map((outfit) => (
                                 <ButtonBase
                                     key={`outfit_option_${outfit}`}
                                     onClick={() => {
@@ -153,10 +153,10 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                                         }}
                                     />
                                     <Typography color="text.primary" sx={{ fontWeight: 600, textTransform: "capitalize" }}>
-                                        {stage.alphaMode ? stage.wardrobes[speaker.anonymizedId].outfits[outfit].name : outfit}
+                                        {stage.wardrobes[speaker.anonymizedId].outfits[outfit].name}
                                     </Typography>
                                 </ButtonBase>
-                            ))}
+                            )))}
                         </motion.div>
                     </motion.div>
                 )}

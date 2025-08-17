@@ -16,7 +16,7 @@ import BackgroundButton from "./BackgroundButton.tsx";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
 import {FastAverageColor} from "fast-average-color";
-import SpeakerSettings, {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
+import {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
 import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
 import ColorThief from "colorthief";
 import { Emotion, EMOTION_MAPPING, EMOTION_PROMPTS, EmotionPack } from "./Emotion.tsx";
@@ -151,7 +151,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     useBackgroundDepth: boolean;
     artStyle: string;
     speakers: {[key: string]: Speaker};
-    alphaMode: boolean;
     owns: string[] = []; // List of speakerIds that this client owns (generally themself and their owned characters).
     canEdit: string[] = []; // List of speakerIds that this client can edit (generally themself and any character).
     userId: string; // ID of this client
@@ -202,24 +201,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         this.generateCharacters = (config?.generateCharacters ?? "True") == "True";
         this.generateBackgrounds = (config?.generateBackgrounds ?? "True") == "True";
         this.useBackgroundDepth = (config?.useBackgroundDepth ?? "True") == "True";
-        this.alphaMode = (config?.alphaMode ?? "False") == "True";
+        //this.alphaMode = (config?.alphaMode ?? "False") == "True";
         this.artStyle = config?.artStyle ?? 'Bold, visual novel style illustration, clean lines';
-
-        if (!this.alphaMode) {
-            // Look at characters, set up packs, and initialize values that aren't present in message/chat state
-            Object.keys(this.speakers).forEach((charAnonId: string) => {
-                const speaker = this.speakers[charAnonId];
-                if (!speaker.isRemoved) {
-                    if (this.chatState.generatedWardrobes[charAnonId] && this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME] && Object.keys(this.chatState.generatedWardrobes[charAnonId][DEFAULT_OUTFIT_NAME]).length > 0) {
-                        console.log('Character has a wardrobe.');
-                    } else {
-                        console.log('Initializing a new wardrobe.')
-                        this.chatState.generatedWardrobes[charAnonId] = {[DEFAULT_OUTFIT_NAME]: {}};
-                        this.chatState.selectedOutfit[charAnonId] = DEFAULT_OUTFIT_NAME;
-                    }
-                }
-            });
-        }
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
@@ -239,88 +222,83 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Sets background image but also updates depth and other elements of incomplete backgrounds.
         await this.updateBackground();
+        
+        // Test whether userId has storage access to update canonical character data and update owns accordingly
+        for (const speakerId of Object.keys(this.speakers)) {
+            if (this.isSpeakerIdCharacterId(speakerId)) {
+                try {
+                    const response: any = await this.storage.set('dummy', {data: "dummy data"}).forCharacterSensitive(speakerId);
+                    console.log(response);
+                    if (response.errors) {
+                        console.error(`Failed sensitive storage access for ${speakerId}: ${response.errors}`);
+                    } else {
+                        console.log(`Successfully accessed sensitive storage for ${speakerId}`);
+                        this.owns.push(speakerId);
+                    }
+                } catch (error) {
+                    console.error(`Error accessing sensitive storage for ${speakerId}: ${error}`);
+                }
+            }
+        }
 
-        if (this.alphaMode) {
-            console.warn('Alpha mode enabled. This is experimental and may break things.');
+        // Load wardrobes from storage API:
+        this.wardrobes = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
+        console.log('Loaded wardrobes from storage:');
+        console.log(this.wardrobes);
+        this.backupWardrobes = JSON.parse(JSON.stringify(this.wardrobes));
 
-            
-            // Test whether userId has storage access to update canonical character data and update owns accordingly
-            for (const speakerId of Object.keys(this.speakers)) {
-                if (this.isSpeakerIdCharacterId(speakerId)) {
-                    try {
-                        const response: any = await this.storage.set('dummy', {data: "dummy data"}).forCharacterSensitive(speakerId);
-                        console.log(response);
-                        if (response.errors) {
-                            console.error(`Failed sensitive storage access for ${speakerId}: ${response.errors}`);
-                        } else {
-                            console.log(`Successfully accessed sensitive storage for ${speakerId}`);
-                            this.owns.push(speakerId);
-                        }
-                    } catch (error) {
-                        console.error(`Error accessing sensitive storage for ${speakerId}: ${error}`);
+        // Load expression pack wardrobes:
+        for (let charAnonId of Object.keys(this.speakers)) {
+            if ('partial_extensions' in this.speakers[charAnonId]) {
+                const character: Character = this.speakers[charAnonId] as Character;
+                if (character.partial_extensions?.chub?.expressions?.expressions != null) {
+                    console.log(`Character ${charAnonId} has an expressions pack.`);
+                    // Generate outfit entries for each expressions pack, marked non-generated.
+                    if (!this.wardrobes[charAnonId]) {
+                        this.wardrobes[charAnonId] = {
+                            speakerId: charAnonId,
+                            outfits: {}
+                        };
+                    }
+                    for (let expressionPack of Object.values([character.partial_extensions.chub.expressions])) {
+                        this.wardrobes[charAnonId].outfits[expressionPack.version] = {
+                            images: expressionPack.expressions,
+                            name: expressionPack.version,
+                            triggerWords: '',
+                            artPrompt: '',
+                            generated: false,
+                            global: false
+                        };
                     }
                 }
             }
+        }
 
-            // Load wardrobes from storage API:
-            this.wardrobes = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
-            console.log('Loaded wardrobes from storage:');
-            console.log(this.wardrobes);
-            this.backupWardrobes = JSON.parse(JSON.stringify(this.wardrobes));
-
-            // Load expression pack wardrobes:
-            for (let charAnonId of Object.keys(this.speakers)) {
-                if ('partial_extensions' in this.speakers[charAnonId]) {
-                    const character: Character = this.speakers[charAnonId] as Character;
-                    if (character.partial_extensions?.chub?.expressions?.expressions != null) {
-                        console.log(`Character ${charAnonId} has an expressions pack.`);
-                        // Generate outfit entries for each expressions pack, marked non-generated.
-                        if (!this.wardrobes[charAnonId]) {
-                            this.wardrobes[charAnonId] = {
-                                speakerId: charAnonId,
-                                outfits: {}
-                            };
-                        }
-                        for (let expressionPack of Object.values([character.partial_extensions.chub.expressions])) {
-                            this.wardrobes[charAnonId].outfits[expressionPack.version] = {
-                                images: expressionPack.expressions,
-                                name: expressionPack.version,
-                                triggerWords: '',
-                                artPrompt: '',
-                                generated: false,
-                                global: false
-                            };
+        // Initialize wardrobes for characters with no loaded wardrobes
+        
+        for (let speakerId of Object.keys(this.speakers)) {
+            if (!(speakerId in this.wardrobes) || this.wardrobes[speakerId].outfits == null || Object.keys(this.wardrobes[speakerId].outfits).length === 0) {
+                console.log(`Initializing wardrobe for ${speakerId}.`);
+                this.wardrobes[speakerId] = {
+                    speakerId: speakerId,
+                    outfits: {
+                        [generateUUID()]: {
+                            name: DEFAULT_OUTFIT_NAME,
+                            artPrompt: '',
+                            images: {},
+                            triggerWords: '',
+                            generated: true,
+                            global: false
                         }
                     }
-                }
+                } as WardrobeType;
             }
 
-            // Initialize wardrobes for characters with no loaded wardrobes
-            
-            for (let speakerId of Object.keys(this.speakers)) {
-                if (!(speakerId in this.wardrobes) || this.wardrobes[speakerId].outfits == null || Object.keys(this.wardrobes[speakerId].outfits).length === 0) {
-                    console.log(`Initializing wardrobe for ${speakerId}.`);
-                    this.wardrobes[speakerId] = {
-                        speakerId: speakerId,
-                        outfits: {
-                            [generateUUID()]: {
-                                name: DEFAULT_OUTFIT_NAME,
-                                artPrompt: '',
-                                images: {},
-                                triggerWords: '',
-                                generated: true,
-                                global: false
-                            }
-                        }
-                    } as WardrobeType;
-                }
-
-                // Set a selected outfit if none exists.
-                console.log(`Checking selectedOutfit for ${speakerId}: ${this.chatState.selectedOutfit[speakerId]}`);
-                if (!this.chatState.selectedOutfit[speakerId] || this.chatState.selectedOutfit[speakerId] == '' || !(this.chatState.selectedOutfit[speakerId] in this.wardrobes[speakerId].outfits)) {
-                    console.log(`Setting selectedOutfit for ${speakerId}.`);
-                    this.chatState.selectedOutfit[speakerId] = Object.keys(this.wardrobes[speakerId].outfits)[0];
-                }
+            // Set a selected outfit if none exists.
+            console.log(`Checking selectedOutfit for ${speakerId}: ${this.chatState.selectedOutfit[speakerId]}`);
+            if (!this.chatState.selectedOutfit[speakerId] || this.chatState.selectedOutfit[speakerId] == '' || !(this.chatState.selectedOutfit[speakerId] in this.wardrobes[speakerId].outfits)) {
+                console.log(`Setting selectedOutfit for ${speakerId}.`);
+                this.chatState.selectedOutfit[speakerId] = Object.keys(this.wardrobes[speakerId].outfits)[0];
             }
         }
 
@@ -377,8 +355,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.info(`New emotion for ${speaker.name}: ${newEmotion}`);
         this.messageState.speakerEmotion[speaker.anonymizedId] = newEmotion;
         this.messageState.activeSpeaker = speaker.anonymizedId;
-        if ((this.alphaMode && !this.wardrobes[speaker.anonymizedId].outfits[this.chatState.selectedOutfit[speaker.anonymizedId]]?.images[EMOTION_MAPPING[newEmotion as Emotion] ?? newEmotion]) ||
-            (!this.alphaMode && !this.chatState.generatedWardrobes[speaker.anonymizedId][this.chatState.selectedOutfit[speaker.anonymizedId]][EMOTION_MAPPING[newEmotion as Emotion] ?? newEmotion])) {
+        if (!this.wardrobes[speaker.anonymizedId].outfits[this.chatState.selectedOutfit[speaker.anonymizedId]]?.images[EMOTION_MAPPING[newEmotion as Emotion] ?? newEmotion]) {
             this.wrapPromise(
                 this.generateSpeakerImage(speaker, this.chatState.selectedOutfit[speaker.anonymizedId], EMOTION_MAPPING[newEmotion as Emotion] ?? (newEmotion as Emotion)),
                 `Generating ${newEmotion} for ${speaker.name} (${this.chatState.selectedOutfit[speaker.anonymizedId]}).`);
@@ -501,130 +478,128 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async updateWardrobeStorage() {
-        if (this.alphaMode) {
 
-            const remoteWardrobes: {[key: string]: WardrobeType} = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
-            // Should check for differences in wardrobes between existingWardrobes and this.backupWardrobes, then apply non-conflicting changes to this.wardrobes before saving.
-            // Bear in mind that this.backupWardrobes will have non-generated outfits, while we expect existingWardrobes to have only generated outfits.
-            console.log('Existing wardrobes from storage:');
-            console.log(remoteWardrobes);
-            // Compare existingWardrobes against this.backupWardrobes to find differences in generated outfits:
-            Object.keys(remoteWardrobes).forEach((speakerId) => {
-                if (this.backupWardrobes[speakerId]) {
-                    for (let outfitKey of Object.keys(remoteWardrobes[speakerId].outfits)) {
-                        // If the outfit exists in existingWardrobes but not in backup, it means it was added by another user
-                        // We need to add it to this.wardrobes.
-                        if (!this.backupWardrobes[speakerId].outfits[outfitKey] && Object.keys(remoteWardrobes[speakerId].outfits[outfitKey].images).length > 0) {
-                            console.log(`Outfit ${outfitKey} was added for ${speakerId}`);
-                            this.wardrobes[speakerId].outfits[outfitKey] = remoteWardrobes[speakerId].outfits[outfitKey];
-                        } else if (this.backupWardrobes[speakerId].outfits[outfitKey] && !this.wardrobes[speakerId].outfits[outfitKey]) {
-                            // If the outfit exists in backup but not in this.wardrobes, it means it was removed locally.
-                            console.log(`Outfit ${outfitKey} was removed for ${speakerId}`);
-                            // No action is taken; the deletion will be pushed below.
-                        } else {
-                            // If the outfit exists in both existingWardrobes and backup, we need to compare images to see if any need to be updated.
-                            // Be smart about this; some images may have been updated in this.wardrobes. We only want to apply differences and not all images.
-                            console.log(`Outfit ${outfitKey} exists in both existing and backup wardrobes for ${speakerId}. Checking images...`);
+        const remoteWardrobes: {[key: string]: WardrobeType} = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
+        // Should check for differences in wardrobes between existingWardrobes and this.backupWardrobes, then apply non-conflicting changes to this.wardrobes before saving.
+        // Bear in mind that this.backupWardrobes will have non-generated outfits, while we expect existingWardrobes to have only generated outfits.
+        console.log('Existing wardrobes from storage:');
+        console.log(remoteWardrobes);
+        // Compare existingWardrobes against this.backupWardrobes to find differences in generated outfits:
+        Object.keys(remoteWardrobes).forEach((speakerId) => {
+            if (this.backupWardrobes[speakerId]) {
+                for (let outfitKey of Object.keys(remoteWardrobes[speakerId].outfits)) {
+                    // If the outfit exists in existingWardrobes but not in backup, it means it was added by another user
+                    // We need to add it to this.wardrobes.
+                    if (!this.backupWardrobes[speakerId].outfits[outfitKey] && Object.keys(remoteWardrobes[speakerId].outfits[outfitKey].images).length > 0) {
+                        console.log(`Outfit ${outfitKey} was added for ${speakerId}`);
+                        this.wardrobes[speakerId].outfits[outfitKey] = remoteWardrobes[speakerId].outfits[outfitKey];
+                    } else if (this.backupWardrobes[speakerId].outfits[outfitKey] && !this.wardrobes[speakerId].outfits[outfitKey]) {
+                        // If the outfit exists in backup but not in this.wardrobes, it means it was removed locally.
+                        console.log(`Outfit ${outfitKey} was removed for ${speakerId}`);
+                        // No action is taken; the deletion will be pushed below.
+                    } else {
+                        // If the outfit exists in both existingWardrobes and backup, we need to compare images to see if any need to be updated.
+                        // Be smart about this; some images may have been updated in this.wardrobes. We only want to apply differences and not all images.
+                        console.log(`Outfit ${outfitKey} exists in both existing and backup wardrobes for ${speakerId}. Checking images...`);
 
-                            const existingImages = remoteWardrobes[speakerId].outfits[outfitKey].images || {};
-                            const backupImages = this.backupWardrobes[speakerId].outfits[outfitKey].images || {};
-                            const currentImages = this.wardrobes[speakerId].outfits[outfitKey].images || {};
+                        const existingImages = remoteWardrobes[speakerId].outfits[outfitKey].images || {};
+                        const backupImages = this.backupWardrobes[speakerId].outfits[outfitKey].images || {};
+                        const currentImages = this.wardrobes[speakerId].outfits[outfitKey].images || {};
+                        
+                        // Compare each emotion/image key
+                        Object.keys(existingImages).forEach((emotionKey) => {
+                            const existingImageUrl = existingImages[emotionKey];
+                            const backupImageUrl = backupImages[emotionKey];
                             
-                            // Compare each emotion/image key
-                            Object.keys(existingImages).forEach((emotionKey) => {
-                                const existingImageUrl = existingImages[emotionKey];
-                                const backupImageUrl = backupImages[emotionKey];
-                                
-                                // If the image exists in existing but not in backup, it was added externally
-                                if (existingImageUrl && !backupImageUrl) {
-                                    console.log(`Image for emotion '${emotionKey}' was added externally for ${speakerId}/${outfitKey}`);
+                            // If the image exists in existing but not in backup, it was added externally
+                            if (existingImageUrl && !backupImageUrl) {
+                                console.log(`Image for emotion '${emotionKey}' was added externally for ${speakerId}/${outfitKey}`);
+                                this.wardrobes[speakerId].outfits[outfitKey].images[emotionKey] = existingImageUrl;
+                            }
+                            // If the image exists in both but has different URLs, it was updated externally
+                            else if (existingImageUrl && backupImageUrl && existingImageUrl !== backupImageUrl) {
+                                // Only apply if we haven't locally modified this image since backup
+                                if (!currentImages[emotionKey] || currentImages[emotionKey] === backupImageUrl) {
+                                    console.log(`Image for emotion '${emotionKey}' was updated externally for ${speakerId}/${outfitKey}`);
                                     this.wardrobes[speakerId].outfits[outfitKey].images[emotionKey] = existingImageUrl;
+                                } else {
+                                    console.log(`Image for emotion '${emotionKey}' has conflicting changes - keeping local version for ${speakerId}/${outfitKey}`);
                                 }
-                                // If the image exists in both but has different URLs, it was updated externally
-                                else if (existingImageUrl && backupImageUrl && existingImageUrl !== backupImageUrl) {
-                                    // Only apply if we haven't locally modified this image since backup
-                                    if (!currentImages[emotionKey] || currentImages[emotionKey] === backupImageUrl) {
-                                        console.log(`Image for emotion '${emotionKey}' was updated externally for ${speakerId}/${outfitKey}`);
-                                        this.wardrobes[speakerId].outfits[outfitKey].images[emotionKey] = existingImageUrl;
-                                    } else {
-                                        console.log(`Image for emotion '${emotionKey}' has conflicting changes - keeping local version for ${speakerId}/${outfitKey}`);
-                                    }
+                            }
+                        });
+                        
+                        // Check for images that were removed externally
+                        Object.keys(backupImages).forEach((emotionKey) => {
+                            if (backupImages[emotionKey] && !existingImages[emotionKey]) {
+                                // Only remove if we haven't locally modified this image since backup
+                                if (!currentImages[emotionKey] || currentImages[emotionKey] === backupImages[emotionKey]) {
+                                    console.log(`Image for emotion '${emotionKey}' was removed externally for ${speakerId}/${outfitKey}`);
+                                    delete this.wardrobes[speakerId].outfits[outfitKey].images[emotionKey];
+                                } else {
+                                    console.log(`Image for emotion '${emotionKey}' was removed externally but has local changes - keeping local version for ${speakerId}/${outfitKey}`);
                                 }
-                            });
-                            
-                            // Check for images that were removed externally
-                            Object.keys(backupImages).forEach((emotionKey) => {
-                                if (backupImages[emotionKey] && !existingImages[emotionKey]) {
-                                    // Only remove if we haven't locally modified this image since backup
-                                    if (!currentImages[emotionKey] || currentImages[emotionKey] === backupImages[emotionKey]) {
-                                        console.log(`Image for emotion '${emotionKey}' was removed externally for ${speakerId}/${outfitKey}`);
-                                        delete this.wardrobes[speakerId].outfits[outfitKey].images[emotionKey];
-                                    } else {
-                                        console.log(`Image for emotion '${emotionKey}' was removed externally but has local changes - keeping local version for ${speakerId}/${outfitKey}`);
-                                    }
-                                }
-                            });
+                            }
+                        });
 
-                            // Check for outfit name, generatedDescription, and triggerWords:
-                            if (remoteWardrobes[speakerId].outfits[outfitKey].name && 
-                                this.wardrobes[speakerId].outfits[outfitKey].name !== remoteWardrobes[speakerId].outfits[outfitKey].name && 
-                                this.wardrobes[speakerId].outfits[outfitKey].name == this.backupWardrobes[speakerId].outfits[outfitKey].name) {
-                                console.log(`Outfit name changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].name}' to '${remoteWardrobes[speakerId].outfits[outfitKey].name}'`);
-                                this.wardrobes[speakerId].outfits[outfitKey].name = remoteWardrobes[speakerId].outfits[outfitKey].name;
-                            }
-                            if (remoteWardrobes[speakerId].outfits[outfitKey].artPrompt && 
-                                this.wardrobes[speakerId].outfits[outfitKey].artPrompt !== remoteWardrobes[speakerId].outfits[outfitKey].artPrompt &&
-                                this.wardrobes[speakerId].outfits[outfitKey].artPrompt == this.backupWardrobes[speakerId].outfits[outfitKey].artPrompt) {
-                                console.log(`Outfit description changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].artPrompt}' to '${remoteWardrobes[speakerId].outfits[outfitKey].artPrompt}'`);
-                                this.wardrobes[speakerId].outfits[outfitKey].artPrompt = remoteWardrobes[speakerId].outfits[outfitKey].artPrompt;
-                            }
-                            if (remoteWardrobes[speakerId].outfits[outfitKey].triggerWords && 
-                                this.wardrobes[speakerId].outfits[outfitKey].triggerWords !== remoteWardrobes[speakerId].outfits[outfitKey].triggerWords &&
-                                this.wardrobes[speakerId].outfits[outfitKey].triggerWords == this.backupWardrobes[speakerId].outfits[outfitKey].triggerWords) {
-                                console.log(`Outfit trigger words changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].triggerWords}' to '${remoteWardrobes[speakerId].outfits[outfitKey].triggerWords}'`);
-                                this.wardrobes[speakerId].outfits[outfitKey].triggerWords = remoteWardrobes[speakerId].outfits[outfitKey].triggerWords;
-                            }
+                        // Check for outfit name, generatedDescription, and triggerWords:
+                        if (remoteWardrobes[speakerId].outfits[outfitKey].name && 
+                            this.wardrobes[speakerId].outfits[outfitKey].name !== remoteWardrobes[speakerId].outfits[outfitKey].name && 
+                            this.wardrobes[speakerId].outfits[outfitKey].name == this.backupWardrobes[speakerId].outfits[outfitKey].name) {
+                            console.log(`Outfit name changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].name}' to '${remoteWardrobes[speakerId].outfits[outfitKey].name}'`);
+                            this.wardrobes[speakerId].outfits[outfitKey].name = remoteWardrobes[speakerId].outfits[outfitKey].name;
+                        }
+                        if (remoteWardrobes[speakerId].outfits[outfitKey].artPrompt && 
+                            this.wardrobes[speakerId].outfits[outfitKey].artPrompt !== remoteWardrobes[speakerId].outfits[outfitKey].artPrompt &&
+                            this.wardrobes[speakerId].outfits[outfitKey].artPrompt == this.backupWardrobes[speakerId].outfits[outfitKey].artPrompt) {
+                            console.log(`Outfit description changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].artPrompt}' to '${remoteWardrobes[speakerId].outfits[outfitKey].artPrompt}'`);
+                            this.wardrobes[speakerId].outfits[outfitKey].artPrompt = remoteWardrobes[speakerId].outfits[outfitKey].artPrompt;
+                        }
+                        if (remoteWardrobes[speakerId].outfits[outfitKey].triggerWords && 
+                            this.wardrobes[speakerId].outfits[outfitKey].triggerWords !== remoteWardrobes[speakerId].outfits[outfitKey].triggerWords &&
+                            this.wardrobes[speakerId].outfits[outfitKey].triggerWords == this.backupWardrobes[speakerId].outfits[outfitKey].triggerWords) {
+                            console.log(`Outfit trigger words changed for ${speakerId}/${outfitKey} from '${this.wardrobes[speakerId].outfits[outfitKey].triggerWords}' to '${remoteWardrobes[speakerId].outfits[outfitKey].triggerWords}'`);
+                            this.wardrobes[speakerId].outfits[outfitKey].triggerWords = remoteWardrobes[speakerId].outfits[outfitKey].triggerWords;
                         }
                     }
-                    // Compare outfits:
-                    Object.keys(this.backupWardrobes[speakerId].outfits).forEach((outfitName) => {
-                        if (this.backupWardrobes[speakerId].outfits[outfitName] && !remoteWardrobes[speakerId].outfits[outfitName]) {
-                            // If the outfit exists in backup but not in existing, it means it was removed
-                            console.log(`Outfit ${outfitName} was removed for ${speakerId}`);
-                        }
-                    });
                 }
-            });
+                // Compare outfits:
+                Object.keys(this.backupWardrobes[speakerId].outfits).forEach((outfitName) => {
+                    if (this.backupWardrobes[speakerId].outfits[outfitName] && !remoteWardrobes[speakerId].outfits[outfitName]) {
+                        // If the outfit exists in backup but not in existing, it means it was removed
+                        console.log(`Outfit ${outfitName} was removed for ${speakerId}`);
+                    }
+                });
+            }
+        });
 
-            // Push current wardrobes
-            console.log('Pushing wardrobe updates to storage.');
+        // Push current wardrobes
+        console.log('Pushing wardrobe updates to storage.');
 
-            // Build updates for this persona's stuff:
-            let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forCharacter(this.userId).forUser().forChat()
-                    .set('global_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && outfit.global)).forCharacter(this.userId).forUser();
+        // Build updates for this persona's stuff:
+        let updateBuilder = this.storage.set('local_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && !outfit.global)).forCharacter(this.userId).forUser().forChat()
+                .set('global_wardrobe', this.pickOutfits(this.userId, outfit => outfit.generated && outfit.global)).forCharacter(this.userId).forUser();
 
-            // Add updates for editable or owned characters:
-            for (let speakerId of Object.keys(this.wardrobes)) {
-                if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
-                    if (this.isSpeakerIdCharacterId(speakerId)) {
-                        if (this.canEdit.includes(speakerId)) {
-                            updateBuilder = updateBuilder.set('local_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forChat();
-                        }
-                        if (this.owns.includes(speakerId)) {
-                            updateBuilder = updateBuilder.set('global_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && outfit.global)).forCharacter(speakerId);
-                        }
+        // Add updates for editable or owned characters:
+        for (let speakerId of Object.keys(this.wardrobes)) {
+            if (this.wardrobes[speakerId] && this.wardrobes[speakerId].outfits) {
+                if (this.isSpeakerIdCharacterId(speakerId)) {
+                    if (this.canEdit.includes(speakerId)) {
+                        updateBuilder = updateBuilder.set('local_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forChat();
+                    }
+                    if (this.owns.includes(speakerId)) {
+                        updateBuilder = updateBuilder.set('global_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && outfit.global)).forCharacter(speakerId);
                     }
                 }
             }
-
-            // Need to await all wardrobePromises, but also want to log their results
-            const response = await updateBuilder;
-            console.log(response);
-
-            // With everything reconciled and updated, set backup to a copy of wardrobes.
-            console.log('update backupWardrobes');
-            this.backupWardrobes = JSON.parse(JSON.stringify(this.wardrobes));
         }
+
+        // Need to await all wardrobePromises, but also want to log their results
+        const response = await updateBuilder;
+        console.log(response);
+
+        // With everything reconciled and updated, set backup to a copy of wardrobes.
+        console.log('update backupWardrobes');
+        this.backupWardrobes = JSON.parse(JSON.stringify(this.wardrobes));
 
     }
 
@@ -633,14 +608,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion): string {
-        let generatedDescription = '';
-        if (this.alphaMode) {
-            generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
-        } else {
-            generatedDescription = this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`] ?? '';
-        }
+        const generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
         if (generatedDescription) {
-            return `(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfit}`]}), ((${CHARACTER_ART_PROMPT})), (${EMOTION_PROMPTS[emotion]})`;
+            return `(Art style: ${this.artStyle}), (${generatedDescription}), ((${CHARACTER_ART_PROMPT})), (${EMOTION_PROMPTS[emotion]})`;
         }
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
     }
@@ -648,7 +618,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async generateSpeakerImagePrompt(speaker: Speaker, outfitKey: string): Promise<void> {
         // Must first build a visual description for this character:
         console.log(`Generating a physical description of ${speaker.name}.`);
-        const outfitName = this.alphaMode ? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].name : outfitKey;
+        const outfitName = this.wardrobes[speaker.anonymizedId].outfits[outfitKey].name;
         const imageDescription = await this.generator.textGen({
             prompt:
                 `Chat History:\n{{messages}}\n\n` +
@@ -674,10 +644,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         });
         if (imageDescription?.result) {
             console.log(`Received an image description: ${imageDescription.result}`);
-            this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfitKey}`] = imageDescription.result;
-            if (this.alphaMode && this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]) {
-                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt = imageDescription.result;
-            }
+            this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt = imageDescription.result;
             await this.updateChatState();
         } else {
             return;
@@ -685,15 +652,15 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async generateSpeakerImage(speaker: Speaker, outfitKey: string, emotion: Emotion): Promise<void> {
-        console.log(`Current generated descriptions: ${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfitKey}`]} and ${this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt}`);
-        const outfitName = this.alphaMode ? (this.wardrobes[speaker.anonymizedId].outfits[outfitKey]?.name ?? outfitKey) : outfitKey;
+        console.log(`Current generated description: ${this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt}`);
+        const outfitName = (this.wardrobes[speaker.anonymizedId].outfits[outfitKey]?.name ?? outfitKey);
 
-        if (!this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfitKey}`] || (this.alphaMode && !this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt)) {
+        if (!this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt) {
             await this.generateSpeakerImagePrompt(speaker, outfitKey);
         }
 
         // Must do neutral first:
-        if (emotion != Emotion.neutral && !this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey][Emotion.neutral]) {
+        if (emotion != Emotion.neutral && !this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral]) {
             emotion = Emotion.neutral;
         }
         console.log(`Generating ${emotion} image for ${speaker.name} (${outfitName}).`)
@@ -708,62 +675,27 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
             // Clear entire pack then assign this image:
-            this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey] = {};
-            this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey][Emotion.neutral] = imageUrl;
-            if (this.alphaMode) {
-                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images = {};
-                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] = imageUrl;
-            }
-            /*if (!this.generating) {
-                this.generateNextImage(0);
-            }*/
+            this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images = {};
+            this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] = imageUrl;
         } else {
             const imageUrl = (await this.generator.imageToImage({
-                image: this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey][Emotion.neutral],
-                prompt: substitute(`(Art style: ${this.artStyle}), (${this.chatState.generatedDescriptions[`${speaker.anonymizedId}_${outfitKey}`]}), (${CHARACTER_ART_PROMPT}), ((Strong Emotion: ${EMOTION_PROMPTS[emotion]}))`),
+                image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
+                prompt: substitute(`(Art style: ${this.artStyle}), (${this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt}), (${CHARACTER_ART_PROMPT}), ((Strong Emotion: ${EMOTION_PROMPTS[emotion]}))`),
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true,
                 strength: 0.1
-            }))?.url ?? this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey][Emotion.neutral] ?? '';
+            }))?.url ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
             if (imageUrl == '') {
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
-            this.chatState.generatedWardrobes[speaker.anonymizedId][outfitKey][emotion] = imageUrl;
-            if (this.alphaMode) {
-                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] = imageUrl;
-            }
+            this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] = imageUrl;
         }
         await this.updateChatState();
     }
 
     async backgroundCheck(content: string): Promise<void> {
         // Repurpose this for triggering background swaps to known backgrounds based on key words
-        /*if (this.flagBackground || !this.generateBackgrounds || !content) return;
-
-        if (this.messageState.backgroundUrl) {
-            const TRANSITION_LABEL = 'transitions to a new location';
-            const STAY_LABEL = 'does not alter the location or setting';
-            try {
-                const response = await this.zeroShotPipeline.predict("/predict", {data_string: JSON.stringify({
-                        sequence: content,
-                        candidate_labels: [STAY_LABEL, TRANSITION_LABEL],
-                        hypothesis_template: 'This passage {}.',
-                        multi_label: true
-                    })});
-                const result = JSON.parse(`${response.data[0]}`);
-                console.log('Zero-shot result:');
-                console.log(result);
-                if (result.labels[0] == STAY_LABEL || result.scores[0] < 0.5) {
-                    return;
-                }
-            } catch (except) {
-                console.warn(except);
-                return;
-            }
-        }
-
-        this.flagBackground = true;*/
     }
 
     async generateBackgroundImage(character: Speaker, background: Background, content: string): Promise<void> {
@@ -818,47 +750,46 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log('BackgroundURL is empty');
             return;
         }
-        if (this.alphaMode) {
-            console.log('Set background properties');
-            if (this.useBackgroundDepth) {
-                try {
-                    // This endpoint takes actual image data and not a URL; need to load data from imageUrl
-                    const response = await fetch(background.backgroundUrl);
-                    const imageBlob = await response.blob();
-                    const depthPromise = this.depthPipeline.predict("/on_submit", {image: imageBlob});
 
-                    // Need to get a HtmlImageElement for getPalette:
-                    const imageElement = document.createElement('img');
-                    imageElement.src = URL.createObjectURL(imageBlob);
-                    // Wait for the image to load before calling getPalette
-                    await new Promise((resolve) => {
-                        imageElement.onload = resolve;
-                    });
+        console.log('Set background properties');
+        if (this.useBackgroundDepth) {
+            try {
+                // This endpoint takes actual image data and not a URL; need to load data from imageUrl
+                const response = await fetch(background.backgroundUrl);
+                const imageBlob = await response.blob();
+                const depthPromise = this.depthPipeline.predict("/on_submit", {image: imageBlob});
 
-                    // Get colors and sort by "brightness"; map to CSS hex color from rgb
-                    const colors = this.colorThief.getPalette(imageElement, 10).sort((a, b) => {
-                        const brightnessA = a[0] * 0.299 + a[1] * 0.587 + a[2] * 0.114;
-                        const brightnessB = b[0] * 0.299 + b[1] * 0.587 + b[2] * 0.114;
-                        return brightnessB - brightnessA;
-                    }).map(c => `#${c.map(channel => channel.toString(16).padStart(2, '0')).join('')}`);
+                // Need to get a HtmlImageElement for getPalette:
+                const imageElement = document.createElement('img');
+                imageElement.src = URL.createObjectURL(imageBlob);
+                // Wait for the image to load before calling getPalette
+                await new Promise((resolve) => {
+                    imageElement.onload = resolve;
+                });
 
-                    console.log(`Color palette: ${colors}`);
+                // Get colors and sort by "brightness"; map to CSS hex color from rgb
+                const colors = this.colorThief.getPalette(imageElement, 10).sort((a, b) => {
+                    const brightnessA = a[0] * 0.299 + a[1] * 0.587 + a[2] * 0.114;
+                    const brightnessB = b[0] * 0.299 + b[1] * 0.587 + b[2] * 0.114;
+                    return brightnessB - brightnessA;
+                }).map(c => `#${c.map(channel => channel.toString(16).padStart(2, '0')).join('')}`);
 
-                    background.highlightColor = background.highlightColor == DEFAULT_HIGHLIGHT_COLOR ? colors[0] : background.highlightColor;
-                    background.borderColor = background.borderColor == DEFAULT_BORDER_COLOR ? colors[Math.floor(colors.length / 2)] : background.borderColor;
-                    background.depthUrl = '';
-                    const depthResponse = await depthPromise;
-                    console.log(depthResponse);
-                    // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
-                    const imageFile: File = new File([await (await fetch(depthResponse.data[1].url)).blob()], `${background.id}_depth.png`, {type: 'image/png'});
-                    const updateResponse = await this.storage.set(`${background.id}_depth.png`, imageFile).forUser();
-                    console.log('Pushed depth URL to Chub:');
-                    console.log(updateResponse);
-                    background.depthUrl = updateResponse.data[0].value;
-                    await this.updateBackgroundsStorage();
-                } catch (err) {
-                    console.warn(`Failed to generate palette or depth map for background image: ${err}`);
-                }
+                console.log(`Color palette: ${colors}`);
+
+                background.highlightColor = background.highlightColor == DEFAULT_HIGHLIGHT_COLOR ? colors[0] : background.highlightColor;
+                background.borderColor = background.borderColor == DEFAULT_BORDER_COLOR ? colors[Math.floor(colors.length / 2)] : background.borderColor;
+                background.depthUrl = '';
+                const depthResponse = await depthPromise;
+                console.log(depthResponse);
+                // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
+                const imageFile: File = new File([await (await fetch(depthResponse.data[1].url)).blob()], `${background.id}_depth.png`, {type: 'image/png'});
+                const updateResponse = await this.storage.set(`${background.id}_depth.png`, imageFile).forUser();
+                console.log('Pushed depth URL to Chub:');
+                console.log(updateResponse);
+                background.depthUrl = updateResponse.data[0].value;
+                await this.updateBackgroundsStorage();
+            } catch (err) {
+                console.warn(`Failed to generate palette or depth map for background image: ${err}`);
             }
         }
     }
@@ -937,10 +868,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getSpeakerImage(anonymizedId: string, outfit: string, emotion: Emotion, defaultUrl: string): string {
-        if (this.alphaMode) {
-            return this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[EMOTION_MAPPING[emotion] ?? emotion] ?? this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[Emotion.neutral] ?? defaultUrl;
-        }
-        return this.chatState.generatedWardrobes[anonymizedId][(outfit && outfit in this.chatState.generatedWardrobes[anonymizedId]) ? outfit : DEFAULT_OUTFIT_NAME][EMOTION_MAPPING[emotion] ?? emotion] ?? this.chatState.generatedWardrobes[anonymizedId][outfit][Emotion.neutral] ?? defaultUrl;
+        return this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[EMOTION_MAPPING[emotion] ?? emotion] ?? this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[Emotion.neutral] ?? defaultUrl;
     }
 
     isSpeakerInUi(speaker: Speaker) {
@@ -1000,24 +928,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }}
             >
                 <ThemeProvider theme={darkTheme}>
-                    {this.alphaMode ? (
-                        <NewSpeakerSettings
-                            register={(handle) => {this.speakerSettingsHandle = handle;}}
-                            stage={this}
-                            borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}
-                            onRegenerate={(char, outfit, emotion) => {
-                                this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${this.wardrobes[char.anonymizedId].outfits[outfit].name}).`);
-                            }}
-                            />) : (
-                        <SpeakerSettings
-                            register={(handle) => {this.speakerSettingsHandle = handle;}}
-                            stage={this}
-                            borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}
-                            onRegenerate={(char, outfit, emotion) => {
-                                this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${outfit}).`);
-                            }}
-                        />)
-                    }
+                    <NewSpeakerSettings
+                        register={(handle) => {this.speakerSettingsHandle = handle;}}
+                        stage={this}
+                        borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}
+                        onRegenerate={(char, outfit, emotion) => {
+                            this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${this.wardrobes[char.anonymizedId].outfits[outfit].name}).`);
+                        }}
+                        />
                     <BackgroundSettings
                         register={(handle) => {this.backgroundSettingsHandle = handle;}}
                         stage={this}

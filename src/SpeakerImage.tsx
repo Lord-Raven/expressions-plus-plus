@@ -14,21 +14,19 @@ interface SpeakerImageProps {
     yPosition: number;
     zIndex: number;
     isTalking: boolean;
-    alphaMode: boolean;
     highlightColor: string;
     panX: number;
     panY: number;
 }
 
 const SpeakerImage: FC<SpeakerImageProps> = ({
-    speaker, 
-    emotion, 
-    imageUrl, 
-    xPosition, 
-    yPosition, 
-    zIndex, 
-    isTalking, 
-    alphaMode,
+    speaker,
+    emotion,
+    imageUrl,
+    xPosition,
+    yPosition,
+    zIndex,
+    isTalking,
     highlightColor,
     panX,
     panY
@@ -37,9 +35,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
     const currentState = isTalking ? 'talking' : 'idle';
 
-    // Process image with color multiplication when in alpha mode
+    // Process image with color multiplication
     useEffect(() => {
-        if (!imageUrl || !alphaMode) {
+        if (!imageUrl) {
             setProcessedImageUrl(imageUrl);
             return;
         }
@@ -53,13 +51,13 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             }
         };
         img.src = imageUrl;
-    }, [imageUrl, highlightColor, alphaMode]);
+    }, [imageUrl, highlightColor]);
 
     // Calculate final parallax position
     const tempY =  (isTalking ? 0 : (2 + yPosition));
     const depth = (50 - tempY) / 50;
-    const finalX = (isTalking ? 50 : xPosition) + ((alphaMode ? (panX * depth * 1.5) : 0)) * 100;
-    const finalY = tempY + ((alphaMode ? (-panY * depth * 1.5) : 0)) * 100;
+    const finalX = (isTalking ? 50 : xPosition) + ((panX * depth * 1.5) * 100);
+    const finalY = tempY + ((-panY * depth * 1.5) * 100);
 
     const variants: Variants = {
         absent: {
@@ -111,9 +109,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         }
     };
 
-    const imageToUse = alphaMode ? processedImageUrl : imageUrl;
-
-    return imageToUse ? (
+    return processedImageUrl ? (
         <motion.div
             key={`speaker_motion_div_${speaker.anonymizedId}`}
             variants={variants}
@@ -125,7 +121,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             
             {/* Blurred background layer */}
             <img 
-                src={imageToUse} 
+                src={processedImageUrl} 
                 style={{
                     position: 'absolute', 
                     top: 0, 
@@ -140,7 +136,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             
             {/* Main image layer */}
             <img 
-                src={imageToUse} 
+                src={processedImageUrl} 
                 style={{
                     position: 'absolute', 
                     top: 0, 
