@@ -872,6 +872,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getSelectedBackground(): Background {
+        if (!this.generateBackgrounds || Object.keys(this.backgrounds).length == 0) {
+            return {
+                    id: '',
+                    name: 'Default Background',
+                    artPrompt: '',
+                    backgroundUrl: '',
+                    depthUrl: '',
+                    borderColor: DEFAULT_BORDER_COLOR,
+                    highlightColor: DEFAULT_HIGHLIGHT_COLOR,
+                    triggerWords: ''
+                };
+        }
         if (!this.backgrounds[this.chatState.selectedBackground]) {
             this.chatState.selectedBackground = Object.keys(this.backgrounds)[0];
         }

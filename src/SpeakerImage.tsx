@@ -63,8 +63,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     // Calculate final parallax position
     const tempY =  (isTalking ? 0 : (2 + yPosition));
     const depth = (50 - tempY) / 50;
-    const finalX = (isTalking ? 50 : xPosition) + ((panX * depth * 1.5) * 100);
-    const finalY = tempY + ((-panY * depth * 1.5) * 100);
+    const finalX = (isTalking ? 50 : xPosition) + ((panX * depth * 1.8) * 100);
+    const finalY = tempY + ((-panY * depth * 1.8) * 100);
 
     const variants: Variants = {
         absent: {
