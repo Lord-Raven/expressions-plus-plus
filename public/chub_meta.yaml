@@ -9,22 +9,27 @@ tagline: "Shows character emotions based on a set of images.++"
 
 # A longer explanation. Supports Markdown format.
 creator_notes: "
-_Apologies as I transition alpha features into regular usage. There is a good chance I spoil existing content, and I'm very sorry if that occurs to you._  
-  
+_Apologies as I transition alpha features into regular usage. There is a good chance I spoil existing content, and I'm very sorry if that occurs to you._
+<br>
+<br>
 This is a shameless knock-off of the [official Expression Packs stage](https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d). 
 You can add this stage to any chat by searching for it under Stages in Chat Settings, but you may want to read some of this beforehand.  
-  
+<br>
+<br>
 In addition to pulling official expression packs, this stage can generate expression and background art for any character (and even personae) using Chub's generative endpoints. 
-  
+<br>
+<br>
 The system works with any single-character bot or even personae, but _it uses lots of image generation credits_ (unless you have a Mars subscription, which is unlimited), and your mileage may vary quality-wise. 
 Images may initially take time to appear as they must be generated; they are lazy loaded, so they don't hold up the chat so much. 
 You can regenerate individual images and create different \"outfits\" using the characters' settings in the upper-right corner.  
-  
+<br>
+<br>
 This stage also generates background images based on the scene. These are not lazy loaded because it causes saving issues, and they can easily become out of sync. 
 They can add quite a bit of load time to responses when they occur, but they can also be disabled from the stage's configuration menu. 
-  
+<br>
+<br>
 From the configuration menu, you can also alter the basic art style element of the stage's image prompts, to taylor the style to suit your aesthetic.  
-  
+<br>
 ### Improvements Over the Original 
 
 <li>This stage can be used with any character, without manual effort by the author.<br>

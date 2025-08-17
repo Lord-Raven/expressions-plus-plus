@@ -456,7 +456,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     user_ids: speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))
                 }),
             this.storage.get('global_wardrobe').forCharacters(speakerIds.filter(id => this.isSpeakerIdCharacterId(id))),
-            this.storage.get('global_wardrobe').forUsers(speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))),
+            this.storage.get('global_wardrobe').forCharacters(speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))).forUsers(speakerIds.filter(id => !this.isSpeakerIdCharacterId(id))),
         ];
 
         // Load all wardrobes in parallel
