@@ -89,44 +89,42 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     };
 
     return processedImageUrl ? (
-        <div style={{transform: `translate(${modX}vw, ${modY}vh)`}}>
-            <motion.div
-                key={`speaker_motion_div_${speaker.anonymizedId}`}
-                variants={variants}
-                initial='absent'
-                exit='absent'
-                animate={isTalking ? 'talking' : 'idle'}
-                style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
-                {/* Blurred background layer */}
-                <img 
-                    src={processedImageUrl} 
-                    style={{
-                        position: 'absolute', 
-                        top: 0, 
-                        width: '100%', 
-                        height: '100%', 
-                        filter: 'blur(2.5px)', 
-                        transform: 'translate(-50%, 0)', 
-                        zIndex: 4
-                    }} 
-                    alt={`${speaker.name} (${emotion}) background`}
-                />
-                {/* Main image layer */}
-                <img 
-                    src={processedImageUrl} 
-                    style={{
-                        position: 'absolute', 
-                        top: 0, 
-                        width: '100%', 
-                        height: '100%', 
-                        opacity: 0.75, 
-                        transform: 'translate(-50%, 0)', 
-                        zIndex: 5
-                    }} 
-                    alt={`${speaker.name} (${emotion})`}
-                />
-            </motion.div>
-        </div>
+        <motion.div
+            key={`speaker_motion_div_${speaker.anonymizedId}`}
+            variants={variants}
+            initial='absent'
+            exit='absent'
+            animate={isTalking ? 'talking' : 'idle'}
+            style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
+            {/* Blurred background layer */}
+            <img 
+                src={processedImageUrl} 
+                style={{
+                    position: 'absolute', 
+                    top: 0, 
+                    width: '100%', 
+                    height: '100%', 
+                    filter: 'blur(2.5px)', 
+                    transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`, 
+                    zIndex: 4
+                }} 
+                alt={`${speaker.name} (${emotion}) background`}
+            />
+            {/* Main image layer */}
+            <img 
+                src={processedImageUrl} 
+                style={{
+                    position: 'absolute', 
+                    top: 0, 
+                    width: '100%', 
+                    height: '100%', 
+                    opacity: 0.75, 
+                    transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                    zIndex: 5
+                }} 
+                alt={`${speaker.name} (${emotion})`}
+            />
+        </motion.div>
     ) : <></>;
 };
 
