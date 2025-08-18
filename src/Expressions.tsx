@@ -212,9 +212,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Load backgrounds
         if (this.generateBackgrounds) {
-            this.backgrounds = JSON.parse(JSON.stringify(await this.readBackgroundsFromStorage()));
+            this.backgrounds = JSON.parse(JSON.stringify(await this.readBackgroundsFromStorage())) as {[key: string]: Background};
             console.log('Loaded backgrounds from storage:');
             console.log(this.backgrounds);
+            console.log('Type:', typeof this.backgrounds);
             if (Object.keys(this.backgrounds).length == 0) {
                 console.log('No backgrounds found in storage, creating default background.');
                 console.log(this.backgrounds);
