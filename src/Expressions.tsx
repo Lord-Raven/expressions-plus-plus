@@ -217,6 +217,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log(this.backgrounds);
             if (Object.keys(this.backgrounds).length == 0) {
                 console.log('No backgrounds found in storage, creating default background.');
+                console.log(this.backgrounds);
+                console.log(Object.keys(this.backgrounds));
                 const background = this.createNewBackground('Default Background');
                 this.backgrounds[background.id] = background;
                 this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], background, ''), `Generating background for ${background.name}.`).then(() => {this.setSelectedBackground(background.id)});
