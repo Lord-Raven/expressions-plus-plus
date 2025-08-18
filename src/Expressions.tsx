@@ -820,19 +820,21 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // Differences have been reconciled: push changes to remote
         console.log('Pushing background changes.');
         const localBackgrounds = Object.keys(this.backgrounds).reduce((acc: {[key: string]: Background}, backgroundKey: string) => {
-                if (!this.backgrounds[backgroundKey].global) {
+                if (backgroundKey && !this.backgrounds[backgroundKey].global) {
                     acc[backgroundKey] = this.backgrounds[backgroundKey];
                 }
                 return acc;
             }, {})
+        console.log(`Pushing local backgrounds:`, localBackgrounds);
         await this.storage.set('local_backgrounds', localBackgrounds).forCharacter('1').forChat();
-        if (this.owns["1"]) {
+        if (this.owns['1']) {
             const globalBackgrounds = Object.keys(this.backgrounds).reduce((acc: {[key: string]: Background}, backgroundKey: string) => {
-                if (this.backgrounds[backgroundKey].global) {
+                if (backgroundKey && this.backgrounds[backgroundKey].global) {
                     acc[backgroundKey] = this.backgrounds[backgroundKey];
                 }
                 return acc;
             }, {});
+            console.log(`Pushing global backgrounds:,`, globalBackgrounds);
             await this.storage.set('global_backgrounds', globalBackgrounds).forCharacter('1');
         }
         // Update backupBackgrounds for later comparison.
