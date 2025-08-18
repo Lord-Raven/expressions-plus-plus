@@ -1,4 +1,4 @@
-import {motion, Variants, easeOut} from "framer-motion";
+import {motion, Variants, easeOut, useMotionValue, easeIn} from "framer-motion";
 import { Speaker } from "@chub-ai/stages-ts";
 import { FC, useState, useEffect } from "react";
 import { Emotion } from "./Emotion";
@@ -31,7 +31,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     panX,
     panY
 }) => {
-    // Remove transitionDuration state, use dynamic transition instead
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
 
     // Process image with color multiplication
@@ -53,53 +52,39 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     }, [imageUrl, highlightColor]);
 
     // Calculate final parallax position
-    const tempY =  (isTalking ? 0 : (2 + yPosition));
-    const depth = (50 - tempY) / 50;
-    const finalX = (isTalking ? 50 : xPosition) + ((panX * depth * 1.8) * 100);
-    const finalY = tempY + ((-panY * depth * 1.8) * 100);
+    const baseX = isTalking ? 50 : xPosition);
+    const baseY = (isTalking ? 0 : (2 + yPosition));
+    const depth = (50 - baseY) / 50;
+    const modX = ((panX * depth * 1.8) * 100);
+    const modY = ((-panY * depth * 1.8) * 100);
 
-    // Calculate previous position for snap logic
-    const [prevPos, setPrevPos] = useState<{x: number, y: number}>({x: 150, y: finalY});
-    useEffect(() => {
-        setPrevPos({x: finalX, y: finalY});
-    }, [finalX, finalY]);
-
-    // Calculate distance to target
-    const distance = Math.hypot(prevPos.x - finalX, prevPos.y - finalY);
-    const snapThreshold = 5; // Adjust as needed
-
-    // Dynamic transition: snap if close, animate if far
-    const dynamicTransition = distance < snapThreshold
-        ? { x: { duration: 0 }, bottom: { duration: 0 }, opacity: { duration: 0 } }
-        : { x: { ease: easeOut, duration: 0.3 }, bottom: { duration: 0.3 }, opacity: { ease: easeOut, duration: 0.3 } };
-    
     const variants: Variants = {
         absent: {
             opacity: 0,
             x: `150vw`,
-            bottom: `${finalY}vh`,
+            bottom: `${baseY}vh`,
             height: `${IDLE_HEIGHT - yPosition * 2}vh`,
             filter: 'brightness(0.8)',
             zIndex: zIndex,
-            transition: { x: { ease: easeOut, duration: 0.3 }, bottom: { duration: 0.3 }, opacity: { ease: easeOut, duration: 0.3 } }
+            transition: { x: { ease: easeIn, duration: 0.5 }, bottom: { duration: 0.5 }, opacity: { ease: easeOut, duration: 0.5 } }
         },
         talking: {
             opacity: 1,
-            x: `${finalX}vw`,
-            bottom: `${finalY}vh`,
+            x: `${baseX}vw`,
+            bottom: `${baseY}vh`,
             height: `${SPEAKING_HEIGHT}vh`,
             filter: 'brightness(1)',
             zIndex: 100,
-            transition: dynamicTransition
+            transition: { x: { ease: easeIn, duration: 0.3 }, bottom: { duration: 0.3 }, opacity: { ease: easeOut, duration: 0.3 } }
         },
         idle: {
             opacity: 1,
-            x: `${finalX}vw`,
-            bottom: `${finalY}vh`,
+            x: `${baseX}vw`,
+            bottom: `${baseY}vh`,
             height: `${IDLE_HEIGHT - yPosition * 2}vh`,
             filter: 'brightness(0.8)',
             zIndex: zIndex,
-            transition: dynamicTransition
+            transition: { x: { ease: easeIn, duration: 0.3 }, bottom: { duration: 0.3 }, opacity: { ease: easeOut, duration: 0.3 } }
         }
     };
 
@@ -110,7 +95,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             initial='absent'
             exit='absent'
             animate={isTalking ? 'talking' : 'idle'}
-            style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
+            style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible', transform: `translate(${modX}vw, ${modY}vh)`}}>
             {/* Blurred background layer */}
             <img 
                 src={processedImageUrl} 
