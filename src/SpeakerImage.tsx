@@ -1,4 +1,4 @@
-import {motion, Variants} from "framer-motion";
+import {motion, Variants, useMotionValue} from "framer-motion";
 import { Speaker } from "@chub-ai/stages-ts";
 import { FC, useState, useEffect } from "react";
 import { Emotion } from "./Emotion";
@@ -35,6 +35,36 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     const [transitionDuration, setTransitionDuration] = useState(0.3);
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
 
+    // Calculate final parallax position.
+    const tempY =  (isTalking ? 0 : (2 + yPosition));
+    const depth = (50 - tempY) / 50;
+    const finalX = (isTalking ? 50 : xPosition) + ((panX * depth * 1.8) * 100);
+    const finalY = tempY + ((-panY * depth * 1.8) * 100);
+
+    // Track current animated position using Framer Motion
+    const xMotion = useMotionValue(finalX * window.innerWidth / 100);
+    const yMotion = useMotionValue(finalY * window.innerHeight / 100);
+
+    // Snap or slow transition based on distance to target
+    useEffect(() => {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const targetX = finalX * vw / 100;
+        const targetY = finalY * vh / 100;
+        const currentX = xMotion.get();
+        const currentY = yMotion.get();
+        const distX = Math.abs(targetX - currentX);
+        const distY = Math.abs(targetY - currentY);
+        if (distX > 2 || distY > 2) {
+            setTransitionDuration(0.3);
+        } else {
+            setTransitionDuration(0.01);
+        }
+        // Animate motion values to target
+        xMotion.set(targetX);
+        yMotion.set(targetY);
+    }, [finalX, finalY]);
+
     // Process image with color multiplication
     useEffect(() => {
         if (!imageUrl) {
@@ -52,12 +82,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         };
         img.src = imageUrl;
     }, [imageUrl, highlightColor]);
-
-    // Calculate final parallax position
-    const tempY =  (isTalking ? 0 : (2 + yPosition));
-    const depth = (50 - tempY) / 50;
-    const finalX = (isTalking ? 50 : xPosition) + ((panX * depth * 1.8) * 100);
-    const finalY = tempY + ((-panY * depth * 1.8) * 100);
 
     const variants: Variants = {
         absent: {
@@ -107,20 +131,16 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             variants={variants}
             initial='absent'
             exit='absent'
-            onAnimationStart={(def) => {
-                if (def === 'absent') {
-                    console.log('Absent animation: flip to slow.');
-                    setTransitionDuration(0.3);
-                }
-            }}
-            onAnimationComplete={(def) => {
-                if (def === 'absent') {
-                    console.log('Complete animation: flip to fast.');
-                    setTransitionDuration(0.01);
-                }
-            }}
             animate={isTalking ? 'talking' : 'idle'}
-            style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
+            style={{
+                position: 'absolute',
+                width: 'auto',
+                aspectRatio: '9 / 16',
+                overflow: 'visible',
+                x: xMotion,
+                y: yMotion
+            }}
+        >
             {/* Blurred background layer */}
             <img 
                 src={processedImageUrl} 
