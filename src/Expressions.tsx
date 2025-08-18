@@ -781,16 +781,26 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async readBackgroundsFromStorage(): Promise<{[key: string]: Background}> {
-        const response = await this.storage.query({
-            chat_local: true,
-            character_ids: ['1'],
-            keys: ['backgrounds']
-        });
+        const backgroundFetches = [
+            this.storage.query({
+                chat_local: true,
+                character_ids: ['1'],
+                keys: ['local_backgrounds']
+            }),
+            this.storage.get('global_backgrounds').forCharacters(['1'])
+        ];
 
-        if (response.data && response.data.length > 0 && response.data[0].value) {
-            return response.data[0].value;
-        }
-        return {};
+        const backgroundResponses = await Promise.all(backgroundFetches.map(async promise => {const response = await promise; console.log(response); return response}));
+
+        // Combine responses:
+        const finalBackgrounds = backgroundResponses.map(response => response.data).flat().reduce((acc: {[key: string]: Background}, item) => {
+            if (item.value) {
+                acc[item.value.id] = item.value;
+            }
+            return acc;
+        }, {});
+    
+        return finalBackgrounds;
     }
 
     async updateBackgroundsStorage() {
@@ -807,9 +817,25 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }
         }
 
-        // Differences have been reconciled: push changes to remote and updated backupBackgrounds
+        // Differences have been reconciled: push changes to remote
         console.log('Pushing background changes.');
-        await this.storage.set('backgrounds', this.backgrounds).forCharacter('1').forChat();
+        const localBackgrounds = Object.keys(this.backgrounds).reduce((acc: {[key: string]: Background}, backgroundKey: string) => {
+                if (!this.backgrounds[backgroundKey].global) {
+                    acc[backgroundKey] = this.backgrounds[backgroundKey];
+                }
+                return acc;
+            }, {})
+        await this.storage.set('local_backgrounds', localBackgrounds).forCharacter('1').forChat();
+        if (this.owns["1"]) {
+            const globalBackgrounds = Object.keys(this.backgrounds).reduce((acc: {[key: string]: Background}, backgroundKey: string) => {
+                if (this.backgrounds[backgroundKey].global) {
+                    acc[backgroundKey] = this.backgrounds[backgroundKey];
+                }
+                return acc;
+            }, {});
+            await this.storage.set('global_backgrounds', globalBackgrounds).forCharacter('1');
+        }
+        // Update backupBackgrounds for later comparison.
         this.backupBackgrounds = JSON.parse(JSON.stringify(this.backgrounds));
     }
 
@@ -881,7 +907,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     depthUrl: '',
                     borderColor: DEFAULT_BORDER_COLOR,
                     highlightColor: DEFAULT_HIGHLIGHT_COLOR,
-                    triggerWords: ''
+                    triggerWords: '',
+                    global: false
                 };
         }
         if (!this.backgrounds[this.chatState.selectedBackground]) {
@@ -909,7 +936,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             depthUrl: '',
             borderColor: DEFAULT_BORDER_COLOR,
             highlightColor: DEFAULT_HIGHLIGHT_COLOR,
-            triggerWords: ''
+            triggerWords: '',
+            global: false
         };
     }
 

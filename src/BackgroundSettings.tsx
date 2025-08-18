@@ -85,9 +85,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
     }, [register]);
 
     const updateStageBackgrounds = (newBackgrounds: {[key: string]: Background}) => {
-        console.log("Updating stage backgrounds:", newBackgrounds);
         stage.backgrounds = newBackgrounds;
-        console.log(`Updated stage backgrounds:`, stage.backgrounds);
         setBackgrounds(newBackgrounds);
         setBackgroundIds(Object.keys(newBackgrounds));
         // If selected background no longer exists, select the first available one
@@ -301,6 +299,16 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                 <Box sx={{ mt: 3 }}>
                                     <EditModeFields
                                         fields={[
+                                            {
+                                                type: 'global',
+                                                label: currentBackground.global ? 'Global Background' : 'Local Background',
+                                                value: currentBackground.global || false,
+                                                onChange: (val: boolean) => {
+                                                    const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, global: val } };
+                                                    updateStageBackgrounds(updatedBackgrounds);
+                                                },
+                                                visible: stage.owns.includes("1")
+                                            },
                                             {
                                                 type: 'artPrompt',
                                                 label: 'Art Prompt',

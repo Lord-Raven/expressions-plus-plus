@@ -20,4 +20,6 @@ export type Background = {
     highlightColor: string;
     // Comma-delimited list of trigger words that will swap to this background
     triggerWords: string;
+    // Whether this background is global (applies to all chats with the primary character)
+    global: boolean;
 }
