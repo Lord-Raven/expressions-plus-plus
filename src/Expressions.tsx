@@ -798,8 +798,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Combine responses:
         const finalBackgrounds: {[key: string]: Background} = backgroundResponses.map(response => response.data).flat().reduce((acc: {[key: string]: Background}, item) => {
-            const value = item.value as Background;
-            const key = value?.id ?? '';
+            const value: Background = item.value as Background;
+            const key: string = value?.id ?? '';
             if (key && value) {
                 acc[key] = value;
             }
