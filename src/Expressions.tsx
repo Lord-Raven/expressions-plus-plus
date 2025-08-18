@@ -779,7 +779,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 background.depthUrl = updateResponse.data[0].value;
                 await this.updateBackgroundsStorage();
             } catch (err) {
-                console.warn(`Failed to generate palette or depth map for background image: ${err}`);
+                console.warn('Failed to generate palette or depth map for background image:', err);
             }
         }
     }
