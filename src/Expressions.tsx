@@ -801,7 +801,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             const value: Background = item.value as Background;
             const key: string = value?.id ?? '';
             if (key && value) {
-                acc[key] = value;
+                acc[`${key}`] = value;
             }
             return acc;
         }, {});
