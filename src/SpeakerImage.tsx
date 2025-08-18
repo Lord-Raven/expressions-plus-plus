@@ -59,7 +59,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     const finalY = tempY + ((-panY * depth * 1.8) * 100);
 
     // Calculate previous position for snap logic
-    const [prevPos, setPrevPos] = useState<{x: number, y: number}>({x: finalX, y: finalY});
+    const [prevPos, setPrevPos] = useState<{x: number, y: number}>({x: 150, y: finalY});
     useEffect(() => {
         setPrevPos({x: finalX, y: finalY});
     }, [finalX, finalY]);
@@ -81,7 +81,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             height: `${IDLE_HEIGHT - yPosition * 2}vh`,
             filter: 'brightness(0.8)',
             zIndex: zIndex,
-            transition: dynamicTransition
+            transition: { x: { ease: easeOut, duration: 0.3 }, bottom: { duration: 0.3 }, opacity: { ease: easeOut, duration: 0.3 } }
         },
         talking: {
             opacity: 1,
