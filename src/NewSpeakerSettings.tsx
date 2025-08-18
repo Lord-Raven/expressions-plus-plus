@@ -334,6 +334,16 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         <EditModeFields
                             fields={[
                                 {
+                                    type: 'global',
+                                    label: (outfitMap[selectedOutfit]?.global || false) ? 'Global Outfit' : 'Local Outfit',
+                                    value: outfitMap[selectedOutfit]?.global || false,
+                                    onChange: (val: string) => {
+                                        const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], global: val } };
+                                        updateStageWardrobeMap(updatedMap);
+                                    },
+                                    visible: outfitMap[selectedOutfit]?.generated && stage.owns.includes(speaker.anonymizedId)
+                                },
+                                {
                                     type: 'artPrompt',
                                     label: 'Art Prompt',
                                     value: outfitMap[selectedOutfit]?.artPrompt || "",
@@ -357,16 +367,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     visible: outfitMap[selectedOutfit]?.generated,
                                     disabled: checkIsLocked(selectedOutfit),
                                 },*/
-                                {
-                                    type: 'global',
-                                    label: 'Global Outfit',
-                                    value: outfitMap[selectedOutfit]?.global || false,
-                                    onChange: (val: string) => {
-                                        const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], global: val } };
-                                        updateStageWardrobeMap(updatedMap);
-                                    },
-                                    visible: outfitMap[selectedOutfit]?.generated && stage.owns.includes(speaker.anonymizedId)
-                                },
                                 {
                                     type: 'json',
                                     label: 'JSON for Import/Export',

@@ -62,13 +62,15 @@ const BackgroundInfoIcon = ({
 };
 
 const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
+
     // Ref for dialog content scroll
     const dialogContentRef = useRef<HTMLDivElement>(null);
-    
+
     const [open, setOpen] = useState<boolean>(false);
     const [selectedBackground, setSelectedBackground] = useState<string>('');
     const [editMode, setEditMode] = useState('json');
     const [confirmRegenerate, setConfirmRegenerate] = useState<Background | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
     const [backgrounds, setBackgrounds] = useState<{[key: string]: Background}>({});
     const [backgroundIds, setBackgroundIds] = useState<string[]>([]);
     const NEW_BACKGROUND_NAME = 'New Background';
@@ -83,6 +85,31 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
         register?.({ setOpen });
         return () => register?.(undefined!);
     }, [register]);
+
+    // Delete tab with Delete key if not focused on input/textarea/contenteditable
+    useEffect(() => {
+        if (!open) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Delete") {
+                const active = document.activeElement;
+                if (
+                    active && (
+                        active.tagName === "INPUT" ||
+                        active.tagName === "TEXTAREA" ||
+                        (active as HTMLElement).isContentEditable
+                    )
+                ) {
+                    return;
+                }
+                // Only delete if a tab is selected and more than one tab exists
+                if (selectedBackground && backgroundIds.length > 1) {
+                    setConfirmDelete(selectedBackground);
+                }
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [open, selectedBackground, backgroundIds]);
 
     const updateStageBackgrounds = (newBackgrounds: {[key: string]: Background}) => {
         stage.backgrounds = newBackgrounds;
@@ -168,9 +195,9 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
         updateStageBackgrounds(updatedBackgrounds);
     };
 
-    const handleBackgroundDelete = (backgroundId: string) => {
+    // Actual delete logic
+    const doDeleteBackground = (backgroundId: string) => {
         const {[backgroundId]: removed, ...rest} = backgrounds;
-
         if (selectedBackground === backgroundId) {
             const fallback = Object.keys(rest)[0] ?? '';
             setSelectedBackground(fallback);
@@ -180,6 +207,11 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
             }
         }
         updateStageBackgrounds(rest);
+    };
+
+    // Show confirmation dialog before deleting
+    const handleBackgroundDelete = (backgroundId: string) => {
+        setConfirmDelete(backgroundId);
     };
 
     const createNewBackground = () => {
@@ -407,6 +439,38 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                 }
                             }}
                         >Yes</Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Confirmation dialog for deletion */}
+                <Dialog
+                    sx={{border: `3px solid ${borderColor}`, borderRadius: 2}}
+                    open={!!confirmDelete}
+                    onClose={() => setConfirmDelete(null)}
+                >
+                    <DialogTitle sx={{p: 1, backgroundColor: "#333"}}>
+                        Confirm Background Deletion
+                    </DialogTitle>
+                    <DialogContent sx={{p: 1, backgroundColor: "#333"}}>
+                        <Typography>
+                            Delete background <b>{confirmDelete ? backgrounds[confirmDelete]?.name : ""}</b>?
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            This action cannot be undone.
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            onClick={() => setConfirmDelete(null)}
+                        >No</Button>
+                        <Button
+                            variant="contained"
+                            color="error"
+                            onClick={() => {
+                                if (confirmDelete) doDeleteBackground(confirmDelete);
+                                setConfirmDelete(null);
+                            }}
+                        >Yes, Delete</Button>
                     </DialogActions>
                 </Dialog>
             </div>
