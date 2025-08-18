@@ -1,4 +1,4 @@
-import {motion, Variants, easeOut, useMotionValue, easeIn} from "framer-motion";
+import {motion, Variants, easeOut, easeIn} from "framer-motion";
 import { Speaker } from "@chub-ai/stages-ts";
 import { FC, useState, useEffect } from "react";
 import { Emotion } from "./Emotion";
@@ -52,7 +52,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     }, [imageUrl, highlightColor]);
 
     // Calculate final parallax position
-    const baseX = isTalking ? 50 : xPosition);
+    const baseX = isTalking ? 50 : xPosition;
     const baseY = (isTalking ? 0 : (2 + yPosition));
     const depth = (50 - baseY) / 50;
     const modX = ((panX * depth * 1.8) * 100);
