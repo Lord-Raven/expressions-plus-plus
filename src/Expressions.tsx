@@ -322,7 +322,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async updateBackground() {
         if (this.generateBackgrounds) {
-            await this.updateBackgroundsStorage();
             await this.updateChatState();
             await this.messenger.updateEnvironment({background: this.getSelectedBackground().backgroundUrl});
         }
@@ -820,7 +819,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
 
         // Differences have been reconciled: push changes to remote
-        console.log('Pushing background changes.');
         const localBackgrounds = Object.keys(this.backgrounds).reduce((acc: {[key: string]: Background}, backgroundKey: string) => {
                 if (backgroundKey && !this.backgrounds[backgroundKey].global) {
                     acc[backgroundKey] = this.backgrounds[backgroundKey];
