@@ -79,6 +79,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
         setBackgrounds( stage.backgrounds ?? {});
         setBackgroundIds(Object.keys(stage.backgrounds ?? {}));
         setSelectedBackground(stage.chatState.selectedBackground ?? Object.keys(stage.backgrounds ?? {})[0] ?? '');
+        stage.updateBackgroundsStorage();
     }, [open, stage.backgrounds, stage.chatState.selectedBackground]);
 
     useEffect(() => {
@@ -125,7 +126,6 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                 stage.updateChatState();
             }
         }
-        stage.updateBackgroundsStorage();
     }
 
     const tabRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
