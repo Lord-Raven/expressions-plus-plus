@@ -793,6 +793,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async readBackgroundsFromStorage(): Promise<{[key: string]: Background}> {
+
         const backgroundFetches = [
             this.storage.query({
                 chat_local: true,
@@ -805,16 +806,17 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const backgroundResponses = await Promise.all(backgroundFetches.map(async promise => {const response = await promise; console.log(response); return response}));
 
         // Combine responses:
-        const finalBackgrounds: {[key: string]: Background} = backgroundResponses.map(response => response.data).flat().filter(item => item.character_id).reduce((acc: {[key: string]: Background}, item) => {
-            const value: Background = item.value as Background;
-            const key: string = value?.id ?? '' as string;
+        const finalBackgrounds = backgroundResponses.map(response => response.data).flat().filter(item => item.character_id).reduce((acc: {[key: string]: Background}, item) => {
+            const value = item.value as Background;
+            const key = value?.id ?? '' as string;
             if (key && value) {
-                acc[key] = value;
+                console.log(`Fetched background for character ${key}:`, value);
+                acc[key] = {...value};
             }
             return acc;
         }, {});
     
-        console.log('Final, assembled, fetched backgroudns:');
+        console.log('Final, assembled, fetched backgrounds:');
         console.log(finalBackgrounds);
         return finalBackgrounds;
     }
