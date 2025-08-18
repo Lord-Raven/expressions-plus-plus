@@ -213,12 +213,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // Load backgrounds
         if (this.generateBackgrounds) {
             this.backgrounds = await this.readBackgroundsFromStorage();
+            console.log('Loaded backgrounds from storage:');
+            console.log(this.backgrounds);
             if (Object.keys(this.backgrounds).length == 0) {
                 const background = this.createNewBackground('Default Background');
                 this.backgrounds[background.id] = background;
                 this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], background, ''), `Generating background for ${background.name}.`).then(() => {this.setSelectedBackground(background.id)});
             }
-            this.backupBackgrounds = {...this.backgrounds};
+            this.backupBackgrounds = JSON.parse(JSON.stringify(this.backgrounds));
         }
 
         // Sets background image but also updates depth and other elements of incomplete backgrounds.
@@ -794,7 +796,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Combine responses:
         const finalBackgrounds = backgroundResponses.map(response => response.data).flat().reduce((acc: {[key: string]: Background}, item) => {
-            if (item.value) {
+            if (item.value && item.value.id) {
                 acc[item.value.id] = item.value;
             }
             return acc;
