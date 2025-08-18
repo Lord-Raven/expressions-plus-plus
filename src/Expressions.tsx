@@ -212,7 +212,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Load backgrounds
         if (this.generateBackgrounds) {
-            this.backgrounds = await this.readBackgroundsFromStorage();
+            this.backgrounds = JSON.parse(JSON.stringify(await this.readBackgroundsFromStorage()));
             console.log('Loaded backgrounds from storage:');
             console.log(this.backgrounds);
             if (Object.keys(this.backgrounds).length == 0) {
