@@ -800,14 +800,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const backgroundResponses = await Promise.all(backgroundFetches.map(async promise => {const response = await promise; console.log(response); return response}));
 
         // Combine responses:
-        const finalBackgrounds = backgroundResponses.map(response => response.data).flat().filter(item => item.character_id).map(item => item.value).flat().reduce((acc: {[key: string]: Background}, item) => {
-            const value = item as Background;
-            const key = value?.id ?? '' as string;
-            console.log('Checking background:', key);
-            if (key && value) {
-                console.log(`Fetched background for character ${key}:`, value);
-                acc[key] = acc[key] ? {...acc[key], ...value} : value;
-            }
+        const finalBackgrounds = backgroundResponses.map(response => response.data).flat().filter(item => item.character_id).reduce((acc: {[key: string]: Background}, item) => {
+            const value = item.value;
+            console.log(value);
+            acc = {...acc, ...value};
             return acc;
         }, {});
     
