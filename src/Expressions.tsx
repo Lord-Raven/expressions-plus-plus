@@ -232,13 +232,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (this.generateBackgrounds) {
             console.log(this.backgrounds);
             this.backgrounds = await this.readBackgroundsFromStorage();
-            console.log('Loaded backgrounds from storage:');
-            console.log(this.backgrounds);
-            console.log(Object.keys(this.backgrounds));
             if (Object.keys(this.backgrounds).length == 0) {
                 console.log('No backgrounds found in storage, creating default background.');
-                console.log(this.backgrounds);
-                console.log(Object.keys(this.backgrounds));
                 const background = this.createNewBackground('Default Background');
                 this.backgrounds[background.id] = background;
                 this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], background, ''), `Generating background for ${background.name}.`).then(() => {this.setSelectedBackground(background.id)});
@@ -246,8 +241,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             this.backupBackgrounds = JSON.parse(JSON.stringify(this.backgrounds));
         }
 
-        // Sets background image but also updates depth and other elements of incomplete backgrounds.
+        // Sets background image.
         await this.updateBackground();
+        if (this.getSelectedBackground() && !this.getSelectedBackground().depthUrl) {
+            await this.generateBackgroundProperties(this.getSelectedBackground());
+        }
 
         // Load wardrobes from storage API:
         this.wardrobes = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
@@ -801,10 +799,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Combine responses:
         const finalBackgrounds = backgroundResponses.map(response => response.data).flat().filter(item => item.character_id).reduce((acc: {[key: string]: Background}, item) => {
-            const value = item.value;
-            console.log(value);
-            acc = {...acc, ...value};
-            return acc;
+            return {...acc, ...item.value};
         }, {});
     
         console.log('Final, assembled, fetched backgrounds:');
