@@ -209,33 +209,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.error(`Error loading pipelines, error: ${except}`);
             return { success: false, error: except }
         }
-
-        // Load backgrounds
-        if (this.generateBackgrounds) {
-            this.backgrounds = JSON.parse(JSON.stringify({...(await this.readBackgroundsFromStorage())}));
-            console.log('Loaded backgrounds from storage:');
-            console.log(this.backgrounds);
-            console.log(this.backgrounds instanceof Map);
-            console.log(Object.getPrototypeOf(this.backgrounds));
-            console.log(Object.prototype.toString.call(this.backgrounds));
-            console.log(Object.getOwnPropertyDescriptors(this.backgrounds));
-            console.log(JSON.stringify(this.backgrounds));
-            console.log(Object.keys(this.backgrounds));
-            console.log('Type:', typeof this.backgrounds);
-            console.log(Object.keys({...this.backgrounds}));
-            if (Object.keys(this.backgrounds).length == 0) {
-                console.log('No backgrounds found in storage, creating default background.');
-                console.log(this.backgrounds);
-                console.log(Object.keys(this.backgrounds));
-                const background = this.createNewBackground('Default Background');
-                this.backgrounds[background.id] = background;
-                this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], background, ''), `Generating background for ${background.name}.`).then(() => {this.setSelectedBackground(background.id)});
-            }
-            this.backupBackgrounds = JSON.parse(JSON.stringify(this.backgrounds));
-        }
-
-        // Sets background image but also updates depth and other elements of incomplete backgrounds.
-        await this.updateBackground();
         
         // Test whether userId has storage access to update canonical character data and update owns accordingly
         for (const speakerId of Object.keys(this.speakers)) {
@@ -254,6 +227,27 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }
             }
         }
+        
+        // Load backgrounds
+        if (this.generateBackgrounds) {
+            console.log(this.backgrounds);
+            this.backgrounds = await this.readBackgroundsFromStorage();
+            console.log('Loaded backgrounds from storage:');
+            console.log(this.backgrounds);
+            console.log(Object.keys(this.backgrounds));
+            if (Object.keys(this.backgrounds).length == 0) {
+                console.log('No backgrounds found in storage, creating default background.');
+                console.log(this.backgrounds);
+                console.log(Object.keys(this.backgrounds));
+                const background = this.createNewBackground('Default Background');
+                this.backgrounds[background.id] = background;
+                this.wrapPromise(this.generateBackgroundImage(Object.values(this.speakers)[0], background, ''), `Generating background for ${background.name}.`).then(() => {this.setSelectedBackground(background.id)});
+            }
+            this.backupBackgrounds = JSON.parse(JSON.stringify(this.backgrounds));
+        }
+
+        // Sets background image but also updates depth and other elements of incomplete backgrounds.
+        await this.updateBackground();
 
         // Load wardrobes from storage API:
         this.wardrobes = await this.readCharacterWardrobesFromStorage(Object.keys(this.speakers));
@@ -809,9 +803,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const finalBackgrounds = backgroundResponses.map(response => response.data).flat().filter(item => item.character_id).reduce((acc: {[key: string]: Background}, item) => {
             const value = item.value as Background;
             const key = value?.id ?? '' as string;
+            console.log('Checking background:', key);
             if (key && value) {
                 console.log(`Fetched background for character ${key}:`, value);
-                acc[key] = {...value};
+                acc[key] = acc[key] ? {...acc[key], ...value} : value;
             }
             return acc;
         }, {});
