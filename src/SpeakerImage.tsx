@@ -32,7 +32,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     panY
 }) => {
     // Timer-based transition duration
-    const [transitionDuration, setTransitionDuration] = useState(0.5);
+    const [transitionDuration, setTransitionDuration] = useState(0.3);
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
 
     // Process image with color multiplication
@@ -114,8 +114,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                 }
             }}
             onAnimationComplete={(def) => {
-                console.log('Complete animation: flip to fast.');
-                setTransitionDuration(0.01);
+                if (def === 'absent') {
+                    console.log('Complete animation: flip to fast.');
+                    setTransitionDuration(0.01);
+                }
             }}
             animate={isTalking ? 'talking' : 'idle'}
             style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
