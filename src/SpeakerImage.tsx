@@ -56,7 +56,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     const baseY = (isTalking ? 0 : (2 + yPosition));
     const depth = (50 - baseY) / 50;
     const modX = ((panX * depth * 1.8) * 100);
-    const modY = ((-panY * depth * 1.8) * 100);
+    const modY = ((panY * depth * 1.8) * 100);
 
     const variants: Variants = {
         absent: {
