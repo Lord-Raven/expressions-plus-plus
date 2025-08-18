@@ -212,9 +212,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         // Load backgrounds
         if (this.generateBackgrounds) {
-            this.backgrounds = JSON.parse(JSON.stringify(await this.readBackgroundsFromStorage())) as {[key: string]: Background};
+            this.backgrounds = (await this.readBackgroundsFromStorage()) as {[key: string]: Background};
             console.log('Loaded backgrounds from storage:');
             console.log(this.backgrounds);
+            console.log(Object.keys(this.backgrounds));
             console.log('Type:', typeof this.backgrounds);
             if (Object.keys(this.backgrounds).length == 0) {
                 console.log('No backgrounds found in storage, creating default background.');
@@ -798,15 +799,17 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const backgroundResponses = await Promise.all(backgroundFetches.map(async promise => {const response = await promise; console.log(response); return response}));
 
         // Combine responses:
-        const finalBackgrounds: {[key: string]: Background} = backgroundResponses.map(response => response.data).flat().reduce((acc: {[key: string]: Background}, item) => {
+        const finalBackgrounds: {[key: string]: Background} = backgroundResponses.map(response => response.data).flat().filter(item => item.character_id).reduce((acc: {[key: string]: Background}, item) => {
             const value: Background = item.value as Background;
-            const key: string = value?.id ?? '';
+            const key: string = value?.id ?? '' as string;
             if (key && value) {
-                acc[`${key}`] = value;
+                acc[key] = value;
             }
             return acc;
         }, {});
     
+        console.log('Final, assembled, fetched backgroudns:');
+        console.log(finalBackgrounds);
         return finalBackgrounds;
     }
 
