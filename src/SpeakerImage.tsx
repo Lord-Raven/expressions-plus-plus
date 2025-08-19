@@ -32,6 +32,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     panY
 }) => {
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
+        const [aspectRatio, setAspectRatio] = useState<string>('9 / 16');
 
     // Process image with color multiplication
     useEffect(() => {
@@ -43,6 +44,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
+                // Set aspect ratio based on image dimensions
+                if (img.naturalWidth && img.naturalHeight) {
+                    setAspectRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
+                }
             const result = multiplyImageByColor(img, highlightColor);
             if (result) {
                 setProcessedImageUrl(result);
@@ -95,7 +100,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             initial='absent'
             exit='absent'
             animate={isTalking ? 'talking' : 'idle'}
-            style={{position: 'absolute', width: 'auto', aspectRatio: '9 / 16', overflow: 'visible'}}>
+            style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible'}}>
             {/* Blurred background layer */}
             <img 
                 src={processedImageUrl} 

@@ -295,7 +295,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                         whileHover={{scale: 1.05}}
                                         variant="outlined"
                                         sx={{
-                                            width: 400, 
+                                            width: 400,
                                             height: 200,
                                             p: 0,
                                             display: "flex",
@@ -310,8 +310,27 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                             fontWeight: 600,
                                             textShadow: "0 1px 2px #000",
                                             border: `3px solid ${borderColor}`,
+                                            position: 'relative',
+                                            overflow: 'hidden',
                                         }}
                                         onClick={() => setConfirmRegenerate(currentBackground)}
+                                        onDragOver={e => e.preventDefault()}
+                                        onDrop={e => {
+                                            e.preventDefault();
+                                            const file = e.dataTransfer.files[0];
+                                            if (file && file.type.startsWith('image/')) {
+                                                const reader = new FileReader();
+                                                reader.onload = (ev) => {
+                                                    const updatedBackgrounds = { ...backgrounds };
+                                                    updatedBackgrounds[selectedBackground] = {
+                                                        ...currentBackground,
+                                                        backgroundUrl: ev.target?.result as string
+                                                    };
+                                                    updateStageBackgrounds(updatedBackgrounds);
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
                                     >
                                         {!currentBackground.backgroundUrl && (
                                             <span style={{
@@ -321,9 +340,30 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                                 fontSize: 14,
                                                 textAlign: "center"
                                             }}>
-                                                Click to Generate
+                                                Click to Generate or Drag & Drop Image
                                             </span>
                                         )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0, cursor: 'pointer', left: 0, top: 0 }}
+                                            title="Upload image"
+                                            onChange={e => {
+                                                const file = e.target.files?.[0];
+                                                if (file && file.type.startsWith('image/')) {
+                                                    const reader = new FileReader();
+                                                    reader.onload = (ev) => {
+                                                        const updatedBackgrounds = { ...backgrounds };
+                                                        updatedBackgrounds[selectedBackground] = {
+                                                            ...currentBackground,
+                                                            backgroundUrl: ev.target?.result as string
+                                                        };
+                                                        updateStageBackgrounds(updatedBackgrounds);
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                        />
                                     </Button>
                                 </Box>
 

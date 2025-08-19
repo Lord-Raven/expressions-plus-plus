@@ -524,7 +524,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             }}
                         />
                     </Box>
-                    <Box sx={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
+                    <Box sx={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                         <Typography sx={{ mb: 2 }}>
                             <b>{speaker.name}</b> — <b>{confirmEmotion}</b> emotion
                         </Typography>
@@ -532,7 +532,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             You can drag/drop or upload a new image, or click Regenerate to create one.
                             {confirmEmotion == 'neutral' && <><br />Regenerating "neutral" will generate a new visual summary and invalidate ALL emotion images for this outfit.</>}
                         </Typography>
-                        <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                        <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: 'center', width: '100%' }}>
                             <Button
                                 variant="contained"
                                 color="primary"
