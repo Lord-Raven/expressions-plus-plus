@@ -458,23 +458,20 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                 <DialogTitle sx={{ p: 1, backgroundColor: "#333" }}>
                     Regenerate or Replace Emotion Image
                 </DialogTitle>
-                <DialogContent sx={{ p: 2, backgroundColor: "#333", minHeight: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <Typography sx={{ mb: 2 }}>
-                        <b>{speaker.name}</b> — <b>{confirmEmotion}</b> emotion
-                    </Typography>
+                <DialogContent sx={{ p: 2, backgroundColor: "#333", minHeight: 320, display: 'flex', flexDirection: 'row', alignItems: 'stretch', justifyContent: 'center' }}>
                     <Box
                         sx={{
-                            width: 220,
-                            height: 220,
+                            width: 240,
+                            minHeight: 320,
                             border: '2px dashed #888',
                             borderRadius: 3,
                             background: '#222',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            mb: 2,
                             position: 'relative',
                             overflow: 'hidden',
+                            mr: 3,
                         }}
                         onDragOver={e => e.preventDefault()}
                         onDrop={e => {
@@ -483,7 +480,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             if (file && file.type.startsWith('image/')) {
                                 const reader = new FileReader();
                                 reader.onload = (ev) => {
-                                    // Save the new image URL to the outfitMap
                                     const updatedMap = { ...outfitMap };
                                     if (!updatedMap[selectedOutfit].images) updatedMap[selectedOutfit].images = {};
                                     if (confirmEmotion) {
@@ -528,11 +524,33 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             }}
                         />
                     </Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 2 }}>
-                        {confirmEmotion == 'neutral'
-                            ? 'Regenerating "neutral" will generate a new visual summary and invalidate ALL emotion images for this outfit.'
-                            : 'You can drag/drop or upload a new image, or click Regenerate to create one.'}
-                    </Typography>
+                    <Box sx={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
+                        <Typography sx={{ mb: 2 }}>
+                            <b>{speaker.name}</b> — <b>{confirmEmotion}</b> emotion
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ mb: 2 }}>
+                            {confirmEmotion == 'neutral'
+                                ? 'Regenerating "neutral" will generate a new visual summary and invalidate ALL emotion images for this outfit.'
+                                : 'You can drag/drop or upload a new image, or click Regenerate to create one.'}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                            <Button
+                                onClick={() => {
+                                    setConfirmEmotion(null);
+                                }}
+                            >Accept</Button>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => {
+                                    setConfirmEmotion(null);
+                                    if (onRegenerate && confirmEmotion) {
+                                        onRegenerate(speaker, selectedOutfit ?? "", confirmEmotion);
+                                    }
+                                }}
+                            >Regenerate</Button>
+                        </Box>
+                    </Box>
                 </DialogContent>
                 <DialogActions>
                     <Button
