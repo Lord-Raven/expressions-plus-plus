@@ -529,16 +529,10 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             <b>{speaker.name}</b> — <b>{confirmEmotion}</b> emotion
                         </Typography>
                         <Typography variant="caption" color="text.secondary" sx={{ mb: 2 }}>
-                            {confirmEmotion == 'neutral'
-                                ? 'Regenerating "neutral" will generate a new visual summary and invalidate ALL emotion images for this outfit.'
-                                : 'You can drag/drop or upload a new image, or click Regenerate to create one.'}
+                            You can drag/drop or upload a new image, or click Regenerate to create one.
+                            {confirmEmotion == 'neutral' && <><br />Regenerating "neutral" will generate a new visual summary and invalidate ALL emotion images for this outfit.</>}
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                            <Button
-                                onClick={() => {
-                                    setConfirmEmotion(null);
-                                }}
-                            >Accept</Button>
                             <Button
                                 variant="contained"
                                 color="primary"
@@ -554,20 +548,12 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                 </DialogContent>
                 <DialogActions>
                     <Button
-                        onClick={() => {
-                            setConfirmEmotion(null);
-                        }}
-                    >Cancel</Button>
-                    <Button
                         variant="contained"
                         color="primary"
                         onClick={() => {
                             setConfirmEmotion(null);
-                            if (onRegenerate && confirmEmotion) {
-                                onRegenerate(speaker, selectedOutfit ?? "", confirmEmotion);
-                            }
                         }}
-                    >Regenerate</Button>
+                    >Accept</Button>
                 </DialogActions>
             </Dialog>
         </div>)}
