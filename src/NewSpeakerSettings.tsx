@@ -369,8 +369,6 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                     onChange: (val: string) => {
                                         const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], artPrompt: val } };
                                         updateStageWardrobeMap(updatedMap);
-                                        // TODO: Don't call this here later; I'm using it for testing.
-                                        stage.updateChatState();
                                     },
                                     visible: outfitMap[selectedOutfit]?.generated,
                                     disabled: checkIsLocked(selectedOutfit),
@@ -457,15 +455,83 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                 open={!!confirmEmotion}
                 onClose={() => setConfirmEmotion(null)}
             >
-                <DialogTitle sx={{p: 1, backgroundColor: "#333"}}>
-                    Confirm Regeneration
+                <DialogTitle sx={{ p: 1, backgroundColor: "#333" }}>
+                    Regenerate or Replace Emotion Image
                 </DialogTitle>
-                <DialogContent sx={{p: 1, backgroundColor: "#333"}}>
-                    <Typography>
-                        Generate <b>{confirmEmotion}</b> image for <b>{speaker.name}</b>?
+                <DialogContent sx={{ p: 2, backgroundColor: "#333", minHeight: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <Typography sx={{ mb: 2 }}>
+                        <b>{speaker.name}</b> — <b>{confirmEmotion}</b> emotion
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        {confirmEmotion == 'neutral' ? 'Regenerating "neutral" will generate a new visual summary and invalidate ALL emotion images for this outfit.' : 'This may take a minute'}
+                    <Box
+                        sx={{
+                            width: 220,
+                            height: 220,
+                            border: '2px dashed #888',
+                            borderRadius: 3,
+                            background: '#222',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mb: 2,
+                            position: 'relative',
+                            overflow: 'hidden',
+                        }}
+                        onDragOver={e => e.preventDefault()}
+                        onDrop={e => {
+                            e.preventDefault();
+                            const file = e.dataTransfer.files[0];
+                            if (file && file.type.startsWith('image/')) {
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                    // Save the new image URL to the outfitMap
+                                    const updatedMap = { ...outfitMap };
+                                    if (!updatedMap[selectedOutfit].images) updatedMap[selectedOutfit].images = {};
+                                    if (confirmEmotion) {
+                                        updatedMap[selectedOutfit].images[confirmEmotion] = ev.target?.result;
+                                    }
+                                    updateStageWardrobeMap(updatedMap);
+                                };
+                                reader.readAsDataURL(file);
+                            }
+                        }}
+                    >
+                        {confirmEmotion && outfitMap[selectedOutfit]?.images?.[confirmEmotion] ? (
+                            <img
+                                src={outfitMap[selectedOutfit].images[confirmEmotion]}
+                                alt={`${confirmEmotion} preview`}
+                                style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 3 }}
+                            />
+                        ) : (
+                            <Typography color="text.secondary" sx={{ textAlign: 'center', px: 2 }}>
+                                Drag & drop an image here to replace, or click Regenerate below.
+                            </Typography>
+                        )}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0, cursor: 'pointer', left: 0, top: 0 }}
+                            title="Upload image"
+                            onChange={e => {
+                                const file = e.target.files?.[0];
+                                if (file && file.type.startsWith('image/')) {
+                                    const reader = new FileReader();
+                                    reader.onload = (ev) => {
+                                        const updatedMap = { ...outfitMap };
+                                        if (!updatedMap[selectedOutfit].images) updatedMap[selectedOutfit].images = {};
+                                        if (confirmEmotion) {
+                                            updatedMap[selectedOutfit].images[confirmEmotion] = ev.target?.result;
+                                        }
+                                        updateStageWardrobeMap(updatedMap);
+                                    };
+                                    reader.readAsDataURL(file);
+                                }
+                            }}
+                        />
+                    </Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 2 }}>
+                        {confirmEmotion == 'neutral'
+                            ? 'Regenerating "neutral" will generate a new visual summary and invalidate ALL emotion images for this outfit.'
+                            : 'You can drag/drop or upload a new image, or click Regenerate to create one.'}
                     </Typography>
                 </DialogContent>
                 <DialogActions>
@@ -473,7 +539,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         onClick={() => {
                             setConfirmEmotion(null);
                         }}
-                    >No</Button>
+                    >Cancel</Button>
                     <Button
                         variant="contained"
                         color="primary"
@@ -483,7 +549,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                 onRegenerate(speaker, selectedOutfit ?? "", confirmEmotion);
                             }
                         }}
-                    >Yes</Button>
+                    >Regenerate</Button>
                 </DialogActions>
             </Dialog>
         </div>)}
