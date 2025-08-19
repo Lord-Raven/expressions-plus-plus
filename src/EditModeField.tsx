@@ -28,7 +28,8 @@ interface EditModeFieldProps {
     onFocus?: () => void;
 }
 
-const getIcon = (type: EditFieldType) => {
+const getIcon = (type: EditFieldType, value?: any) => {
+    const isColor = typeof value === 'string' && /^#([0-9a-fA-F]{3}){1,2}$/.test(value);
     switch (type) {
         case 'artPrompt':
             return <ChatBubbleOutlineIcon fontSize="small" />;
@@ -37,11 +38,13 @@ const getIcon = (type: EditFieldType) => {
         case 'json':
             return <CodeIcon fontSize="small" />;
         case 'global':
-            return <PublicOutlineIcon fontSize="small" />;
-        case 'borderColor':
-            return <BorderColorOutlineIcon fontSize="small" />;
-        case 'highlightColor':
-            return <HighlightOutlineIcon fontSize="small" />;
+            return <PublicOutlineIcon fontSize="small" sx={{ color: value ? undefined : 'red' }} />;
+        case 'borderColor': {
+            return <BorderColorOutlineIcon fontSize="small" sx={{ color: isColor ? value : undefined }} />;
+        }
+        case 'highlightColor': {
+            return <HighlightOutlineIcon fontSize="small" sx={{ color: isColor ? value : undefined }} />;
+        }
         default:
             return null;
     }
@@ -146,7 +149,7 @@ export const EditModeField: React.FC<EditModeFieldProps> = ({
             onClick={handleEditModeChange}
             sx={buttonSx}
         >
-            {getIcon(type)}
+            {getIcon(type, value)}
         </Button>
     );
 };
