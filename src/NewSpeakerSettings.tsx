@@ -15,7 +15,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import silhouetteUrl from './assets/silhouette.png'
 import { SpeakerSettingsHandle } from "./SpeakerSettings";
-import { Emotion, EMOTION_PROMPTS } from "./Emotion";
+import { Emotion, EMOTION_MAPPING, EMOTION_PROMPTS } from "./Emotion";
 import EditModeFields, { EditModeFieldConfig } from "./EditModeFields";
 import { generateUUID } from "three/src/math/MathUtils.js";
 
@@ -389,7 +389,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                 {
                                     type: 'json',
                                     label: 'JSON for Import/Export',
-                                    value: JSON.stringify(outfitMap[selectedOutfit], ['name', 'images', 'artPrompt', 'triggerWords'], 2),
+                                    value: JSON.stringify(outfitMap[selectedOutfit], ['name', 'images', 'artPrompt', 'triggerWords', ...Object.keys(EMOTION_PROMPTS)], 2),
                                     onChange: (val: string) => {
                                         try {
                                             const data = JSON.parse(val);
