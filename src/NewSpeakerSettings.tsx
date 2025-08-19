@@ -80,7 +80,32 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     const [confirmEmotion, setConfirmEmotion] = useState<Emotion | null>(null);
     const [outfitMap, setOutfitMap] = useState<{[key: string]: any}>({});
     const [outfitKeys, setOutfitKeys] = useState<string[]>([]);
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
     const NEW_OUTFIT_NAME = 'Unnamed Outfit';
+    // Delete tab with Delete key if not focused on input/textarea/contenteditable
+    useEffect(() => {
+        if (!speaker) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Delete") {
+                const active = document.activeElement;
+                if (
+                    active && (
+                        active.tagName === "INPUT" ||
+                        active.tagName === "TEXTAREA" ||
+                        (active as HTMLElement).isContentEditable
+                    )
+                ) {
+                    return;
+                }
+                // Only delete if a tab is selected and more than one tab exists
+                if (selectedOutfit && outfitKeys.length > 1) {
+                    setConfirmDelete(selectedOutfit);
+                }
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [speaker, selectedOutfit, outfitKeys]);
 
     useEffect(() => {
         console.log(`setSpeaker: ${speaker?.name}, ${speaker?.anonymizedId}, ${stage.chatState.selectedOutfit[speaker?.anonymizedId ?? '']}`);
@@ -185,19 +210,13 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     };
 
     const handleOutfitDelete = (key: string) => {
-        // Can't delete the last outfit
-        if (outfitKeys.length < 2) return;
-
-        const {[key]: removed, ...rest} = outfitMap;
-
-        if (selectedOutfit === key) {
-            setSelectedOutfit(Object.keys(rest)[0]);
-        }
-        updateStageWardrobeMap(rest);
+    // Can't delete the last outfit
+    if (outfitKeys.length < 2) return;
+    setConfirmDelete(key);
     };
 
     return (<>
-        {speaker && (<div>
+    {speaker && (<div>
             <Dialog 
                 open={true} 
                 onClose={() => setSpeaker(null)} 
@@ -395,7 +414,44 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                     </Box>
                 </DialogContent>
             </Dialog>
-            {/* Confirmation dialog */}
+            {/* Confirmation dialog for deletion */}
+            <Dialog
+                sx={{border: `3px solid ${borderColor}`, borderRadius: 2}}
+                open={!!confirmDelete}
+                onClose={() => setConfirmDelete(null)}
+            >
+                <DialogTitle sx={{p: 1, backgroundColor: "#333"}}>
+                    Confirm Outfit Deletion
+                </DialogTitle>
+                <DialogContent sx={{p: 1, backgroundColor: "#333"}}>
+                    <Typography>
+                        Delete outfit <b>{confirmDelete ? outfitMap[confirmDelete]?.name : ""}</b>?
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => setConfirmDelete(null)}
+                    >No</Button>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        onClick={() => {
+                            if (confirmDelete && outfitKeys.length > 1) {
+                                const {[confirmDelete]: removed, ...rest} = outfitMap;
+                                if (selectedOutfit === confirmDelete) {
+                                    setSelectedOutfit(Object.keys(rest)[0]);
+                                }
+                                updateStageWardrobeMap(rest);
+                            }
+                            setConfirmDelete(null);
+                        }}
+                    >Yes, Delete</Button>
+                </DialogActions>
+            </Dialog>
+            {/* Confirmation dialog for emotion regeneration */}
             <Dialog
                 sx={{border: `3px solid ${borderColor}`, borderRadius: 2}}
                 open={!!confirmEmotion}

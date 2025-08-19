@@ -382,12 +382,13 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                             {
                                                 type: 'json',
                                                 label: 'JSON for Import/Export',
-                                                value: JSON.stringify(currentBackground, null, 2),
+                                                value: JSON.stringify(currentBackground, ['name', 'backgroundUrl', 'depthUrl', 'highlightColor', 'borderColor', 'triggerWords', 'artPromnpt'], 2),
                                                 onChange: (val: string) => {
                                                     try {
                                                         const data = JSON.parse(val);
-                                                        if (typeof data === 'object' && data && 'id' in data && 'name' in data) {
-                                                            const updatedBackgrounds = { ...backgrounds, [selectedBackground]: data as Background };
+                                                        if (typeof data === 'object' && data && 'name' in data && 'backgroundUrl' in data && 'depthUrl' in data && 'highlightColor' in data && 'borderColor' in data &&
+                                                            'triggerWords' in data && 'artPrompt' in data) {
+                                                            const updatedBackgrounds = { ...backgrounds, [selectedBackground]: {...data, id: currentBackground.id, global: currentBackground.global } };
                                                             updateStageBackgrounds(updatedBackgrounds);
                                                         }
                                                     } catch (err) {
