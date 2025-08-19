@@ -52,7 +52,7 @@ const OutfitInfoIcon = ({
     }
 
     return (
-        <Tooltip title={isLocked ? (<><Icon fontSize="inherit" color={color} />This outfit was built by an expression pack and cannot be altered.</>) :
+        <Tooltip title={isLocked ? (<><Icon fontSize="inherit" color={color} />This outfit cannot be altered.</>) :
                 (<>Prompt used for image generation:<br/><br/>{description}
                     {isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt failed to generate an image. This could be due to exhausted daily credits or sensitive content in the prompt; consider reporting false positives to the stage developer.</>)}
                     {isAltered && !isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt was automatically altered from its original form to avoid triggering a sensitive content failure; if the result appears fine, you may disregard this warning.</>)}
@@ -166,7 +166,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
         ) : (
             <span onDoubleClick={() => setEditing(!locked)}>
                 {value}
-                {speaker && outfitMap[value] && (
+                {speaker && outfitMap[outfitKey] && (
                     <OutfitInfoIcon
                         description={stage.buildArtPrompt(speaker, value, Emotion.neutral)}
                         isLocked={locked}
@@ -370,12 +370,12 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                 {
                                     type: 'json',
                                     label: 'JSON for Import/Export',
-                                    value: JSON.stringify(outfitMap[selectedOutfit], null, 2),
+                                    value: JSON.stringify(outfitMap[selectedOutfit], ['name', 'images', 'artPrompt', 'triggerWords'], 2),
                                     onChange: (val: string) => {
                                         try {
                                             const data = JSON.parse(val);
-                                            if (typeof data === 'object' && data && 'images' in data && 'description' in data) {
-                                                const updatedMap = { ...outfitMap, [selectedOutfit]: data };
+                                            if (typeof data === 'object' && data && 'images' in data && 'name' in data && 'artPrompt' in data && 'triggerWords' in data) {
+                                                const updatedMap = { ...outfitMap, [selectedOutfit]: {...data, generated: outfitMap[selectedOutfit].generated, global: outfitMap[selectedOutfit].global} };
                                                 updateStageWardrobeMap(updatedMap);
                                             }
                                         } catch (err) {

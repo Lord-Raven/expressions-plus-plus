@@ -143,7 +143,6 @@ export const EditModeField: React.FC<EditModeFieldProps> = ({
             <Button
                 variant="outlined"
                 color="primary"
-                disabled={disabled}
             onClick={handleEditModeChange}
             sx={buttonSx}
         >

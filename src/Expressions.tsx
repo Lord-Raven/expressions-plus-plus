@@ -644,7 +644,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (imageDescription?.result) {
             console.log(`Received an image description: ${imageDescription.result}`);
             this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt = imageDescription.result;
-            await this.updateChatState();
         } else {
             return;
         }
@@ -689,7 +688,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }
             this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] = imageUrl;
         }
-        await this.updateChatState();
+        await this.updateWardrobeStorage();
     }
 
     async backgroundCheck(content: string): Promise<void> {
@@ -736,9 +735,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.warn(`Failed to generate a background image.`);
         } else {
             background.backgroundUrl = imageUrl;
+            background.depthUrl = '';
+            background.borderColor = DEFAULT_BORDER_COLOR;
+            background.highlightColor = DEFAULT_HIGHLIGHT_COLOR;
         }
 
         await this.generateBackgroundProperties(background);
+        await this.updateBackgroundsStorage();
     }
 
     async generateBackgroundProperties(background: Background) {
