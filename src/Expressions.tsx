@@ -16,7 +16,7 @@ import BackgroundButton from "./BackgroundButton.tsx";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
 import {FastAverageColor} from "fast-average-color";
-import {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
+import {SpeakerSettingsHandle} from "./NewSpeakerSettings.tsx";
 import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
 import ColorThief from "colorthief";
 import { Emotion, EMOTION_MAPPING, EMOTION_PROMPTS, EmotionPack } from "./Emotion.tsx";

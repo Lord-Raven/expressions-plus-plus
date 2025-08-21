@@ -14,10 +14,13 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import silhouetteUrl from './assets/silhouette.png'
-import { SpeakerSettingsHandle } from "./SpeakerSettings";
 import { Emotion, EMOTION_PROMPTS } from "./Emotion";
 import EditModeFields, { EditModeFieldConfig } from "./EditModeFields";
 import { generateUUID } from "three/src/math/MathUtils.js";
+
+export interface SpeakerSettingsHandle {
+    setSpeaker: (speaker: Speaker|null) => void;
+}
 
 type NewSpeakerSettingsProps = {
     register?: (handle: SpeakerSettingsHandle) => void;
@@ -499,7 +502,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             />
                         ) : (
                             <Typography color="text.secondary" sx={{ textAlign: 'center', px: 2 }}>
-                                Drag & drop an image here to replace, or click Regenerate below.
+                                Drag & drop an image here to replace, or click Regenerate.
                             </Typography>
                         )}
                         <input
