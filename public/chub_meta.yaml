@@ -8,96 +8,84 @@ project_name: "Expressions++"
 tagline: "Shows character emotions based on a set of images.++"
 
 # A longer explanation. Supports Markdown format.
-creator_notes: "
-_Apologies as I transition alpha features into regular use. I think as of this update, the last breaking change has been deployed. Sorry, again, if you lost content. 
-If you feel strongly about anything you lose, you can find generated images in your Chub gallery and manually inject them into your content by editing the JSON found in character or background settings. 
-It is not convenient, but it is possible to restore things._
-<br>
-<br>
-This is a shameless knock-off of the [official Expression Packs stage](https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d), 
-except better in almost every conceivable way. You can add this stage to any chat by searching for it under Stages in Chat Settings, but you may want to read some of this beforehand. 
-<br>
-<br>
-In addition to displaying official expression packs, this stage can generate expression and background art for any character (and even personae) using Chub's generative endpoints. 
-<br>
-<br>
-
-### Improvements Over the Original 
-
-<li>This stage can be used with any character, without manual effort by the author.<br>
-<li>This stage supports multiple characters. You will need to refresh the chat after adding a new character, though.<br>
-<li>This stage supports persona images.<br>
-<li>This stage supports multiplayer.<br>
-<li>This stage allows you to toggle character outfits or visibility from within the stage UI itself.<br>
-<li>This stage includes backgrounds.<br>
-<li>This stage supports global content across chats using Chub's new storage API.<br>
-<li>This stage discards neutral emotion determinations when a secondary emotion is over a certain threshold, which causes characters to appear more expressive.<br>
-
-### Disimprovements Under the Original 
-
-<li>If you don't have a Mars subscription, and the bot's author didn't pre-generate content, this could use an exorbitant amount of credits.<br>
-
-That's it! If you have a Mars subscription and you want some expression images, there's literally no reason to use the original over this one.
-
-### External Dependencies 
-
-This stage leverages [SamLowe/roberta-base-go_emotions](https://huggingface.co/SamLowe/roberta-base-go_emotions) for emotion inference ([my HF space for this](https://huggingface.co/spaces/Ravenok/emotions)), 
-[MoritzLaurer/ModernBERT-large-zeroshot-v2.0](https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0) for zero-shot classification ([my HF space for that](https://huggingface.co/spaces/Ravenok/statosphere-backend)),
-and [Depth Anything V2](https://depth-anything-v2.github.io/) for depthmap generation ([my HF space for this, too](https://huggingface.co/spaces/Ravenok/depth-anything-v2)).
-
-### Image Generation and Sensitive Material 
-
-This stage doesn't directly contain any NSFW material and doesn't do anything to prompt NSFW images, but a lot of the content is dependent upon the nature of 
-the characters and narrative that are being depicted. Chub's image generation will outright fail on triggering words or phrases that it deems sensitive; 
-the system appears to use a rather naive test for this purpose, and because the stage relies on generated art prompts, 
-I have implemented some simple key word substitution to avoid needless failures, but there are
-undoubtedly situations that will still fail. The character management UI will indicate this next to each outfit.  
-
-### Updates  
-
-2025.08.17:
-
-- I am continuing to fix issues and update documentation. There are a few alpha features that I withheld for further testing, but the most disruptive stuff should be out of the way. Thank you for your patience!
-
-2025.08.16:
-
-- Swapped over to the new storage API for outfit and background content. Official expression packs are also accessible now. A lot of past content has probably been lost, but the new storage allows for content to be 
-shared across instances of the stage; for example, player outfits can be marked global to persist across chats. If you own a character, you can mark outfits global for other users to leverage.
-
-2025.07.10: 
-
-- Started to do some outfit initialization configuration and then rolled it back; Lore confirmed that expression pack support are coming to other stages soon, so I will wait patiently for that.
-
-2025.07.08: 
-
-- Added a blank where you can modify the outfit description or copy/paste outfit details to effectively export and import them into new outfits, characters, or chats. 
-
-2025.07.01: 
-
-- Added image prompt details and warnings to each outfit tabs in the management UI. 
-
-- Minor prompt revisions. 
-
-2025.06.29: 
-
-- UI revisions, mostly to make the stage usable on mobile. 
-
-- Fixed background generation triggering too frequently. 
-
-2025.06.28: 
-
-- User persona support. 
-
-- Outfit management. 
-
-- Visibility toggles for characters. 
-
-- Users and multi-character or narrator bots are invisible by default, to avoid confusing situations. 
-
-- Images are now generated as-needed, which can mean a delay in initial use, but you can still manually pre-load them from character management. 
-
-- Various prompt improvements. 
-"
+creator_notes: |
+  <div class="creator-notes">
+    <section class="panel">
+      <div class="panel-content">
+        <h2>Overview!</h2>
+        <p>
+          This is a shameless knock-off of the <a href="https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d">official Expression Packs stage</a>, 
+          except better in almost every conceivable way. You can add this stage to any chat by searching for it under Stages in Chat Settings.<br><br>
+          In addition to displaying official expression packs, this stage can generate expression and background art for any character (and even personae) using Chub's generative endpoints.
+        </p>
+      </div>
+      <div class="panel-img-col">
+        <img style="content: url('https://avatars.charhub.io/avatars/uploads/images/gallery/file/27fff678-125b-48cb-bca8-71a75f47975e/7fb44813-bfbc-4e1a-9edf-3e44326d1f18.png');" alt=" " class="panel-img" />
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-content">
+        <h2>Improvements Over the Original!</h2>
+        <ul>
+          <li>Can be used with any character, without the author's intervention.</li>
+          <li>Supports multiple characters. (Refresh the chat after adding them.)</li>
+          <li>Persona images and multiplayer support.</li>
+          <li>Toggle outfits/visibility in UI.</li>
+          <li>Adds background generation.</li>
+          <li>Allows for global content authorship that persists across chats.</li>
+          <li>More expressive emotion display.</li>
+        </ul>
+      </div>
+      <div class="panel-img-col">
+        <img style="content: url('https://avatars.charhub.io/avatars/uploads/images/gallery/file/d3da9abe-2f2d-4bcc-a7fb-6033c53c662c/253789bb-d02d-4d2e-bdc4-632fe93de867.png');" alt=" " class="panel-img" />
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-content">
+        <h2>Disimprovements Under the Original!</h2>
+        <ul>
+          <li>Without a Mars subscription, may burn a lot of daily credits if content hasn't been pre-generated.</li>
+        </ul>
+        <p>That's it! If you have a Mars subscription and you want some expression images, there's literally no reason to use the original over this.</p>
+      </div>
+      <div class="panel-img-col">
+        <img style="content: url('https://avatars.charhub.io/avatars/uploads/images/gallery/file/e89eedbd-e571-4db9-9146-617a9654b70e/6f7afcdf-347d-4c21-9df3-0d03438725c6.png');" alt=" " class="panel-img" />
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-content">
+        <h2>External Dependencies!</h2>
+        <p>This stage utilizes multiple external calls to different HF endpoints that I manage, based on these models:</p>
+        <ul>
+          <li><a href="https://huggingface.co/SamLowe/roberta-base-go_emotions">Go Emotions</a> for emotion inference</li>
+          <li><a href="https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0">ModernBERT</a> for zero-shot classification</li>
+          <li><a href="https://depth-anything-v2.github.io/">Depth Anything V2</a> for depthmap generation</li>
+        </ul>
+      </div>
+      <div class="panel-img-col">
+        <img style="content: url('https://avatars.charhub.io/avatars/uploads/images/gallery/file/726e2c5b-e765-42c3-944c-d63d27021d91/12d154ef-e5c5-424a-b144-79c96969df05.png');" alt=" " class="panel-img" />
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-content">
+        <h2>Updates</h2>
+        <ul>
+          <li>2025.08.20: I have a few final small updates that I'll be pushing over the coming days, as well as some demo applications. Updates should slow soon.</li>
+          <li>2025.08.17: Continued fixes and documentation updates.</li>
+          <li>2025.08.16: Swapped to new storage API, official packs accessible, global content sharing.</li>
+          <li>2025.07.10: Outfit config changes, waiting for official support.</li>
+          <li>2025.07.08: Outfit export/import features.</li>
+          <li>2025.07.01: Added prompt details and warnings.</li>
+          <li>2025.06.29: Mobile UI revisions, background generation fixes.</li>
+          <li>2025.06.28: Persona support, outfit management, visibility toggles, on-demand image generation.</li>
+        </ul>
+      </div>
+      <div class="panel-img-col">
+        <img style="content: url('https://avatars.charhub.io/avatars/uploads/images/gallery/file/8466b92e-34d1-4b79-a7f0-229e4ecd4bbb/8b778c6a-b1cc-49b6-96c3-fd82e303a6d3.png');" alt=" " class="panel-img" />
+      </div>
+    </section>
+  </div>
+  <script>.creator-notes { margin: auto; } .panel { position: relative; display: flex; flex-direction: row; align-items: stretch; border: 1px solid var(--panel-border); border-radius: 16px; margin: 32px 0; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden; backdrop-filter: blur(2px); background: linear-gradient(90deg, rgba(20,120,80,0.2) 0%, rgba(0,30,20,0.05) 100%); border-color: rgba(120,120,120,0.15); } .panel-content { flex: 1 1 auto; padding: 10px 24px; } .panel-img-col { position: relative; flex: 0 0 15%; display: flex; align-items: stretch; justify-content: flex-end; background: none; } .panel-img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; border-radius: 0 16px 16px 0; box-shadow: 0 0 8px rgba(0,0,0,0.08); } .panel h2 { margin-top: 0; font-size: 1.5em; font-weight: 700; } .panel ul { padding-left: 20px; }</script>
 
 # 'PUBLIC', 'PRIVATE', or 'UNLISTED'.
 visibility: 'PUBLIC'
