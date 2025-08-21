@@ -14,8 +14,7 @@ creator_notes: >
       <div class="panel-content">
         <h2>Overview!</h2>
         <p>
-          This is a shameless knock-off of the <a href="https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d">official Expression Packs stage</a>, 
-          except better in almost every conceivable way. You can add this stage to any chat by searching for it under Stages in Chat Settings.<br><br>
+          This is a shameless knock-off of the <a href="https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d">official Expression Packs stage</a>, except better in almost every conceivable way. You can add this stage to any chat by searching for it under Stages in Chat Settings.<br><br>
           In addition to displaying official expression packs, this stage can generate expression and background art for any character (and even personae) using Chub's generative endpoints. 
         </p>
       </div>
@@ -55,8 +54,7 @@ creator_notes: >
     <section class="panel">
       <div class="panel-content">
         <h2>External Dependencies!</h2>
-        <p>This stage utilizes multiple external calls to different Hugging Face endpoints that I manage. All of these Spaces are open source (as is this stage itself), 
-        if you want to learn more or verify that nothing nefarious is going on:</p>
+        <p>This stage utilizes multiple external calls to different Hugging Face endpoints that I manage. All of these Spaces are open source (as is this stage itself), if you want to learn more or verify that nothing nefarious is going on:</p>
         <ul>
           <li><a href="https://huggingface.co/SamLowe/roberta-base-go_emotions">Go Emotions</a> for emotion inference: <a href="https://huggingface.co/spaces/Ravenok/emotions">HF Space</a></li>
           <li><a href="https://huggingface.co/MoritzLaurer/ModernBERT-large-zeroshot-v2.0">ModernBERT</a> for zero-shot classification: <a href="https://huggingface.co/spaces/Ravenok/statosphere-backend">HF Space</a></li>
