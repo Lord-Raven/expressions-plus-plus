@@ -343,27 +343,6 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                                 Click to Generate or Drag & Drop Image
                                             </span>
                                         )}
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0, cursor: 'pointer', left: 0, top: 0 }}
-                                            title="Upload image"
-                                            onChange={e => {
-                                                const file = e.target.files?.[0];
-                                                if (file && file.type.startsWith('image/')) {
-                                                    const reader = new FileReader();
-                                                    reader.onload = (ev) => {
-                                                        const updatedBackgrounds = { ...backgrounds };
-                                                        updatedBackgrounds[selectedBackground] = {
-                                                            ...currentBackground,
-                                                            backgroundUrl: ev.target?.result as string
-                                                        };
-                                                        updateStageBackgrounds(updatedBackgrounds);
-                                                    };
-                                                    reader.readAsDataURL(file);
-                                                }
-                                            }}
-                                        />
                                     </Button>
                                 </Box>
 
