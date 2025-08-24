@@ -14,6 +14,9 @@ creator_notes: >
       <div class="panel-content">
         <h2>Overview!</h2>
         <p>
+          <i>This stage is a tiny bit broken at the moment. There've been some img2img changes that have temporarily rendered "face" the only type of img2img request the stage can make, so you may get some zoomed in expression images that are inconsistent. This is a temporary issue that I expect will be resolved very soon.</i>
+        </p>
+        <p>
           This is a shameless knock-off of the <a href="https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d">official Expression Packs stage</a>, except better in almost every conceivable way. You can add this stage to any chat by searching for it under Stages in Chat Settings.<br><br>
           In addition to displaying official expression packs, this stage can generate expression and background art for any character (and even personae) using Chub's generative endpoints. 
         </p>
@@ -69,6 +72,7 @@ creator_notes: >
       <div class="panel-content">
         <h2>Updates!</h2>
         <ul>
+          <li>2025.08.24: Temporary fix for expressions not generating due to ongoing img2img upgrades. Should be resolved soon.</li>
           <li>2025.08.20: I have a few final small updates that I'll be pushing over the coming days, as well as some demo applications. Updates should slow soon.</li>
           <li>2025.08.17: Continued fixes and documentation updates.</li>
           <li>2025.08.16: Swapped to new storage API, official packs accessible, global content sharing.</li>
