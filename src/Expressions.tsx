@@ -609,7 +609,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion): string {
         const generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
         if (generatedDescription) {
-            return `(Art style: ${this.artStyle}), (${generatedDescription}), ((${CHARACTER_ART_PROMPT})), (${EMOTION_PROMPTS[emotion]})`;
+            return `(A full-body character rendered in this style: ${this.artStyle}), (Expressing Emotion: ${EMOTION_PROMPTS[emotion]}), (${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}), (${CHARACTER_ART_PROMPT})`;
         }
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
     }
@@ -677,7 +677,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } else {
             const imageUrl = (await this.generator.imageToImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
-                prompt: substitute(`(Art style: ${this.artStyle}), (${this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt}), (${CHARACTER_ART_PROMPT}), ((Strong Emotion: ${EMOTION_PROMPTS[emotion]}))`),
+                prompt: substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true,
@@ -729,7 +729,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             return;
         }
         const imageUrl = (await this.generator.makeImage({
-            prompt: substitute(`(Art style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${background.artPrompt})`),
+            prompt: substitute(`(A background scene rendered in this style: ${this.artStyle}), (${BACKGROUND_ART_PROMPT}), (${background.artPrompt})`),
             aspect_ratio: AspectRatio.CINEMATIC_HORIZONTAL,
         }))?.url ?? '';
         if (imageUrl == '') {
