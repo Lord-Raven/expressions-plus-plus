@@ -321,7 +321,6 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                             if (file && file.type.startsWith('image/')) {
                                                 const reader = new FileReader();
                                                 reader.onload = () => {
-                                                    // When uploaded, update url:
                                                     stage.uploadFile(`${currentBackground.id}_background.png`, file).then((url: string) => {
                                                         const updatedBackgrounds = { ...backgrounds };
                                                         updatedBackgrounds[selectedBackground] = {
@@ -329,6 +328,8 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                                             backgroundUrl: url
                                                         };
                                                         updateStageBackgrounds(updatedBackgrounds);
+                                                    }).catch(() => {
+                                                        stage.wrapPromise(null, "Failed to upload image.");
                                                     });
                                                 };
                                                 reader.readAsDataURL(file);

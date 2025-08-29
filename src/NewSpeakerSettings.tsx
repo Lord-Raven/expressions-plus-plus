@@ -482,13 +482,17 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                             const file = e.dataTransfer.files[0];
                             if (file && file.type.startsWith('image/')) {
                                 const reader = new FileReader();
-                                reader.onload = (ev) => {
-                                    const updatedMap = { ...outfitMap };
-                                    if (!updatedMap[selectedOutfit].images) updatedMap[selectedOutfit].images = {};
-                                    if (confirmEmotion) {
-                                        updatedMap[selectedOutfit].images[confirmEmotion] = ev.target?.result;
-                                    }
-                                    updateStageWardrobeMap(updatedMap);
+                                reader.onload = () => {
+                                    stage.uploadFile(`${selectedOutfit}_${confirmEmotion}.png`, file).then((url: string) => {
+                                        const updatedMap = { ...outfitMap };
+                                        if (!updatedMap[selectedOutfit].images) updatedMap[selectedOutfit].images = {};
+                                        if (confirmEmotion) {
+                                            updatedMap[selectedOutfit].images[confirmEmotion] = url;
+                                        }
+                                        updateStageWardrobeMap(updatedMap);
+                                    }).catch(() => {
+                                        stage.wrapPromise(null, "Failed to upload image.");
+                                    });
                                 };
                                 reader.readAsDataURL(file);
                             }
