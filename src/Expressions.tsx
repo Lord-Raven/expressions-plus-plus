@@ -778,14 +778,27 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 background.depthUrl = '';
                 const depthResponse = await depthPromise;
                 // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
-                const imageFile: File = new File([await (await fetch(depthResponse.data[1].url)).blob()], `${background.id}_depth.png`, {type: 'image/png'});
-                const updateResponse = await this.storage.set(`${background.id}_depth.png`, imageFile).forUser();
-                background.depthUrl = updateResponse.data[0].value;
+                background.depthUrl = await this.uploadBlob(`${background.id}_depth.png`, await (await fetch(depthResponse.data[1].url)).blob(), {type: 'image/png'});
                 await this.updateBackgroundsStorage();
             } catch (err) {
                 console.warn('Failed to generate palette or depth map for background image:', err);
             }
         }
+    }
+
+    async uploadBlob(fileName: string, blob: Blob, propertyBag: BlobPropertyBag): Promise<string> {
+        // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
+        const file: File = new File([blob], fileName, propertyBag);
+        return this.uploadFile(fileName, file);
+    }
+
+    async uploadFile(fileName: string, file: File): Promise<string> {
+        // Don't honor filename; want to overwrite existing content that may have had a different actual name.
+        const updateResponse = await this.storage.set(fileName, file).forUser();
+        if (!updateResponse.data || updateResponse.data.length == 0) {
+            throw new Error('Failed to upload file to storage.');
+        }
+        return updateResponse.data[0].value;
     }
 
     async readBackgroundsFromStorage(): Promise<{[key: string]: Background}> {

@@ -320,13 +320,16 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                             const file = e.dataTransfer.files[0];
                                             if (file && file.type.startsWith('image/')) {
                                                 const reader = new FileReader();
-                                                reader.onload = (ev) => {
-                                                    const updatedBackgrounds = { ...backgrounds };
-                                                    updatedBackgrounds[selectedBackground] = {
-                                                        ...currentBackground,
-                                                        backgroundUrl: ev.target?.result as string
-                                                    };
-                                                    updateStageBackgrounds(updatedBackgrounds);
+                                                reader.onload = () => {
+                                                    // When uploaded, update url:
+                                                    stage.uploadFile(`${currentBackground.id}_background.png`, file).then((url: string) => {
+                                                        const updatedBackgrounds = { ...backgrounds };
+                                                        updatedBackgrounds[selectedBackground] = {
+                                                            ...currentBackground,
+                                                            backgroundUrl: url
+                                                        };
+                                                        updateStageBackgrounds(updatedBackgrounds);
+                                                    });
                                                 };
                                                 reader.readAsDataURL(file);
                                             }
@@ -401,7 +404,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                             {
                                                 type: 'json',
                                                 label: 'JSON for Import/Export',
-                                                value: JSON.stringify(currentBackground, ['name', 'backgroundUrl', 'depthUrl', 'highlightColor', 'borderColor', 'triggerWords', 'artPromnpt'], 2),
+                                                value: JSON.stringify(currentBackground, ['name', 'backgroundUrl', 'depthUrl', 'highlightColor', 'borderColor', 'triggerWords', 'artPrompt'], 2),
                                                 onChange: (val: string) => {
                                                     try {
                                                         const data = JSON.parse(val);
