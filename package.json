@@ -23,7 +23,6 @@
     "react-dom": "^19.1.1",
     "vite-plugin-dts": "^3.9.1",
     "framer-motion": "12.19.1",
-    "fast-average-color": "9.5.0",
     "@mui/material": "7.1.2",
     "@mui/icons-material": "7.1.2",
     "@emotion/react": "11.14.0",

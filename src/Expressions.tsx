@@ -15,7 +15,6 @@ import SpeakerButton from "./SpeakerButton.tsx";
 import BackgroundButton from "./BackgroundButton.tsx";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
-import {FastAverageColor} from "fast-average-color";
 import {SpeakerSettingsHandle} from "./NewSpeakerSettings.tsx";
 import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
 import ColorThief from "colorthief";
@@ -152,7 +151,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     canEdit: string[] = []; // List of speakerIds that this client can edit (generally themself and any character).
     userId: string; // ID of this client
 
-    readonly fac = new FastAverageColor();
     readonly colorThief = new ColorThief();
     private messageHandle?: MessageQueueHandle;
     private speakerSettingsHandle?: SpeakerSettingsHandle;
@@ -359,7 +357,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.info(`New emotion for ${speaker.name}: ${newEmotion}`);
         this.messageState.speakerEmotion[speaker.anonymizedId] = newEmotion;
         this.messageState.activeSpeaker = speaker.anonymizedId;
-        if (!this.wardrobes[speaker.anonymizedId].outfits[this.chatState.selectedOutfit[speaker.anonymizedId]]?.images[EMOTION_MAPPING[newEmotion as Emotion] ?? newEmotion]) {
+        const outfit = this.wardrobes[speaker.anonymizedId].outfits[this.chatState.selectedOutfit[speaker.anonymizedId]];
+        if (!outfit) return;
+        const locked =
+            !outfit.generated || // Non-generated outfits are ineditable
+            !this.canEdit.includes(speaker?.anonymizedId || "") || // Outfits belonging to characters this user can't edit
+            (outfit.global && !this.owns.includes(speaker?.anonymizedId || "")); // Global outfits not owned by user are ineditable
+        if (!outfit.images[EMOTION_MAPPING[newEmotion as Emotion] ?? newEmotion] && !locked) {
             this.wrapPromise(
                 this.generateSpeakerImage(speaker, this.chatState.selectedOutfit[speaker.anonymizedId], EMOTION_MAPPING[newEmotion as Emotion] ?? (newEmotion as Emotion)),
                 `Generating ${newEmotion} for ${speaker.name} (${this.chatState.selectedOutfit[speaker.anonymizedId]}).`);
