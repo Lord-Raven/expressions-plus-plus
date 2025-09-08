@@ -214,7 +214,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 try {
                     const response: any = await this.storage.set('dummy', {data: "dummy data"}).forCharacterSensitive(speakerId);
                     console.log(response);
-                    if (response.errors) {
+                    if (response.errors && response.errors.length) {
                         console.error(`Failed sensitive storage access for ${speakerId}: ${response.errors}`);
                     } else {
                         console.log(`Successfully accessed sensitive storage for ${speakerId}`);
@@ -685,8 +685,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true,
-                strength: 0.1,
-                transfer_type: 'face'
+                strength: 0.1
             }))?.url ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
             if (imageUrl == '') {
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
