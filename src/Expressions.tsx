@@ -591,7 +591,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         updateBuilder = updateBuilder.set('local_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && !outfit.global)).forCharacter(speakerId).forChat();
                     }
                     if (this.owns.includes(speakerId)) {
-                        updateBuilder = updateBuilder.set('global_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && outfit.global)).forCharacter(speakerId);
+                        updateBuilder = updateBuilder.set('global_wardrobe', this.pickOutfits(speakerId, outfit => outfit.generated && outfit.global)).forCharacterSensitive(speakerId);
                     }
                 }
             }
@@ -859,7 +859,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 return acc;
             }, {});
             console.log(`Pushing global backgrounds:,`, globalBackgrounds);
-            await this.storage.set('global_backgrounds', globalBackgrounds).forCharacter('1');
+            await this.storage.set('global_backgrounds', globalBackgrounds).forCharacterSensitive('1');
         }
         // Update backupBackgrounds for later comparison.
         this.backupBackgrounds = JSON.parse(JSON.stringify(this.backgrounds));
