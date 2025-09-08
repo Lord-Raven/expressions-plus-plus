@@ -685,7 +685,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                 aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
                 remove_background: true,
-                strength: 0.1
+                strength: 0.1,
+                transfer_type: 'face'
             }))?.url ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
             if (imageUrl == '') {
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
