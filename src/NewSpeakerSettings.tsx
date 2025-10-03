@@ -558,7 +558,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                         {/* "Clone From" drop-down for selecting a different outfit to create this outfit from; if this is neutral and more than one outfit exists (because this one won't be listed),
                         allow  it to be generated from the neutral image of another outfit.
                         This drop-down allows selection of any other outfit, and will use that image and a simplified prompt to render a new neutral image. */}
-                        {confirmEmotion == 'neutral' && outfitKeys.filter(key => key != selectedOutfit && outfitMap[key].iamges[Emotion.neutral]).length > 0
+                        {confirmEmotion == 'neutral' && outfitKeys.filter(key => key != selectedOutfit && outfitMap[key].images[Emotion.neutral]).length > 0
                         && (<Box sx={{ mt: 4, width: '100%', textAlign: 'center' }}>
                             <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
                                 Or clone from another outfit:
