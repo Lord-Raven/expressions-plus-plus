@@ -692,7 +692,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: response.blob()});
                 // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
                 this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] =
-                    await this.uploadBlob(`${outfitKey}_${emotion}.png`, await (await fetch(backgroundlessResponse.data[0].url)).blob(), {type: 'image/png'});
+                    await this.uploadBlob(`${outfitKey}_${emotion}.png`, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
             }
 
             if (this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] == '') {
