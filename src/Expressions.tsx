@@ -685,6 +685,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 )))?.url ?? '';
 
             if (imageUrl != '') {
+
+                // Clear entire pack:
+                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images = {};
                 // Remove background:
                 const response = await fetch(imageUrl);
 
@@ -697,9 +700,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             if (this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] == '') {
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
-
-            // Clear entire pack:
-            this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images = {};
 
         } else {
             const imageUrl = (await this.generator.imageToImage({
