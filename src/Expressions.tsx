@@ -692,7 +692,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: response.blob()});
                 // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
                 this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] =
-                    await this.uploadBlob(`${outfitKey}_${emotion}.png`, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
+                    await this.uploadBlob(`${outfitKey}_${emotion}.png`, await (await fetch(backgroundlessResponse.data[0].url)).blob(), {type: 'image/png'});
             }
 
             if (this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] == '') {
@@ -765,7 +765,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 // This endpoint takes actual image data and not a URL; need to load data from imageUrl
                 const response = await fetch(background.backgroundUrl);
                 const imageBlob = await response.blob();
-                const depthPromise = this.depthPipeline.predict("/on_submit", {image: imageBlob});
+                const depthPromise = this.depthPipeline.predict("/predict_depth", {image: imageBlob});
 
                 // Need to get a HtmlImageElement for getPalette:
                 const imageElement = document.createElement('img');
