@@ -365,7 +365,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             (outfit.global && !this.owns.includes(speaker?.anonymizedId || "")); // Global outfits not owned by user are ineditable
         if (!outfit.images[EMOTION_MAPPING[newEmotion as Emotion] ?? newEmotion] && !locked) {
             this.wrapPromise(
-                this.generateSpeakerImage(speaker, this.chatState.selectedOutfit[speaker.anonymizedId], EMOTION_MAPPING[newEmotion as Emotion] ?? (newEmotion as Emotion)),
+                this.generateSpeakerImage(speaker, this.chatState.selectedOutfit[speaker.anonymizedId], EMOTION_MAPPING[newEmotion as Emotion] ?? (newEmotion as Emotion), ''),
                 `Generating ${newEmotion} for ${speaker.name} (${this.chatState.selectedOutfit[speaker.anonymizedId]}).`);
         }
     }
@@ -611,6 +611,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion): string {
+        console.log(`buildArtPrompt(speaker=${speaker.name}, outfit=${outfit}, emotion=${emotion})`);
+        console.log(this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '');
         const generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
         if (generatedDescription) {
             return `(A full-body character rendered in this style: ${this.artStyle}), (Expressing Emotion: ${EMOTION_PROMPTS[emotion]}), (${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}), (${CHARACTER_ART_PROMPT})`;
@@ -653,7 +655,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
     }
 
-    async generateSpeakerImage(speaker: Speaker, outfitKey: string, emotion: Emotion): Promise<void> {
+    async generateSpeakerImage(speaker: Speaker, outfitKey: string, emotion: Emotion, fromOutfitKey: string): Promise<void> {
         const outfitName = (this.wardrobes[speaker.anonymizedId].outfits[outfitKey]?.name ?? outfitKey);
 
         if (!this.wardrobes[speaker.anonymizedId]?.outfits?.[outfitKey]?.artPrompt) {
@@ -666,18 +668,39 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
         console.log(`Generating ${emotion} image for ${speaker.name} (${outfitName}).`)
         if (emotion == Emotion.neutral) {
-            const imageUrl = (await this.generator.makeImage({
-                prompt: substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
-                negative_prompt: CHARACTER_NEGATIVE_PROMPT,
-                aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
-                remove_background: true
-            }))?.url ?? '';
-            if (imageUrl == '') {
+            const imageUrl = (await (
+                fromOutfitKey ?
+                    this.generator.imageToImage({
+                        image: this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral],
+                        prompt: substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
+                        remove_background: false, // Not yet supported by Qwen Image Edit
+                        transfer_type: 'edit'
+                    }
+                ) :
+                    this.generator.makeImage({
+                        prompt: substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
+                        negative_prompt: CHARACTER_NEGATIVE_PROMPT,
+                        aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL
+                    }
+                )))?.url ?? '';
+
+            if (imageUrl != '') {
+                // Remove background:
+                const response = await fetch(imageUrl);
+
+                const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
+                // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
+                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] =
+                    await this.uploadBlob(`${outfitKey}_${emotion}.png`, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
+            }
+
+            if (this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] == '') {
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
-            // Clear entire pack then assign this image:
+
+            // Clear entire pack:
             this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images = {};
-            this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] = imageUrl;
+
         } else {
             const imageUrl = (await this.generator.imageToImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
@@ -991,8 +1014,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         register={(handle) => {this.speakerSettingsHandle = handle;}}
                         stage={this}
                         borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}
-                        onRegenerate={(char, outfit, emotion) => {
-                            this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion), `Generating ${emotion} for ${char.name} (${this.wardrobes[char.anonymizedId].outfits[outfit].name}).`);
+                        onRegenerate={(char, outfit, emotion, fromOutfit) => {
+                            this.wrapPromise(this.generateSpeakerImage(char, outfit, emotion, fromOutfit), `Generating ${emotion} for ${char.name} (${this.wardrobes[char.anonymizedId].outfits[outfit].name}).`);
                         }}
                         />
                     <BackgroundSettings

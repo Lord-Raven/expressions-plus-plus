@@ -26,7 +26,7 @@ type NewSpeakerSettingsProps = {
     register?: (handle: SpeakerSettingsHandle) => void;
     stage: any;
     borderColor: string;
-    onRegenerate?: (speaker: Speaker, outfit: string, emotion: Emotion) => void;
+    onRegenerate?: (speaker: Speaker, outfit: string, emotion: Emotion, fromOutfit: string) => void;
 };
 
 const OutfitInfoIcon = ({
@@ -550,11 +550,41 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                 onClick={() => {
                                     setConfirmEmotion(null);
                                     if (onRegenerate && confirmEmotion) {
-                                        onRegenerate(speaker, selectedOutfit ?? "", confirmEmotion);
+                                        onRegenerate(speaker, selectedOutfit ?? "", confirmEmotion, "");
                                     }
                                 }}
                             >Regenerate</Button>
                         </Box>
+                        {/* "Clone From" drop-down for selecting a different outfit to create this outfit from; if this is neutral and more than one outfit exists (because this one won't be listed),
+                        allow  it to be generated from the neutral image of another outfit.
+                        This drop-down allows selection of any other outfit, and will use that image and a simplified prompt to render a new neutral image. */}
+                        {confirmEmotion == 'neutral' && outfitKeys.filter(key => key != selectedOutfit && outfitMap[key].iamges[Emotion.neutral]).length > 0
+                        && (<Box sx={{ mt: 4, width: '100%', textAlign: 'center' }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+                                Or clone from another outfit:
+                            </Typography>
+                            <TextField
+                                select
+                                value=""
+                                onChange={e => {
+                                    const fromOutfit = e.target.value;
+                                    if (fromOutfit && fromOutfit in outfitMap && fromOutfit != selectedOutfit) {
+                                        setConfirmEmotion(null);
+                                        if (onRegenerate) {
+                                            onRegenerate(speaker, selectedOutfit ?? "", Emotion.neutral, fromOutfit);
+                                        }
+                                    }
+                                }}
+                                variant="outlined"
+                                size="small"
+                                sx={{ minWidth: 200 }}
+                            >
+                                <option value="" disabled>Clone from...</option>
+                                {outfitKeys.filter(k => k != selectedOutfit).map(k => (
+                                    <option key={k} value={k}>{outfitMap[k]?.name || k}</option>
+                                ))}
+                            </TextField>
+                        </Box>)}
                     </Box>
                 </DialogContent>
                 <DialogActions>
