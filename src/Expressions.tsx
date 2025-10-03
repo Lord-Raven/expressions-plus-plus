@@ -681,14 +681,23 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } else {
             const imageUrl = (await this.generator.imageToImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
-                prompt: `Draw this character with a ${EMOTION_PROMPTS[emotion]}.`,//substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
-                remove_background: true,
+                prompt: `Give this character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,//substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
+                remove_background: false, // Not yet supported by Qwen Image Edit
                 transfer_type: 'edit'
             }))?.url ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
-            if (imageUrl == '') {
+            if (imageUrl != '') {
+                // Remove background:
+                const response = await fetch(imageUrl);
+
+                const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: response.blob()});
+                // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
+                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] =
+                    await this.uploadBlob(`${outfitKey}_${emotion}.png`, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
+            }
+
+            if (this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] == '') {
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
-            this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] = imageUrl;
         }
         await this.updateWardrobeStorage();
     }
