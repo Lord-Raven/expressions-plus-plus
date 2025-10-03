@@ -681,12 +681,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } else {
             const imageUrl = (await this.generator.imageToImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
-                prompt: substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
-                negative_prompt: CHARACTER_NEGATIVE_PROMPT,
-                aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL,
+                prompt: `Draw this character with a ${EMOTION_PROMPTS[emotion]}.`,//substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
                 remove_background: true,
-                strength: 0.1,
-                transfer_type: 'face'
+                transfer_type: 'edit'
             }))?.url ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
             if (imageUrl == '') {
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);

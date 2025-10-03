@@ -14,7 +14,7 @@ creator_notes: >
       <div class="panel-content">
         <h2>Overview!</h2>
         <p>
-          <i>This stage is a tiny bit broken at the moment. There've been some img2img changes that have temporarily rendered "face" the only type of img2img request the stage can make, so you may get some zoomed in expression images that are inconsistent. This is a temporary issue that I expect will be resolved very soon.</i>
+          <i>I am working to transition to the Qwen Image Edit model to improve emotion consistency, but I don't expect things are quite there yet. Please pardon the image generation aspect of this stage while I continue to tweak.</i> 
         </p>
         <p>
           This is a shameless knock-off of the <a href="https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d">official Expression Packs stage</a>, except better in almost every conceivable way. You can add this stage to any chat by searching for it under Stages in Chat Settings.<br><br>
@@ -47,6 +47,7 @@ creator_notes: >
         <h2>Disimprovements Under the Original!</h2>
         <ul>
           <li>Without a Mars subscription, may burn a lot of daily credits if content hasn't been pre-generated.</li>
+          <li>If you hate backgrounds, you will have to disable them from the stage's configuration (in Chat Settings).</li>
         </ul>
         <p>That's it! If you have a Mars subscription and you want some expression images, there's literally no reason to use the original over this.</p>
       </div>
@@ -72,7 +73,8 @@ creator_notes: >
       <div class="panel-content">
         <h2>Updates!</h2>
         <ul>
-          <li>2025.09.08: Addressing a sensitive storage change. img2img is still set to "face" so the results aren't great.</li>
+          <li>2025.10.02: Moving to Qwen for img2img calls. Should see some improved expression quality and consistency when this is finished.</li>
+          <li>2025.09.08: Addressing a sensitive storage change.</li>
           <li>2025.08.29: Pushing uploaded images to storage and referencing by URL.</li>
           <li>2025.08.24: Temporary fix for expressions not generating due to ongoing img2img upgrades. Should be resolved soon.</li>
           <li>2025.08.20: I have a few final small updates that I'll be pushing over the coming days, as well as some demo applications. Updates should slow soon.</li>
