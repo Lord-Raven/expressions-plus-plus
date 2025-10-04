@@ -111,12 +111,15 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
     }, [speaker, selectedOutfit, outfitKeys]);
 
     useEffect(() => {
-        console.log(`setSpeaker: ${speaker?.name}, ${speaker?.anonymizedId}, ${stage.chatState.selectedOutfit[speaker?.anonymizedId ?? ''] ?? stage.messageState.speakerOutfit[speaker?.anonymizedId ?? ''] ?? ''}`);
         stage.updateChatState();
         stage.updateWardrobeStorage();
-        setSelectedOutfit((speaker ? stage.chatState.selectedOutfit[speaker.anonymizedId] ?? stage.messageState.speakerOutfit[speaker.anonymizedId] : null) ?? "");
-        setOutfitMap((speaker ? stage.wardrobes[speaker.anonymizedId].outfits : {}) ?? {});
-        setOutfitKeys(Object.keys(speaker ? stage.wardrobes[speaker.anonymizedId].outfits : []) ?? []);
+        if (speaker) {
+            setOutfitMap((stage.wardrobes[speaker.anonymizedId].outfits) ?? {});
+            setOutfitKeys(Object.keys(stage.wardrobes[speaker.anonymizedId].outfits) ?? []);
+            console.log(`setSpeaker: ${speaker?.name}, ${speaker?.anonymizedId}, ` +
+                `${stage.chatState.selectedOutfit[speaker?.anonymizedId ?? ''] ?? stage.messageState.speakerOutfit[speaker?.anonymizedId ?? ''] ?? Object.keys(stage.wardrobes[speaker.anonymizedId].outfits)[0] ?? ''}`);
+            setSelectedOutfit((stage.chatState.selectedOutfit[speaker.anonymizedId] ?? stage.messageState.speakerOutfit[speaker.anonymizedId] ?? Object.keys(stage.wardrobes[speaker.anonymizedId].outfits)[0]) ?? "");
+        }
     }, [speaker]);
 
     useEffect(() => {

@@ -364,9 +364,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const lowerContent = content.toLowerCase();
         const newOutfitIds = Object.keys(this.wardrobes[speaker.anonymizedId].outfits).filter(outfitId => {
             const outfit = this.wardrobes[speaker.anonymizedId].outfits[outfitId];
+            console.log(`Testing outfit keywords for ${outfit.name} (${outfitId}): ${outfit.triggerWords}`);
             return outfit.triggerWords.split(',').map(word => word.trim().toLowerCase()).some(word => word.length > 0 && lowerContent.includes(word));
         });
         if (newOutfitIds.length > 0 && !newOutfitIds.includes(this.messageState.speakerOutfit[speaker.anonymizedId])) {
+            console.log(`Setting auto outfit to ${newOutfitIds[0]} for ${speaker.name} based on key words.`);
             this.messageState.speakerOutfit[speaker.anonymizedId] = newOutfitIds[0];
         }
 
