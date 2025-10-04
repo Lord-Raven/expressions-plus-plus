@@ -568,9 +568,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 value=""
                                 onChange={e => {
                                     const fromOutfit = e.target.value;
-                                    console.log(`Cloning neutral from ${fromOutfit}`);
                                     if (fromOutfit && fromOutfit in outfitMap && fromOutfit != selectedOutfit) {
-                                        console.log('Passed clone check.');
                                         setConfirmEmotion(null);
                                         if (onRegenerate) {
                                             onRegenerate(speaker, selectedOutfit ?? "", Emotion.neutral, fromOutfit);

@@ -83,7 +83,6 @@ const darkTheme = createTheme({
     },
 });
 
-const CHARACTER_ART_PROMPT: string = 'plain flat background, standing, full body, head-to-toe';
 const CHARACTER_NEGATIVE_PROMPT: string = 'border, ((close-up)), scenery, special effects, scene, dynamic angle, action, cut-off';
 
 export const DEFAULT_OUTFIT_NAME: string = 'Starter Outfit';
@@ -613,7 +612,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion): string {
         const generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
         if (generatedDescription) {
-            return `(A full-body character rendered in this style: ${this.artStyle}), (Expressing Emotion: ${EMOTION_PROMPTS[emotion]}), (${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}), (${CHARACTER_ART_PROMPT})`;
+            return `A full-body character standing against an empty background, rendered in this style: ${this.artStyle}. They have a calm, neutral expression. ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
         }
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
     }
@@ -702,7 +701,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } else {
             const imageUrl = (await this.generator.imageToImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
-                prompt: `Maintain this composition but give the character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,//substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
+                prompt: `Maintain this composition and art style (${this.artStyle}); just give the character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,//substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
                 remove_background: false, // Not yet supported by Qwen Image Edit
                 transfer_type: 'edit'
             }))?.url ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';

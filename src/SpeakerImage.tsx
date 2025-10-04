@@ -148,7 +148,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                             top: 0,
                             width: '100%',
                             height: '100%',
-                            filter: 'blur(2px)',
+                            filter: 'blur(2.5px)',
                             zIndex: 4,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                         }}
