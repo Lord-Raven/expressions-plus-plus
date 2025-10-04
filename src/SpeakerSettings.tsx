@@ -33,12 +33,10 @@ const OutfitInfoIcon = ({
                             isAltered,
                             isErrored,
                             isLocked,
-                            description,
                         }: {
     isAltered: boolean;
     isErrored: boolean;
     isLocked: boolean;
-    description: string;
 }) => {
     let Icon = InfoOutlinedIcon;
     let color: "primary" | "warning" | "error" = "primary";
@@ -150,7 +148,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
     };
 
     const checkIsLocked: (key: string) => boolean = key => {
-        return !outfitMap[key]?.generated || // Non-generated outfits are ineditable
+        return !outfitMap[key]?.generated || // Non-generated outfits are immutable
             !stage.canEdit.includes(speaker?.anonymizedId || "") || // Outfits belonging to characters this user can't edit
             (stage.wardrobes[speaker?.anonymizedId || ""].outfits[key]?.global === true && !stage.owns.includes(speaker?.anonymizedId || "")); // Global outfits not owned by user are ineditable
     };
@@ -200,7 +198,6 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                 {value}
                 {speaker && outfitMap[outfitKey] && (
                     <OutfitInfoIcon
-                        description={stage.buildArtPrompt(speaker, value, Emotion.neutral)}
                         isLocked={locked}
                         isAltered={stage.buildArtPrompt(speaker, value, Emotion.neutral) != substitute(stage.buildArtPrompt(speaker, value, Emotion.neutral))}
                         isErrored={stage.getSpeakerImage(speaker.anonymizedId, value, Emotion.neutral, silhouetteUrl) == ''}/>

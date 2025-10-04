@@ -702,22 +702,22 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 )))?.url ?? '';
 
             if (imageUrl != '') {
-
-                // Clear entire pack:
-                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images = {};
                 // Remove background:
-                const response = await fetch(imageUrl);
+                let finalImage = imageUrl;
+                try {
+                    const response = await fetch(finalImage);
 
-                const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
-                // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
-                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] =
-                    await this.uploadBlob(`${outfitKey}_${emotion}.png`, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
-            }
-
-            if (this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] == '') {
+                    const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
+                    // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
+                    finalImage = await this.uploadBlob(`${outfitKey}_${emotion}.png`, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
+                } catch (error) {
+                    console.error(`Error removing background or storing result: ${error}`);
+                }
+                // Re-initialize this pack entirely with just the neutral image:
+                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images = {[emotion]: finalImage};
+            } else {
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
-
         } else {
             const imageUrl = (await this.generator.imageToImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
@@ -727,15 +727,19 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }))?.url ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
             if (imageUrl != '') {
                 // Remove background:
-                const response = await fetch(imageUrl);
+                let finalImage = imageUrl;
+                try {
+                    const response = await fetch(imageUrl);
 
-                const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
-                // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
-                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] =
-                    await this.uploadBlob(`${outfitKey}_${emotion}.png`, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
-            }
-
-            if (this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] == '') {
+                    const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
+                    // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
+                    finalImage =
+                        await this.uploadBlob(`${outfitKey}_${emotion}.png`, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
+                    } catch (error) {
+                    console.error(`Error removing background or storing result: ${error}`);
+                }
+                this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] = finalImage;
+            } else {
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
         }
