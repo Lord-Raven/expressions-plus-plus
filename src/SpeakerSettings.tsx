@@ -4,7 +4,7 @@ import { Speaker } from "@chub-ai/stages-ts";
 import {motion} from "framer-motion";
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
-    Box, Button, Typography, TextField, IconButton, Tooltip
+    Box, Button, Typography, TextField, IconButton, Tooltip, MenuItem
 } from "@mui/material";
 import { Grid, Tabs, Tab } from "@mui/material";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
@@ -581,9 +581,9 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 size="small"
                                 sx={{ minWidth: 200 }}
                             >
-                                <option value="" disabled>Clone from...</option>
+                                <MenuItem value="" disabled>Clone from...</MenuItem>
                                 {outfitKeys.filter(key => key != selectedOutfit && outfitMap[key].images[Emotion.neutral]).map(k => (
-                                    <option key={k} value={k}>{outfitMap[k]?.name || k}</option>
+                                    <MenuItem key={`cloneFrom_${k}`} value={k}>{outfitMap[k]?.name || k}</MenuItem>
                                 ))}
                             </TextField>
                         </Box>)}
