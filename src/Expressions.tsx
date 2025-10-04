@@ -151,6 +151,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     canEdit: string[] = []; // List of speakerIds that this client can edit (generally themself and any character).
     userId: string; // ID of this client
 
+    readonly defaultBackground: Background = {
+        id: '',
+        name: 'Default Background',
+        artPrompt: '',
+        backgroundUrl: '',
+        depthUrl: '',
+        borderColor: DEFAULT_BORDER_COLOR,
+        highlightColor: DEFAULT_HIGHLIGHT_COLOR,
+        triggerWords: '',
+        global: false
+    };
+
     readonly colorThief = new ColorThief();
     private messageHandle?: MessageQueueHandle;
     private speakerSettingsHandle?: SpeakerSettingsHandle;
@@ -632,7 +644,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion): string {
         const generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
         if (generatedDescription) {
-            return `A full-body character standing against an empty background, rendered in this style: ${this.artStyle}. They have a calm, neutral expression. ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
+            return `A full-body character image on an empty background. They have a calm, neutral expression. Rendered them in this style: ${this.artStyle}. ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
         }
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
     }
@@ -979,18 +991,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     getSelectedBackground(): Background {
         if (!this.generateBackgrounds || Object.keys(this.backgrounds).length == 0) {
-            console.warn('No backgrounds available or background generation is disabled. Returning default background.');
-            return {
-                    id: '',
-                    name: 'Default Background',
-                    artPrompt: '',
-                    backgroundUrl: '',
-                    depthUrl: '',
-                    borderColor: DEFAULT_BORDER_COLOR,
-                    highlightColor: DEFAULT_HIGHLIGHT_COLOR,
-                    triggerWords: '',
-                    global: false
-                };
+            return this.defaultBackground;
         }
         if (!this.backgrounds[this.chatState.selectedBackground]) {
             this.chatState.selectedBackground = Object.keys(this.backgrounds)[0];
