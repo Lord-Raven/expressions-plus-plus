@@ -15,8 +15,8 @@ import SpeakerButton from "./SpeakerButton.tsx";
 import BackgroundButton from "./BackgroundButton.tsx";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
-import {SpeakerSettingsHandle} from "./NewSpeakerSettings.tsx";
-import NewSpeakerSettings from "./NewSpeakerSettings.tsx";
+import {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
+import SpeakerSettings from "./SpeakerSettings.tsx";
 import ColorThief from "colorthief";
 import { Emotion, EMOTION_MAPPING, EMOTION_PROMPTS, EmotionPack } from "./Emotion.tsx";
 import { Background, DEFAULT_BORDER_COLOR, DEFAULT_HIGHLIGHT_COLOR, BACKGROUND_ART_PROMPT } from "./Background.tsx";
@@ -611,8 +611,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion): string {
-        console.log(`buildArtPrompt(speaker=${speaker.name}, outfit=${outfit}, emotion=${emotion})`);
-        console.log(this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '');
         const generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
         if (generatedDescription) {
             return `(A full-body character rendered in this style: ${this.artStyle}), (Expressing Emotion: ${EMOTION_PROMPTS[emotion]}), (${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}), (${CHARACTER_ART_PROMPT})`;
@@ -704,7 +702,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } else {
             const imageUrl = (await this.generator.imageToImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
-                prompt: `Give this character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,//substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
+                prompt: `Maintain this composition but give the character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,//substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
                 remove_background: false, // Not yet supported by Qwen Image Edit
                 transfer_type: 'edit'
             }))?.url ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
@@ -1010,7 +1008,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 }}
             >
                 <ThemeProvider theme={darkTheme}>
-                    <NewSpeakerSettings
+                    <SpeakerSettings
                         register={(handle) => {this.speakerSettingsHandle = handle;}}
                         stage={this}
                         borderColor={this.getSelectedBackground().borderColor ?? DEFAULT_BORDER_COLOR}

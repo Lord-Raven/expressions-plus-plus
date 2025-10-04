@@ -1,6 +1,6 @@
-import {motion, Variants, easeOut, easeIn} from "framer-motion";
+import {motion, Variants, easeOut, easeIn, AnimatePresence} from "framer-motion";
 import { Speaker } from "@chub-ai/stages-ts";
-import { FC, useState, useEffect } from "react";
+import {FC, useState, useEffect, useRef} from "react";
 import { Emotion } from "./Emotion";
 
 const IDLE_HEIGHT: number = 70;
@@ -32,7 +32,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     panY
 }) => {
     const [processedImageUrl, setProcessedImageUrl] = useState<string>('');
-        const [aspectRatio, setAspectRatio] = useState<string>('9 / 16');
+    const [prevImageUrl, setPrevImageUrl] = useState<string>('');
+    const [aspectRatio, setAspectRatio] = useState<string>('9 / 16');
+    const prevRawImageUrl = useRef<string>(imageUrl);
 
     // Process image with color multiplication
     useEffect(() => {
@@ -55,6 +57,14 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         };
         img.src = imageUrl;
     }, [imageUrl, highlightColor]);
+
+    // Track previous processed image for fade transition
+    useEffect(() => {
+        if (prevRawImageUrl.current !== imageUrl) {
+            setPrevImageUrl(processedImageUrl);
+            prevRawImageUrl.current = imageUrl;
+        }
+    }, [imageUrl, processedImageUrl]);
 
     // Calculate final parallax position
     const baseX = isTalking ? 50 : xPosition;
@@ -102,33 +112,72 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
             animate={isTalking ? 'talking' : 'idle'}
             style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible'}}>
             {/* Blurred background layer */}
-            <img 
-                src={processedImageUrl} 
-                style={{
-                    position: 'absolute', 
-                    top: 0, 
-                    width: '100%', 
-                    height: '100%', 
-                    filter: 'blur(2.5px)', 
-                    transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`, 
-                    zIndex: 4
-                }} 
-                alt={`${speaker.name} (${emotion}) background`}
-            />
-            {/* Main image layer */}
-            <img 
-                src={processedImageUrl} 
-                style={{
-                    position: 'absolute', 
-                    top: 0, 
-                    width: '100%', 
-                    height: '100%', 
-                    opacity: 0.75, 
-                    transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
-                    zIndex: 5
-                }} 
-                alt={`${speaker.name} (${emotion})`}
-            />
+            <AnimatePresence>
+                {prevImageUrl && prevImageUrl !== processedImageUrl && (
+                    <motion.img
+                        key="prev"
+                        src={prevImageUrl}
+                        initial={{ opacity: 1 }}
+                        animate={{ opacity: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            width: '100%',
+                            height: '100%',
+                            filter: 'blur(2.5px)',
+                            zIndex: 4,
+                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                        }}
+                        alt={`${speaker.name} (${emotion}) previous`}
+                    />
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {processedImageUrl && (
+                    <motion.img
+                        key={processedImageUrl}
+                        src={processedImageUrl}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            width: '100%',
+                            height: '100%',
+                            filter: 'blur(2px)',
+                            zIndex: 4,
+                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                        }}
+                        alt={`${speaker.name} (${emotion}) background`}
+                    />
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {processedImageUrl && (
+                    <motion.img
+                        key={processedImageUrl + "_main"}
+                        src={processedImageUrl}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 0.75 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            width: '100%',
+                            height: '100%',
+                            opacity: 0.75,
+                            zIndex: 5,
+                            transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                        }}
+                        alt={`${speaker.name} (${emotion})`}
+                    />
+                )}
+            </AnimatePresence>
         </motion.div>
     ) : <></>;
 };

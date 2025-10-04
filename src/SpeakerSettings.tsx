@@ -22,7 +22,7 @@ export interface SpeakerSettingsHandle {
     setSpeaker: (speaker: Speaker|null) => void;
 }
 
-type NewSpeakerSettingsProps = {
+type SpeakerSettingsProps = {
     register?: (handle: SpeakerSettingsHandle) => void;
     stage: any;
     borderColor: string;
@@ -56,9 +56,9 @@ const OutfitInfoIcon = ({
 
     return (
         <Tooltip title={isLocked ? (<><Icon fontSize="inherit" color={color} />This outfit cannot be altered.</>) :
-                (<>Prompt used for image generation:<br/><br/>{description}
-                    {isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt failed to generate an image. This could be due to exhausted daily credits or sensitive content in the prompt; consider reporting false positives to the stage developer.</>)}
-                    {isAltered && !isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />This prompt was automatically altered from its original form to avoid triggering a sensitive content failure; if the result appears fine, you may disregard this warning.</>)}
+                (<>Double-click or tap this tab to edit its name.
+                    {isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />The art prompt failed to generate an image. This could be due to exhausted daily credits or sensitive content in the prompt; consider reporting false positives to the stage developer.</>)}
+                    {isAltered && !isErrored && (<><br/><br/><Icon fontSize="inherit" color={color} />The art prompt was automatically altered from its original form to avoid triggering a sensitive content failure; if the result appears fine, you may disregard this warning.</>)}
                     </>)}
                 arrow enterDelay={300} leaveDelay={150}>
             <IconButton
@@ -72,7 +72,7 @@ const OutfitInfoIcon = ({
     );
 };
 
-const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
+const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borderColor, onRegenerate}) => {
     // Ref for dialog content scroll
     const dialogContentRef = useRef<HTMLDivElement>(null);
     // Refs for edit fields
@@ -568,7 +568,9 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                 value=""
                                 onChange={e => {
                                     const fromOutfit = e.target.value;
+                                    console.log(`Cloning neutral from ${fromOutfit}`);
                                     if (fromOutfit && fromOutfit in outfitMap && fromOutfit != selectedOutfit) {
+                                        console.log('Passed clone check.');
                                         setConfirmEmotion(null);
                                         if (onRegenerate) {
                                             onRegenerate(speaker, selectedOutfit ?? "", Emotion.neutral, fromOutfit);
@@ -580,7 +582,7 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
                                 sx={{ minWidth: 200 }}
                             >
                                 <option value="" disabled>Clone from...</option>
-                                {outfitKeys.filter(k => k != selectedOutfit).map(k => (
+                                {outfitKeys.filter(key => key != selectedOutfit && outfitMap[key].images[Emotion.neutral]).map(k => (
                                     <option key={k} value={k}>{outfitMap[k]?.name || k}</option>
                                 ))}
                             </TextField>
@@ -601,4 +603,4 @@ const NewSpeakerSettings: React.FC<NewSpeakerSettingsProps> = ({register, stage,
     </>);
 };
 
-export default NewSpeakerSettings;
+export default SpeakerSettings;
