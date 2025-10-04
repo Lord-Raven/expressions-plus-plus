@@ -116,6 +116,9 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
         if (speaker) {
             console.log(`setSpeaker: ${speaker?.name}, ${speaker?.anonymizedId}, ` +
                 `${stage.chatState.selectedOutfit[speaker?.anonymizedId ?? ''] ?? stage.messageState.speakerOutfit[speaker?.anonymizedId ?? ''] ?? Object.keys(stage.wardrobes[speaker.anonymizedId].outfits)[0] ?? ''}`);
+            console.log(stage.chatState.selectedOutfit[speaker?.anonymizedId ?? '']);
+            console.log(stage.messageState.speakerOutfit[speaker?.anonymizedId ?? '']);
+            console.log(stage.wardrobes[speaker.anonymizedId].outfits);
             setSelectedOutfit((stage.chatState.selectedOutfit[speaker.anonymizedId] ?? stage.messageState.speakerOutfit[speaker.anonymizedId] ?? Object.keys(stage.wardrobes[speaker.anonymizedId].outfits)[0]) ?? "");
             setOutfitMap((stage.wardrobes[speaker.anonymizedId].outfits) ?? {});
             setOutfitKeys(Object.keys(stage.wardrobes[speaker.anonymizedId].outfits) ?? []);
