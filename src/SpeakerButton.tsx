@@ -92,7 +92,7 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                         height: 40,
                         borderRadius: "50%",
                         backgroundImage: `url(${stage.getSpeakerImage(speaker.anonymizedId, 
-                            stage.chatState.selectedOutfit[speaker.anonymizedId] ?? stage.messageState.speakerOutfit[speaker.anonymizedId] ?? DEFAULT_OUTFIT_NAME, 
+                            stage.chatState.selectedOutfit[speaker.anonymizedId] || stage.messageState.speakerOutfit[speaker.anonymizedId] || DEFAULT_OUTFIT_NAME, 
                             Emotion.neutral, silhouetteUrl)})`,
                         backgroundSize: "200% 356%",
                         backgroundPosition: "center top",

@@ -373,7 +373,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
 
         // Potentially generate new image for new emotion; outfit will be the selected outfit, as the current speaker outfit (as an empty selected outfit ('') means auto outfit).
-        const outfitId = this.chatState.selectedOutfit[speaker.anonymizedId] ?? this.messageState.speakerOutfit[speaker.anonymizedId];
+        const outfitId = this.chatState.selectedOutfit[speaker.anonymizedId] || this.messageState.speakerOutfit[speaker.anonymizedId];
         const outfit = this.wardrobes[speaker.anonymizedId].outfits[outfitId];
         if (outfit) {
             if (!outfit) return;

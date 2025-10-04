@@ -222,7 +222,7 @@ const Scene: FC<SceneProps> = ({ imageUrl, depthUrl, stage }) => {
                                 xPosition={xPosition}
                                 yPosition={yPosition}
                                 zIndex={zIndex}
-                                imageUrl={stage.getSpeakerImage(character.anonymizedId, stage.chatState.selectedOutfit[character.anonymizedId] ?? stage.messageState.speakerOutfit[character.anonymizedId], stage.getSpeakerEmotion(character.anonymizedId), '')}
+                                imageUrl={stage.getSpeakerImage(character.anonymizedId, stage.chatState.selectedOutfit[character.anonymizedId] || stage.messageState.speakerOutfit[character.anonymizedId], stage.getSpeakerEmotion(character.anonymizedId), '')}
                                 isTalking={stage.messageState.activeSpeaker == character.anonymizedId}
                                 highlightColor={highlightColor}
                                 panX={panX}
