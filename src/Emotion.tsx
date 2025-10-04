@@ -43,12 +43,17 @@ export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     neutral: 'calm expression',
+    admiration: 'admiring, appreciative expression',
     amusement: 'subtle smirk, amused expression',
     anger: 'enraged, angry expression',
     annoyance: 'annoyed, dismayed expression',
+    approval: 'approving, pleased expression',
+    caring: 'kind, gentle, caring expression',
     confusion: 'stunned, baffled, confused expression',
+    curiosity: 'inquiring, curious expression',
     desire: 'sexy, alluring, seductive expression',
     disappointment: 'unhappy, disappointed expression',
+    disapproval: 'disapproving, scolding expression',
     disgust: 'disgusted expression',
     embarrassment: 'embarrassed, blushing, sheepish expression',
     excitement: 'keen, excited expression',
@@ -57,10 +62,14 @@ export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     grief: 'depressed, sobbing expression',
     joy: 'happy, smiling',
     love: 'adorable, grinning, blushing, lovestruck expression',
-    nervousness: 'nervous, anxious expression',
+    nervousness: 'slightly nervous, uncertain expression',
+    optimism: 'hopeful, optimistic expression',
     pride: 'proud, haughty, puffed up expression',
+    realization: 'pleasantly surprised, enlightened expression',
+    relief: 'relieved, content expression',
+    remorse: 'regretful, apologetic expression',
     sadness: 'sad, upset expression, teary-eyed',
-    surprise: 'shocked, surprised expression',
+    surprise: 'surprised expression',
 }
 
 export type EmotionPack = {[key: string]: string};

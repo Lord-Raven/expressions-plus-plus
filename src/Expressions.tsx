@@ -18,7 +18,7 @@ import {MessageQueue, MessageQueueHandle} from "./MessageQueue.tsx";
 import {SpeakerSettingsHandle} from "./SpeakerSettings.tsx";
 import SpeakerSettings from "./SpeakerSettings.tsx";
 import ColorThief from "colorthief";
-import { Emotion, EMOTION_MAPPING, EMOTION_PROMPTS, EmotionPack } from "./Emotion.tsx";
+import {Emotion, EMOTION_MAPPING, EMOTION_PROMPTS, EmotionPack} from "./Emotion.tsx";
 import { Background, DEFAULT_BORDER_COLOR, DEFAULT_HIGHLIGHT_COLOR, BACKGROUND_ART_PROMPT } from "./Background.tsx";
 import BackgroundSettings, { BackgroundSettingsHandle } from "./BackgroundSettings.tsx";
 import { generateUUID } from "three/src/math/MathUtils.js";
@@ -66,6 +66,7 @@ type InitStateType = null;
 
 type MessageStateType = {
     speakerEmotion: {[key: string]: string};
+    speakerOutfit: {[key: string]: string};
     activeSpeaker: string;
 };
 
@@ -178,6 +179,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         // Set states or default them.
         this.messageState = {
             speakerEmotion: messageState?.speakerEmotion ?? {},
+            speakerOutfit: messageState?.speakerOutfit ?? {},
             activeSpeaker: messageState?.activeSpeaker ?? ''
         }
 
@@ -297,11 +299,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 } as WardrobeType;
             }
 
-            // Set a selected outfit if none exists.
+            // If bad outfit selection, reset to auto outfit ('')
             console.log(`Checking selectedOutfit for ${speakerId}: ${this.chatState.selectedOutfit[speakerId]}`);
-            if (!this.chatState.selectedOutfit[speakerId] || this.chatState.selectedOutfit[speakerId] == '' || !(this.chatState.selectedOutfit[speakerId] in this.wardrobes[speakerId].outfits)) {
-                console.log(`Setting selectedOutfit for ${speakerId}.`);
-                this.chatState.selectedOutfit[speakerId] = Object.keys(this.wardrobes[speakerId].outfits)[0];
+            if (!this.chatState.selectedOutfit[speakerId] || !(this.chatState.selectedOutfit[speakerId] in this.wardrobes[speakerId].outfits)) {
+                this.chatState.selectedOutfit[speakerId] = ''
             }
         }
 
@@ -331,6 +332,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (state != null) {
             this.messageState = {
                 speakerEmotion: state?.speakerEmotion ?? {},
+                speakerOutfit: state?.speakerOutfit ?? {},
                 activeSpeaker: state?.activeSpeaker ?? ''
             }
         }
@@ -356,16 +358,32 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.info(`New emotion for ${speaker.name}: ${newEmotion}`);
         this.messageState.speakerEmotion[speaker.anonymizedId] = newEmotion;
         this.messageState.activeSpeaker = speaker.anonymizedId;
-        const outfit = this.wardrobes[speaker.anonymizedId].outfits[this.chatState.selectedOutfit[speaker.anonymizedId]];
-        if (!outfit) return;
-        const locked =
-            !outfit.generated || // Non-generated outfits are ineditable
-            !this.canEdit.includes(speaker?.anonymizedId || "") || // Outfits belonging to characters this user can't edit
-            (outfit.global && !this.owns.includes(speaker?.anonymizedId || "")); // Global outfits not owned by user are ineditable
-        if (!outfit.images[EMOTION_MAPPING[newEmotion as Emotion] ?? newEmotion] && !locked) {
-            this.wrapPromise(
-                this.generateSpeakerImage(speaker, this.chatState.selectedOutfit[speaker.anonymizedId], EMOTION_MAPPING[newEmotion as Emotion] ?? (newEmotion as Emotion), ''),
-                `Generating ${newEmotion} for ${speaker.name} (${this.chatState.selectedOutfit[speaker.anonymizedId]}).`);
+
+
+        // Auto-swap outfits based on trigger words:
+        const lowerContent = content.toLowerCase();
+        const newOutfitIds = Object.keys(this.wardrobes[speaker.anonymizedId].outfits).filter(outfitId => {
+            const outfit = this.wardrobes[speaker.anonymizedId].outfits[outfitId];
+            return outfit.triggerWords.split(',').map(word => word.trim().toLowerCase()).some(word => word.length > 0 && lowerContent.includes(word));
+        });
+        if (newOutfitIds.length > 0 && !newOutfitIds.includes(this.messageState.speakerOutfit[speaker.anonymizedId])) {
+            this.messageState.speakerOutfit[speaker.anonymizedId] = newOutfitIds[0];
+        }
+
+        // Potentially generate new image for new emotion; outfit will be the selected outfit, as the current speaker outfit (as an empty selected outfit ('') means auto outfit).
+        const outfitId = this.chatState.selectedOutfit[speaker.anonymizedId] ?? this.messageState.speakerOutfit[speaker.anonymizedId];
+        const outfit = this.wardrobes[speaker.anonymizedId].outfits[outfitId];
+        if (outfit) {
+            if (!outfit) return;
+            const locked =
+                !outfit.generated || // Non-generated outfits are immutable
+                !this.canEdit.includes(speaker?.anonymizedId || "") || // Outfits belonging to characters this user can't edit
+                (outfit.global && !this.owns.includes(speaker?.anonymizedId || "")); // Global outfits not owned by user are immutable
+            if (!outfit.images[newEmotion] && !locked) {
+                this.wrapPromise(
+                    this.generateSpeakerImage(speaker, outfitId, newEmotion as Emotion, ''),
+                    `Generating ${newEmotion} for ${speaker.name} (${outfitId}).`);
+            }
         }
     }
 
@@ -931,8 +949,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return this.messageState.speakerEmotion[anonymizedId] as Emotion ?? Emotion.neutral;
     }
 
-    getSpeakerImage(anonymizedId: string, outfit: string, emotion: Emotion, defaultUrl: string): string {
-        return this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[EMOTION_MAPPING[emotion] ?? emotion] ?? this.wardrobes[anonymizedId]?.outfits?.[outfit]?.images?.[Emotion.neutral] ?? defaultUrl;
+    getSpeakerImage(anonymizedId: string, outfitId: string, emotion: Emotion, defaultUrl: string): string {
+        // Favor in this order: exact emotion, mapped emotion, neutral, or the defaultURL.
+        const outfit = this.wardrobes[anonymizedId]?.outfits?.[outfitId] ?? Object.values(this.wardrobes[anonymizedId]?.outfits ?? {})[0];
+        return outfit?.images?.[emotion] ??
+            outfit?.images?.[EMOTION_MAPPING[emotion] ?? emotion] ??
+            outfit?.images?.[Emotion.neutral] ?? defaultUrl;
     }
 
     isSpeakerInUi(speaker: Speaker) {

@@ -9,6 +9,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CheckroomIcon from '@mui/icons-material/Checkroom';
 import silhouetteUrl from './assets/silhouette.png'
 import { Emotion } from "./Emotion";
+import AutoFixNormalIcon from "@mui/icons-material/AutoFixNormal";
 
 
 type SpeakerButtonProps = {
@@ -21,6 +22,22 @@ type SpeakerButtonProps = {
 const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColor, onOpenSettings}) => {
     const [showOutfits, setShowOutfits] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const collapseTimeout = React.useRef<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = () => {
+        if (collapseTimeout.current) {
+            clearTimeout(collapseTimeout.current);
+            collapseTimeout.current = null;
+        }
+        setIsExpanded(true);
+    };
+
+    const handleMouseLeave = () => {
+        collapseTimeout.current = setTimeout(() => {
+            setIsExpanded(false);
+            setShowOutfits(false);
+        }, 500); // Collapse after 1 second of no interaction
+    }
 
     const handleToggleVisibility = () => {
         const id = speaker.anonymizedId;
@@ -43,8 +60,8 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
         <motion.div
             variants={containerVariants}
             animate={isExpanded ? "expanded" : "collapsed"}
-            onMouseEnter={() => setIsExpanded(true)}
-            onMouseLeave={() => {setIsExpanded(false); setShowOutfits(false);}}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             style={{
                 position: "relative",
                 display: "flex",
@@ -74,7 +91,9 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                         width: 40,
                         height: 40,
                         borderRadius: "50%",
-                        backgroundImage: `url(${stage.getSpeakerImage(speaker.anonymizedId, stage.chatState.selectedOutfit[speaker.anonymizedId] ?? DEFAULT_OUTFIT_NAME, Emotion.neutral, silhouetteUrl)})`,
+                        backgroundImage: `url(${stage.getSpeakerImage(speaker.anonymizedId, 
+                            stage.chatState.selectedOutfit[speaker.anonymizedId] ?? stage.messageState.speakerOutfit[speaker.anonymizedId] ?? DEFAULT_OUTFIT_NAME, 
+                            Emotion.neutral, silhouetteUrl)})`,
                         backgroundSize: "200% 356%",
                         backgroundPosition: "center top",
                         pointerEvents: "none"
@@ -119,6 +138,50 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                         style={{overflow: "hidden"}}
                     >
                         <motion.div style={{display: "flex", flexDirection: "column", gap: 6, width: "100%"}}>
+                            {/* Auto option at the top. */}
+                            <ButtonBase
+                                key={`outfit_option_auto`}
+                                onClick={() => {
+                                    stage.chatState.selectedOutfit[speaker.anonymizedId] = '';
+                                    stage.updateChatState();
+                                }}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "flex-start",
+                                    gap: 1.5,
+                                    width: "100%",
+                                    padding: "6px 12px",
+                                    borderRadius: 8,
+                                    transition: "background-color 0.2s ease",
+                                    textAlign: "left",
+                                    backgroundColor: stage.chatState.selectedOutfit[speaker.anonymizedId] === '' ? "rgba(255,255,255,0.08)" : undefined,
+                                    "&:hover": {
+                                        backgroundColor: "rgba(255,255,255,0.12)",
+                                    },
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: "50%",
+                                        background: "#888",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "#fff",
+                                        fontWeight: 700,
+                                        fontSize: 16,
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    <AutoFixNormalIcon fontSize="small" sx={{color: "white"}}/>
+                                </Box>
+                                <Typography color="text.primary" sx={{ fontWeight: 600, textTransform: "capitalize" }}>
+                                    Auto
+                                </Typography>
+                            </ButtonBase>
                             {(Object.keys(stage.wardrobes[speaker.anonymizedId].outfits).map((outfit) => (
                                 <ButtonBase
                                     key={`outfit_option_${outfit}`}
@@ -136,6 +199,7 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                                         borderRadius: 8,
                                         transition: "background-color 0.2s ease",
                                         textAlign: "left",
+                                        backgroundColor: stage.chatState.selectedOutfit[speaker.anonymizedId] === outfit ? "rgba(255,255,255,0.08)" : undefined,
                                         "&:hover": {
                                             backgroundColor: "rgba(255,255,255,0.08)",
                                         },

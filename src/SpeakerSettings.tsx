@@ -111,10 +111,10 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
     }, [speaker, selectedOutfit, outfitKeys]);
 
     useEffect(() => {
-        console.log(`setSpeaker: ${speaker?.name}, ${speaker?.anonymizedId}, ${stage.chatState.selectedOutfit[speaker?.anonymizedId ?? '']}`);
+        console.log(`setSpeaker: ${speaker?.name}, ${speaker?.anonymizedId}, ${stage.chatState.selectedOutfit[speaker?.anonymizedId ?? ''] ?? stage.messageState.speakerOutfit[speaker?.anonymizedId ?? ''] ?? ''}`);
         stage.updateChatState();
         stage.updateWardrobeStorage();
-        setSelectedOutfit((speaker ? stage.chatState.selectedOutfit[speaker.anonymizedId] : null) ?? "");
+        setSelectedOutfit((speaker ? stage.chatState.selectedOutfit[speaker.anonymizedId] ?? stage.messageState.speakerOutfit[speaker.anonymizedId] : null) ?? "");
         setOutfitMap((speaker ? stage.wardrobes[speaker.anonymizedId].outfits : {}) ?? {});
         setOutfitKeys(Object.keys(speaker ? stage.wardrobes[speaker.anonymizedId].outfits : []) ?? []);
     }, [speaker]);
@@ -129,7 +129,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
             stage.wardrobes[speaker.anonymizedId].outfits = newMap;
             setOutfitMap(newMap);
             setOutfitKeys(Object.keys(newMap));
-            if (!(stage.chatState.selectedOutfit[speaker.anonymizedId] in stage.wardrobes[speaker.anonymizedId].outfits)) {
+            if (stage.chatState.selectedOutfit[speaker.anonymizedId] && !(stage.chatState.selectedOutfit[speaker.anonymizedId] in stage.wardrobes[speaker.anonymizedId].outfits)) {
                 stage.chatState.selectedOutfit[speaker.anonymizedId] = Object.keys(stage.wardrobes[speaker.anonymizedId].outfits).length > 0 ? 
                         Object.keys(stage.wardrobes[speaker.anonymizedId].outfits)[0] : 
                         "";
@@ -376,9 +376,9 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     visible: outfitMap[selectedOutfit]?.generated,
                                     disabled: checkIsLocked(selectedOutfit),
                                 },
-                                /*{
+                                {
                                     type: 'keywords',
-                                    label: 'Comma-Delimitted Keywords',
+                                    label: 'Comma-Delimited Keywords',
                                     value: outfitMap[selectedOutfit]?.triggerWords || "",
                                     onChange: (val: string) => {
                                         const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], triggerWords: val } };
@@ -386,7 +386,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     },
                                     visible: outfitMap[selectedOutfit]?.generated,
                                     disabled: checkIsLocked(selectedOutfit),
-                                },*/
+                                },
                                 {
                                     type: 'json',
                                     label: 'JSON for Import/Export',
