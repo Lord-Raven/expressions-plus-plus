@@ -266,7 +266,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                             if (newValue === "__add_new__") {
                                 const newName = NEW_OUTFIT_NAME;
                                 const newGuid = generateUUID();
-                                updateStageWardrobeMap({...outfitMap, [newGuid]: {name: newName, generated: true, images: {}, artPrompt: "", triggerWords: "", global: false}});
+                                updateStageWardrobeMap({...outfitMap, [newGuid]: {name: newName, generated: true, images: {}, artPrompt: "", triggerWords: "", framing: 'Cowboy Shot', global: false}});
                                 setSelectedOutfit(newGuid);
 
                             } else {
@@ -378,6 +378,17 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     disabled: checkIsLocked(selectedOutfit),
                                 },
                                 {
+                                    type: 'framing',
+                                    label: 'Image Framing',
+                                    value: outfitMap[selectedOutfit]?.framing || "Cowboy Shot",
+                                    onChange: (val: string) => {
+                                        const updatedMap = { ...outfitMap, [selectedOutfit]: { ...outfitMap[selectedOutfit], framing: val } };
+                                        updateStageWardrobeMap(updatedMap);
+                                    },
+                                    visible: outfitMap[selectedOutfit]?.generated,
+                                    disabled: checkIsLocked(selectedOutfit),
+                                },
+                                {
                                     type: 'keywords',
                                     label: 'Comma-Delimited Keywords',
                                     value: outfitMap[selectedOutfit]?.triggerWords || "",
@@ -391,11 +402,11 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 {
                                     type: 'json',
                                     label: 'JSON for Import/Export',
-                                    value: JSON.stringify(outfitMap[selectedOutfit], ['name', 'images', 'artPrompt', 'triggerWords', ...Object.keys(EMOTION_PROMPTS)], 2),
+                                    value: JSON.stringify(outfitMap[selectedOutfit], ['name', 'images', 'artPrompt', 'triggerWords', 'framing', ...Object.keys(EMOTION_PROMPTS)], 2),
                                     onChange: (val: string) => {
                                         try {
                                             const data = JSON.parse(val);
-                                            if (typeof data === 'object' && data && 'images' in data && 'name' in data && 'artPrompt' in data && 'triggerWords' in data) {
+                                            if (typeof data === 'object' && data && 'images' in data && 'name' in data && 'artPrompt' in data && 'triggerWords' in data && 'framing' in data) {
                                                 const updatedMap = { ...outfitMap, [selectedOutfit]: {...data, generated: outfitMap[selectedOutfit].generated, global: outfitMap[selectedOutfit].global} };
                                                 updateStageWardrobeMap(updatedMap);
                                             }

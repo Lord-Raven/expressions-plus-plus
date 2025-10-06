@@ -27,6 +27,7 @@ export enum Emotion {
     remorse = 'remorse',
     sadness = 'sadness',
     surprise = 'surprise',
+    standing = 'standing'
 }
 
 export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
@@ -38,7 +39,8 @@ export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
     optimism: Emotion.gratitude,
     realization: Emotion.surprise,
     relief: Emotion.gratitude,
-    remorse: Emotion.sadness
+    remorse: Emotion.sadness,
+    standing: Emotion.neutral
 }
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
@@ -70,6 +72,7 @@ export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     remorse: 'regretful, apologetic expression',
     sadness: 'sad, upset expression, teary-eyed',
     surprise: 'surprised expression',
+    standing: 'calm expression',
 }
 
 export type EmotionPack = {[key: string]: string};

@@ -143,9 +143,9 @@ export const EditModeField: React.FC<EditModeFieldProps> = ({
                     variant="outlined"
                 />
         )) : (
-            <Button
-                variant="outlined"
-                color="primary"
+        <Button
+            variant="outlined"
+            color="primary"
             onClick={handleEditModeChange}
             sx={buttonSx}
         >
