@@ -645,7 +645,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
 
         if (generatedDescription) {
-            return `${emotion == Emotion.standing ? 'A full-body character image' : 'A "cowboy shot" portrait from the thigh-up'} on an empty background. Rendered in this style: ${this.artStyle}. This character has a calm, neutral expression. ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
+            return `${emotion == Emotion.standing ? 'A full-body character image' : 'A thigh-up character portrait'} on an empty background. Rendered in this style: ${this.artStyle}. This character has a calm, neutral expression. ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
         }
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
     }
@@ -745,7 +745,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 // Generate neutral from standing:
                 let neutralImageUrl = (await this.generator.imageToImage({
                     image: standingImageUrl,
-                    prompt: `Maintain this art style (${this.artStyle}), but re-frame this image as a "cowboy shot," thigh-up portrait and give the character a calm, neutral expression.`,
+                    prompt: `Maintain this art style (${this.artStyle}), but re-frame this image as a thigh-up portrait and give the character a calm, neutral expression.`,
                     remove_background: false, // Not yet supported by Qwen Image Edit
                     transfer_type: 'edit'
                 }))?.url ?? standingImageUrl;
