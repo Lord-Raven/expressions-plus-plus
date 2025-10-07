@@ -641,11 +641,15 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         await this.messenger.updateChatState(this.chatState);
     }
 
-    buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion): string {
+    buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion, fromImage: boolean): string {
         const generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
 
         if (generatedDescription) {
-            return `${emotion == Emotion.standing ? 'Zoom this image to fit a full-body, head-to-toe standing pose of this character' : 'Zoom this image to a thigh-up character portrait'} on an empty background. Render it in this style: ${this.artStyle}. This character has a calm, neutral expression. ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
+            return `${emotion == Emotion.standing ? 
+                (fromImage ? 'Reframe this character on an empty background for a full-body, head-to-toe standing image with small top and bottom margins.' : 
+                    'Generate a full-body image of a character on empty background.') : 
+                'Zoom this image to a thigh-up character portrait.'} ` +
+                ` Render it in this style: ${this.artStyle}. This character has a calm, neutral expression. ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
         }
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
     }
@@ -718,13 +722,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 fromOutfitKey ?
                     this.generator.imageToImage({
                         image: this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] || this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral],
-                        prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing)),
+                        prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing, true)),
                         remove_background: false, // Not yet supported by Qwen Image Edit
                         transfer_type: 'edit'
                     }
                 ) :
                     this.generator.makeImage({
-                        prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing)),
+                        prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing, false)),
                         negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                         aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL
                     }
