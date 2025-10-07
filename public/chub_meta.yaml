@@ -73,7 +73,7 @@ creator_notes: >
       <div class="panel-content">
         <h2>Updates!</h2>
         <ul>
-          <li>2025.10.06: Moving to Qwen for expression generation and new outfit cloning. Lots of small changes and some other new features incoming.</li>
+          <li>2025.10.07: Moving to Qwen for expression generation and new outfit cloning. Lots of small changes and some other new features incoming.</li>
           <li>2025.09.08: Addressing a sensitive storage change.</li>
           <li>2025.08.29: Pushing uploaded images to storage and referencing by URL.</li>
           <li>2025.08.24: Temporary fix for expressions not generating due to ongoing img2img upgrades. Should be resolved soon.</li>

@@ -645,11 +645,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
 
         if (generatedDescription) {
-            return `${emotion == Emotion.standing ? 
-                (fromImage ? 'Reframe this character on an empty background for a full-body, head-to-toe standing image with small top and bottom margins.' : 
-                    'Generate a full-body image of a character on empty background.') : 
-                'Zoom this image to a thigh-up character portrait.'} ` +
-                ` Render it in this style: ${this.artStyle}. This character has a calm, neutral expression. ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
+            if (emotion == Emotion.standing) {
+                if (fromImage) {
+                    return `Reframe this character on an empty background for a full-body, head-to-toe standing image. Ensure small top and bottom margins. Render the character in this style: ${this.artStyle}. ` +
+                        `This character has a calm, neutral expression. Consider this description for reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
+                } else {
+                    return `Generate a full-body image of a character on empty background. Render the character in this style: ${this.artStyle}. ` +
+                        `This character has a calm, neutral expression. Consider this description for reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
+                }
+            } else {
+                return `Zoom this image to a thigh-up character portrait. Render the character in this style: ${this.artStyle}. ` +
+                    `This character has a calm, neutral expression. Consider this description for reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
+            }
         }
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
     }
