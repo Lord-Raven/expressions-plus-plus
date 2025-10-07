@@ -728,7 +728,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                         aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL
                     }
-                )))?.url ?? '';
+                )))?.url || '';
 
             if (standingImageUrl != '') {
                 if (!fromOutfitKey) {
@@ -740,9 +740,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         transfer_type: 'edit'
                     }))?.url || standingImageUrl;
 
-                    console.log(`standingImageUrl = ${standingImageUrl}`);
-                    standingImageUrl = await this.removeBackground(standingImageUrl, `${outfitKey}_${Emotion.standing}.png`);
                 }
+
+                console.log(`standingImageUrl = ${standingImageUrl}`);
+                standingImageUrl = await this.removeBackground(standingImageUrl, `${outfitKey}_${Emotion.standing}.png`);
 
                 // Generate neutral from standing:
                 let neutralImageUrl = (await this.generator.imageToImage({
@@ -750,7 +751,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     prompt: `Maintain this art style (${this.artStyle}), but re-frame this image as a thigh-up portrait and give the character a calm, neutral expression.`,
                     remove_background: false, // Not yet supported by Qwen Image Edit
                     transfer_type: 'edit'
-                }))?.url ?? standingImageUrl;
+                }))?.url || standingImageUrl;
 
                 console.log(`neutralImageUrl = ${neutralImageUrl}`);
                 neutralImageUrl = await this.removeBackground(neutralImageUrl, `${outfitKey}_${Emotion.neutral}.png`);
