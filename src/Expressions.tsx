@@ -645,7 +645,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
 
         if (generatedDescription) {
-            return `${emotion == Emotion.standing ? 'A full-body, head-to-toe standing character image' : 'A thigh-up character portrait'} on an empty background. Rendered in this style: ${this.artStyle}. This character has a calm, neutral expression. ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
+            return `${emotion == Emotion.standing ? 'Zoom this image to fit a full-body, head-to-toe standing pose of this character' : 'Zoom this image to a thigh-up character portrait'} on an empty background. Render it in this style: ${this.artStyle}. This character has a calm, neutral expression. ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
         }
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
     }
