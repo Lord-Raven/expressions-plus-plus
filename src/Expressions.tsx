@@ -652,6 +652,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async removeBackground(imageUrl: string, storageName: string) {
         if (!imageUrl) return imageUrl;
+        console.log(`removeBackground(${imageUrl}, ${storageName})`);
         const response = await fetch(imageUrl);
         try {
             const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
@@ -737,8 +738,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         prompt: `Maintain this art style (${this.artStyle}), but remove extraneous background elements or special effects, isolating and framing this full-body, standing portrait within an otherwise empty image.`,
                         remove_background: false, // Not yet supported by Qwen Image Edit
                         transfer_type: 'edit'
-                    }))?.url ?? standingImageUrl;
+                    }))?.url || standingImageUrl;
 
+                    console.log(`standingImageUrl = ${standingImageUrl}`);
                     standingImageUrl = await this.removeBackground(standingImageUrl, `${outfitKey}_${Emotion.standing}.png`);
                 }
 
@@ -750,6 +752,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     transfer_type: 'edit'
                 }))?.url ?? standingImageUrl;
 
+                console.log(`neutralImageUrl = ${neutralImageUrl}`);
                 neutralImageUrl = await this.removeBackground(neutralImageUrl, `${outfitKey}_${Emotion.neutral}.png`);
                 // Re-initialize this pack entirely with just the neutral and standing images:
                 this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images = {[Emotion.neutral]: neutralImageUrl, [Emotion.standing]: standingImageUrl};
