@@ -647,8 +647,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (generatedDescription) {
             if (emotion == Emotion.standing) {
                 if (fromImage) {
-                    return `Reframe this character on an empty background for a full-body, head-to-toe standing image. Ensure small top and bottom margins. Render the character in this style: ${this.artStyle}. ` +
-                        `This character has a calm, neutral expression. Consider this description for reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
+                    return `Reposition this character on an empty background as a full-body, head-to-toe standing portrait; their entire body should be in-frame. Render the character in this style: ${this.artStyle}. ` +
+                        `This character has a calm, neutral expression. Consider this description for additional reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}. Remember to draw the full body.`;
                 } else {
                     return `Generate a full-body image of a character on empty background. Render the character in this style: ${this.artStyle}. ` +
                         `This character has a calm, neutral expression. Consider this description for reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
