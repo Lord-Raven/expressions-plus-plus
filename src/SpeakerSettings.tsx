@@ -567,13 +567,13 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 }}
                             >Regenerate</Button>
                         </Box>
-                        {/* "Clone From" drop-down for selecting a different outfit to create this outfit from; if this is neutral and more than one outfit exists (because this one won't be listed),
-                        allow  it to be generated from the neutral image of another outfit.
-                        This drop-down allows selection of any other outfit, and will use that image and a simplified prompt to render a new neutral image. */}
-                        {confirmEmotion == 'neutral' && outfitKeys.filter(key => key != selectedOutfit && outfitMap[key].images[Emotion.neutral]).length > 0
+                        {/* "Clone From" drop-down for selecting a different outfit to create this outfit from; if this is neutral and an outfit exists
+                        allow it to be generated from the neutral image of another outfit.
+                        This drop-down allows selection of any outfit, and will use that image and a simplified prompt to render a new neutral image. */}
+                        {confirmEmotion == 'neutral' && outfitKeys.filter(key => outfitMap[key].images[Emotion.neutral]).length > 0
                         && (<Box sx={{ mt: 4, width: '100%', textAlign: 'center' }}>
                             <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
-                                Or clone from another outfit:
+                                Or clone from an existing outfit. You may choose this outfit to re-generate from the current image; this allows you to upload any picture of a character and convert it into a standing portrait:
                             </Typography>
                             <TextField
                                 select
@@ -592,7 +592,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 sx={{ minWidth: 200 }}
                             >
                                 <MenuItem value="" disabled>Clone from...</MenuItem>
-                                {outfitKeys.filter(key => key != selectedOutfit && outfitMap[key].images[Emotion.neutral]).map(k => (
+                                {outfitKeys.filter(key => outfitMap[key].images[Emotion.neutral]).map(k => (
                                     <MenuItem key={`cloneFrom_${k}`} value={k}>{outfitMap[k]?.name || k}</MenuItem>
                                 ))}
                             </TextField>

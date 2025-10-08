@@ -5,7 +5,7 @@ import {
     Message,
     AspectRatio,
     Speaker,
-    Character
+    Character, ImageToImageRequest
 } from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Client } from "@gradio/client";
@@ -647,15 +647,16 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (generatedDescription) {
             if (emotion == Emotion.standing) {
                 if (fromImage) {
-                    return `Reposition this character on an empty background as a full-body, head-to-toe standing portrait; their entire body should be in-frame. Render the character in this style: ${this.artStyle}. ` +
-                        `This character has a calm, neutral expression. Consider this description for additional reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}. Remember to draw the full body.`;
+                    return `Description: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}. ` +
+                        `Create a zoomed-out image of this entire character from head to toe. Give them a natural standing pose that reflects their style or attitude. ` +
+                        `Set them against a white void, facing the camera. Keep their feet in-frame. Logically infer unknown details about their attire or style. ` +
+                        `Maintain tight top and bottom margins with no cut-off.`;
                 } else {
                     return `Generate a full-body image of a character on empty background. Render the character in this style: ${this.artStyle}. ` +
                         `This character has a calm, neutral expression. Consider this description for reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
                 }
             } else {
-                return `Zoom this image to a thigh-up character portrait. Render the character in this style: ${this.artStyle}. ` +
-                    `This character has a calm, neutral expression. Consider this description for reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
+                return `Zoom this image to a thigh-up character portrait. The character should have a calm, neutral expression. Maintain a top margin with no cut-off.`;
             }
         }
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
@@ -725,31 +726,28 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (emotion == Emotion.neutral) {
             // First, generate a standing image using makeImage. Then, use imageToImage to generate a refined standing image and a neutral image
 
-            let standingImageUrl = (await (
-                fromOutfitKey ?
-                    this.generator.imageToImage({
-                        image: this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] || this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral],
-                        prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing, true)),
-                        remove_background: false, // Not yet supported by Qwen Image Edit
-                        transfer_type: 'edit'
-                    }
-                ) :
-                    this.generator.makeImage({
-                        prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing, false)),
-                        negative_prompt: CHARACTER_NEGATIVE_PROMPT,
-                        aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL
-                    }
-                )))?.url || '';
+            let standingImageUrl = await this.imageToImage(
+                fromOutfitKey ? {
+                            image: this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] || this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral],
+                            prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing, true)),
+                            remove_background: false, // Not yet supported by Qwen Image Edit
+                            transfer_type: 'edit',
+                        } as ImageToImageRequest : {
+                            prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing, false)),
+                            negative_prompt: CHARACTER_NEGATIVE_PROMPT,
+                            aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL
+                        } as ImageToImageRequest
+            );
 
             if (standingImageUrl != '') {
                 if (!fromOutfitKey) {
                     // Overwrite standing image with Qwen Image Edit:
-                    standingImageUrl = (await this.generator.imageToImage({
+                    standingImageUrl = (await this.imageToImage({
                         image: standingImageUrl,
                         prompt: `Maintain this art style (${this.artStyle}), but remove extraneous background elements or special effects, isolating and framing this full-body, standing portrait within an otherwise empty image.`,
                         remove_background: false, // Not yet supported by Qwen Image Edit
                         transfer_type: 'edit'
-                    }))?.url || standingImageUrl;
+                    } as ImageToImageRequest)) || standingImageUrl;
 
                 }
 
@@ -757,12 +755,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 standingImageUrl = await this.removeBackground(standingImageUrl, `${outfitKey}_${Emotion.standing}.png`);
 
                 // Generate neutral from standing:
-                let neutralImageUrl = (await this.generator.imageToImage({
+                let neutralImageUrl = (await this.imageToImage({
                     image: standingImageUrl,
                     prompt: `Maintain this art style (${this.artStyle}), but re-frame this image as a thigh-up portrait and give the character a calm, neutral expression.`,
                     remove_background: false, // Not yet supported by Qwen Image Edit
                     transfer_type: 'edit'
-                }))?.url || standingImageUrl;
+                } as ImageToImageRequest)) || standingImageUrl;
 
                 console.log(`neutralImageUrl = ${neutralImageUrl}`);
                 neutralImageUrl = await this.removeBackground(neutralImageUrl, `${outfitKey}_${Emotion.neutral}.png`);
@@ -772,12 +770,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
         } else { // Non-neutral: image2image from neutral
-            const imageUrl = (await this.generator.imageToImage({
+            const imageUrl = (await this.imageToImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
                 prompt: `Maintain this composition and art style (${this.artStyle}); just give the character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,//substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
                 remove_background: false, // Not yet supported by Qwen Image Edit
                 transfer_type: 'edit'
-            }))?.url ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
+            } as ImageToImageRequest)) ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
             if (imageUrl != '') {
                 // Remove background:
                 this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] = await this.removeBackground(imageUrl, `${outfitKey}_${emotion}.png`);
@@ -786,6 +784,19 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             }
         }
         await this.updateWardrobeStorage();
+    }
+
+    async imageToImage(imageToImageRequest: ImageToImageRequest): Promise<string> {
+        let imageUrl = '';
+        let tries = 3;
+        while (imageUrl === '' && tries > 0) {
+            tries--;
+            const response = await this.generator.imageToImage(imageToImageRequest);
+            if (response && response.url && response.url != 'https://images.characterhub.org/') {
+                imageUrl = response.url;
+            }
+        }
+        return imageUrl;
     }
 
     async backgroundCheck(content: string): Promise<void> {
