@@ -647,7 +647,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (generatedDescription) {
             if (emotion == Emotion.standing) {
                 if (fromImage) {
-                    return `Description: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}. ` +
+                    return `Description: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}.\n\n` +
                         `Create a zoomed-out image of this entire character from head to toe. Give them a natural standing pose that reflects their style or attitude. ` +
                         `Set them against a white void, facing the camera. Keep their feet in-frame. Logically infer unknown details about their attire or style. ` +
                         `Maintain tight top and bottom margins with no cut-off.`;

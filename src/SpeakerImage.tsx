@@ -129,6 +129,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                             filter: 'blur(2.5px)',
                             zIndex: 4,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                            ...(isTalking && {
+                                WebkitMaskImage: 'linear-gradient(to bottom, black 98%, transparent 100%)',
+                                maskImage: 'linear-gradient(to bottom, black 98%, transparent 100%)'
+                            })
                         }}
                         alt={`${speaker.name} (${emotion}) previous`}
                     />
@@ -151,6 +155,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                             filter: 'blur(2.5px)',
                             zIndex: 4,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                            ...(isTalking && {
+                                WebkitMaskImage: 'linear-gradient(to bottom, black 98%, transparent 100%)',
+                                maskImage: 'linear-gradient(to bottom, black 98%, transparent 100%)'
+                            })
                         }}
                         alt={`${speaker.name} (${emotion}) background`}
                     />
@@ -173,6 +181,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                             opacity: 0.75,
                             zIndex: 5,
                             transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
+                            ...(isTalking && {
+                                WebkitMaskImage: 'linear-gradient(to bottom, black 98%, transparent 100%)',
+                                maskImage: 'linear-gradient(to bottom, black 98%, transparent 100%)'
+                            })
                         }}
                         alt={`${speaker.name} (${emotion})`}
                     />
