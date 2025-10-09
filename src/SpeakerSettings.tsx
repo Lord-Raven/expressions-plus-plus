@@ -569,7 +569,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 value=""
                                 onChange={e => {
                                     const fromOutfit = e.target.value;
-                                    if (fromOutfit && fromOutfit in outfitMap && fromOutfit != selectedOutfit) {
+                                    if (fromOutfit && fromOutfit in outfitMap) {
                                         setConfirmEmotion(null);
                                         if (onRegenerate) {
                                             onRegenerate(speaker, selectedOutfit ?? "", Emotion.neutral, fromOutfit);
