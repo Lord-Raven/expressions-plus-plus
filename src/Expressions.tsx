@@ -650,13 +650,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     return `Description: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}.\n\n` +
                         `Create a zoomed-out image of this entire character from head to toe. Give them a natural standing pose that reflects their style or attitude. ` +
                         `Set them against a white void, facing the camera. Keep their feet in-frame. Logically infer unknown details about their attire or style. ` +
-                        `Maintain tight top and bottom margins with no cut-off.`;
+                        `Ensure 2% top and bottom negative-space margins with no cut-off.`;
                 } else {
                     return `Generate a full-body image of a character on empty background. Render the character in this style: ${this.artStyle}. ` +
                         `This character has a calm, neutral expression. Consider this description for reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
                 }
             } else {
-                return `Zoom this image to a thigh-up character portrait. The character should have a calm, neutral expression. Maintain a top margin with no cut-off.`;
+                return `Zoom this image to a thigh-up character portrait. The character should have a calm, neutral expression. Maintain a 2% negative-space top margin with no cut-off.`;
             }
         }
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
@@ -1010,13 +1010,16 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     getSpeakerImage(anonymizedId: string, outfitId: string, emotion: Emotion, defaultUrl: string): string {
         // Favor in this order: exact emotion, mapped emotion, neutral, or the defaultURL.
+        console.log(`Getting image for ${anonymizedId}, outfit ${outfitId}, emotion ${emotion}`);
+
         if (this.messageState.activeSpeaker != anonymizedId) {
             emotion = Emotion.standing;
         }
         const outfit = this.wardrobes[anonymizedId]?.outfits?.[outfitId] ?? Object.values(this.wardrobes[anonymizedId]?.outfits ?? {})[0];
-        return outfit?.images?.[emotion] ??
-            outfit?.images?.[EMOTION_MAPPING[emotion] ?? emotion] ??
-            outfit?.images?.[Emotion.neutral] ?? defaultUrl;
+        console.log(`Tests: ${this.messageState.activeSpeaker != anonymizedId}. ${outfit}.`);
+        return outfit?.images?.[emotion] ||
+            outfit?.images?.[EMOTION_MAPPING[emotion] ?? emotion] ||
+            outfit?.images?.[Emotion.neutral] || defaultUrl;
     }
 
     isSpeakerInUi(speaker: Speaker) {
