@@ -1010,13 +1010,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     getSpeakerImage(anonymizedId: string, outfitId: string, emotion: Emotion, defaultUrl: string): string {
         // Favor in this order: exact emotion, mapped emotion, neutral, or the defaultURL.
-        console.log(`Getting image for ${anonymizedId}, outfit ${outfitId}, emotion ${emotion}`);
-
         if (this.messageState.activeSpeaker != anonymizedId) {
             emotion = Emotion.standing;
+        } else if (emotion == Emotion.standing) {
+            emotion = Emotion.neutral;
         }
         const outfit = this.wardrobes[anonymizedId]?.outfits?.[outfitId] ?? Object.values(this.wardrobes[anonymizedId]?.outfits ?? {})[0];
-        console.log(`Tests: ${this.messageState.activeSpeaker != anonymizedId}. ${outfit}.`);
         return outfit?.images?.[emotion] ||
             outfit?.images?.[EMOTION_MAPPING[emotion] ?? emotion] ||
             outfit?.images?.[Emotion.neutral] || defaultUrl;
