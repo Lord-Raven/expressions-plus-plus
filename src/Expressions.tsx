@@ -771,8 +771,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 // Generate neutral from standing:
                 let neutralImageUrl = (await this.generateImage({
                     image: standingImageUrl,
-                    prompt: `Maintain this art style (${this.artStyle}), but re-frame this image as a thigh-up portrait and give the character a calm, neutral expression.`,
-                    remove_background: false, // Not yet supported by Qwen Image Edit
+                    prompt: `Zoom and re-frame this image as a thigh-up portrait of this character with a calm, neutral expression.`,
                     transfer_type: 'edit'
                 })) || standingImageUrl;
 
@@ -786,8 +785,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } else { // Non-neutral: image2image from neutral
             const imageUrl = (await this.generateImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
-                prompt: `Maintain this composition and art style (${this.artStyle}); just give the character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,//substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
-                remove_background: false, // Not yet supported by Qwen Image Edit
+                prompt: `Give this character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,
                 transfer_type: 'edit'
             })) ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
             if (imageUrl != '') {
