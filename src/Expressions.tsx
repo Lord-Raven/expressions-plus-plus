@@ -5,7 +5,7 @@ import {
     Message,
     AspectRatio,
     Speaker,
-    Character, ImageToImageRequest
+    Character
 } from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Client } from "@gradio/client";
@@ -724,43 +724,57 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
         console.log(`Generating ${emotion} image for ${speaker.name} (${outfitName}).`)
         if (emotion == Emotion.neutral) {
-            // First, generate a standing image using makeImage. Then, use imageToImage to generate a refined standing image and a neutral image
-
-            let standingImageUrl = await this.imageToImage(
-                fromOutfitKey ? {
+            // First, generate a standing image; if from outfit is provided, this will use image2image
+            let standingImageUrl;
+            // If fromOutfitKey is provided and it has a distinct standing image, use this initially.
+            if (fromOutfitKey && this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] != this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral]) {
+                standingImageUrl = this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing];
+            } else {
+                console.log('Generating a new standing image.');
+                standingImageUrl = await this.generateImage(
+                    fromOutfitKey ?
+                         {
+                                // From outfit has a standing image, use that
                             image: this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] || this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral],
-                            prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing, true)),
-                            remove_background: false, // Not yet supported by Qwen Image Edit
+                            prompt: substitute('Create a full-body, head-to-toe reference image for this person in a natural, characteristic pose with a neutral expression. They are standing on an empty white floor in a plain white room.'),
                             transfer_type: 'edit',
-                        } as ImageToImageRequest : {
+                        } : {
                             prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing, false)),
                             negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                             aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL
-                        } as ImageToImageRequest
-            );
+                        }
+                    );
+                console.log(`Initial standingImageUrl = ${standingImageUrl}; proceeding with art style application.`);
+                // We now have either a plain image generated from a previous image or a new Flux image. Either way, we want to use Qwen to clean it up and ensure it matches the prompt and art style.
+                standingImageUrl = await this.generateImage({
+                        image: standingImageUrl,
+                        prompt: 'Art style: ' + this.artStyle + '.\n\n' +
+                            `This is a full-body, head-to-toe reference image for this character. ' +
+                            'They are standing on an empty white floor in a plain white room. Maintain this pose and adopt the target art style, removing extraneous background elements or special effects.`,
+                        transfer_type: 'edit'
+                    }) || standingImageUrl;
+                // Finally, manage actual physical details as needed.
+                console.log(`With style applied, standingImageUrl = ${standingImageUrl}; making cosmetic adjustments.`);
+                standingImageUrl = await this.generateImage({
+                    image: standingImageUrl,
+                    prompt: `Maintain this art style (${this.artStyle}) and this full-body, head-to-toe composition, standing on a white floor in a white room. ` +
+                        `Ensure the character's physical details match this description: ${this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt}. ` +
+                        `Make any logical adjustments to the character's attire or appearance to align with this description, while keeping their pose and expression neutral.`,
+                    transfer_type: 'edit'
+                }) || standingImageUrl;
+                console.log(`Penultimate standingImageUrl = ${standingImageUrl}; remove background`);
+            }
 
             if (standingImageUrl != '') {
-                if (!fromOutfitKey) {
-                    // Overwrite standing image with Qwen Image Edit:
-                    standingImageUrl = (await this.imageToImage({
-                        image: standingImageUrl,
-                        prompt: `Maintain this art style (${this.artStyle}), but remove extraneous background elements or special effects, isolating and framing this full-body, standing portrait within an otherwise empty image.`,
-                        remove_background: false, // Not yet supported by Qwen Image Edit
-                        transfer_type: 'edit'
-                    } as ImageToImageRequest)) || standingImageUrl;
-
-                }
-
-                console.log(`standingImageUrl = ${standingImageUrl}`);
                 standingImageUrl = await this.removeBackground(standingImageUrl, `${outfitKey}_${Emotion.standing}.png`);
-
+                console.log(`Final standingImageUrl = ${standingImageUrl}; proceeding to neutral image.`);
                 // Generate neutral from standing:
-                let neutralImageUrl = (await this.imageToImage({
+                let neutralImageUrl = (await this.generateImage({
                     image: standingImageUrl,
                     prompt: `Maintain this art style (${this.artStyle}), but re-frame this image as a thigh-up portrait and give the character a calm, neutral expression.`,
                     remove_background: false, // Not yet supported by Qwen Image Edit
                     transfer_type: 'edit'
-                } as ImageToImageRequest)) || standingImageUrl;
+                })) || standingImageUrl;
 
                 console.log(`neutralImageUrl = ${neutralImageUrl}`);
                 neutralImageUrl = await this.removeBackground(neutralImageUrl, `${outfitKey}_${Emotion.neutral}.png`);
@@ -770,12 +784,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
         } else { // Non-neutral: image2image from neutral
-            const imageUrl = (await this.imageToImage({
+            const imageUrl = (await this.generateImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
                 prompt: `Maintain this composition and art style (${this.artStyle}); just give the character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,//substitute(this.buildArtPrompt(speaker, outfitKey, emotion)),
                 remove_background: false, // Not yet supported by Qwen Image Edit
                 transfer_type: 'edit'
-            } as ImageToImageRequest)) ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
+            })) ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
             if (imageUrl != '') {
                 // Remove background:
                 this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[emotion] = await this.removeBackground(imageUrl, `${outfitKey}_${emotion}.png`);
@@ -786,12 +800,15 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         await this.updateWardrobeStorage();
     }
 
-    async imageToImage(imageToImageRequest: ImageToImageRequest): Promise<string> {
+    async generateImage(imageRequest: any): Promise<string> {
         let imageUrl = '';
         let tries = 3;
         while (imageUrl === '' && tries > 0) {
             tries--;
-            const response = await this.generator.imageToImage(imageToImageRequest);
+            const response = await (imageRequest.image ?
+                this.generator.imageToImage(imageRequest) :
+                this.generator.makeImage(imageRequest));
+
             if (response && response.url && response.url != 'https://images.characterhub.org/') {
                 imageUrl = response.url;
             }

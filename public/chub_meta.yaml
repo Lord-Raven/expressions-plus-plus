@@ -14,7 +14,7 @@ creator_notes: >
       <div class="panel-content">
         <h2>Overview!</h2>
         <p>
-          <i>I am working to transition to the Qwen Image Edit model to improve emotion consistency (and some other nifty changes), but I don't expect things are quite there yet. Please pardon the image generation aspect of this stage while I continue to tweak.</i> 
+          <i>I am still working to transition to the Qwen Image Edit model to improve emotion consistency (and some other nifty changes), but I don't expect things are quite there yet. Please pardon the image generation aspect of this stage while I continue to tweak.</i> 
         </p>
         <p>
           This is a shameless knock-off of the <a href="https://chub.ai/extensions/BartlebyTheScrivener/expressions-extension-768927333d4d">official Expression Packs stage</a>, except better in almost every conceivable way. You can add this stage to any chat by searching for it under Stages in Chat Settings.<br><br>
@@ -73,7 +73,7 @@ creator_notes: >
       <div class="panel-content">
         <h2>Updates!</h2>
         <ul>
-          <li>2025.10.08: Moving to Qwen for expression generation and new outfit cloning. Lots of small changes and some other new features incoming.</li>
+          <li>2025.10.12: Moving to Qwen for expression generation and new outfit cloning. Lots of small changes and some other new features incoming.</li>
           <li>2025.09.08: Addressing a sensitive storage change.</li>
           <li>2025.08.29: Pushing uploaded images to storage and referencing by URL.</li>
           <li>2025.08.24: Temporary fix for expressions not generating due to ongoing img2img upgrades. Should be resolved soon.</li>
