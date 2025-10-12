@@ -641,20 +641,13 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         await this.messenger.updateChatState(this.chatState);
     }
 
-    buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion, fromImage: boolean): string {
+    buildArtPrompt(speaker: Speaker, outfit: string, emotion: Emotion): string {
         const generatedDescription = this.wardrobes[speaker.anonymizedId]?.outfits?.[outfit]?.artPrompt ?? '';
 
         if (generatedDescription) {
             if (emotion == Emotion.standing) {
-                if (fromImage) {
-                    return `Description: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}.\n\n` +
-                        `Create a zoomed-out image of this entire character from head to toe. Give them a natural standing pose that reflects their style or attitude. ` +
-                        `Set them against a white void, facing the camera. Keep their feet in-frame. Logically infer unknown details about their attire or style. ` +
-                        `Ensure 2% top and bottom negative-space margins with no cut-off.`;
-                } else {
-                    return `Generate a full-body image of a character on empty background. Render the character in this style: ${this.artStyle}. ` +
-                        `This character has a calm, neutral expression. Consider this description for reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
-                }
+                return `Generate a full-body image of a character on empty background. Render the character in this style: ${this.artStyle}. ` +
+                    `This character has a calm, neutral expression. Consider this description for reference: ${this.wardrobes[speaker.anonymizedId].outfits[outfit].artPrompt}`;
             } else {
                 return `Zoom this image to a thigh-up character portrait. The character should have a calm, neutral expression. Maintain a 2% negative-space top margin with no cut-off.`;
             }
@@ -739,7 +732,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             prompt: substitute('Create a full-body, head-to-toe reference image for this person in a natural, characteristic pose with a neutral expression. They are standing on an empty white floor in a plain white room.'),
                             transfer_type: 'edit',
                         } : {
-                            prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing, false)),
+                            prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing)),
                             negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                             aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL
                         }
@@ -749,17 +742,16 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 standingImageUrl = await this.generateImage({
                         image: standingImageUrl,
                         prompt: 'Art style: ' + this.artStyle + '.\n\n' +
-                            `This is a full-body, head-to-toe reference image for this character. ' +
-                            'They are standing on an empty white floor in a plain white room. Maintain this pose and adopt the target art style, removing extraneous background elements or special effects.`,
+                            'This is a full-body, head-to-toe reference image for this character. ' +
+                            'They are standing on an empty white floor in a plain white room. Maintain this pose and adopt the target art style, removing extraneous background elements or special effects.',
                         transfer_type: 'edit'
                     }) || standingImageUrl;
                 // Finally, manage actual physical details as needed.
                 console.log(`With style applied, standingImageUrl = ${standingImageUrl}; making cosmetic adjustments.`);
                 standingImageUrl = await this.generateImage({
                     image: standingImageUrl,
-                    prompt: `Maintain this art style (${this.artStyle}) and this full-body, head-to-toe composition, standing on a white floor in a white room. ` +
-                        `Ensure the character's physical details match this description: ${this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt}. ` +
-                        `Make any logical adjustments to the character's attire or appearance to align with this description, while keeping their pose and expression neutral.`,
+                    prompt: `Art style: ${this.artStyle}.\n\n Maintain this full-body, head-to-toe composition, but update the character's physical details as-needed to match this description:\n\n` +
+                        this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt,
                     transfer_type: 'edit'
                 }) || standingImageUrl;
                 console.log(`Penultimate standingImageUrl = ${standingImageUrl}; remove background`);
@@ -771,7 +763,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 // Generate neutral from standing:
                 let neutralImageUrl = (await this.generateImage({
                     image: standingImageUrl,
-                    prompt: `Zoom and re-frame this image as a thigh-up portrait of this character with a calm, neutral expression.`,
+                    prompt: `Zoom-in and enhance to create a mid-thigh-up portrait of this character. Include a margin above their head/hair.`,
                     transfer_type: 'edit'
                 })) || standingImageUrl;
 
