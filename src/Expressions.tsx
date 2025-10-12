@@ -727,7 +727,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             // First, generate a standing image; if from outfit is provided, this will use image2image
             let standingImageUrl;
             // If fromOutfitKey is provided and it has a distinct standing image, use this initially.
-            if (fromOutfitKey && this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] != this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral]) {
+            if (fromOutfitKey && this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] && this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] != this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral]) {
                 standingImageUrl = this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing];
             } else {
                 console.log('Generating a new standing image.');
