@@ -743,15 +743,14 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         image: standingImageUrl,
                         prompt: 'Art style: ' + this.artStyle + '.\n\n' +
                             'Denoise.\n\n' +
-                            'This is a full-body, head-to-toe reference image for this character. ' +
-                            'They are standing on an empty white floor in a plain white room. Maintain this pose and adopt the target art style, removing extraneous background elements or special effects.',
+                            'Apply this art style: ' + this.artStyle + '\n\n',
                         transfer_type: 'edit'
                     }) || standingImageUrl;
                 // Finally, manage actual physical details as needed.
                 console.log(`With style applied, standingImageUrl = ${standingImageUrl}; making cosmetic adjustments.`);
                 standingImageUrl = await this.generateImage({
                     image: standingImageUrl,
-                    prompt: `Denoise.\n\nUpdate the character's appearance to reflect this outfit:\n\n` +
+                    prompt: `Denoise.\n\nApply the outfit described here: ` +
                         this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt,
                     transfer_type: 'edit'
                 }) || standingImageUrl;
@@ -764,7 +763,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 // Generate neutral from standing:
                 let neutralImageUrl = (await this.generateImage({
                     image: standingImageUrl,
-                    prompt: `Denoise.\n\nZoom-in and enhance to create a mid-thigh-up portrait of this character. Include a margin above their head/hair.`,
+                    prompt: `Denoise.\n\nZoom in for a mid-thigh-up portrait. Include a margin above the character's head/hair.`,
                     transfer_type: 'edit'
                 })) || standingImageUrl;
 
