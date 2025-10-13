@@ -729,7 +729,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                          {
                                 // From outfit has a standing image, use that
                             image: this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] || this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral],
-                            prompt: substitute('Create a full-body, head-to-toe reference image for this person in a natural, characteristic pose with a neutral expression. They are standing on an empty white floor in a plain white room.'),
+                            prompt: substitute('Denoise.\n\nCreate a full-body, head-to-toe reference image for this person in a natural, characteristic pose with a neutral expression. They are standing on an empty white floor in a plain white room.'),
                             transfer_type: 'edit',
                         } : {
                             prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing)),
@@ -742,6 +742,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 standingImageUrl = await this.generateImage({
                         image: standingImageUrl,
                         prompt: 'Art style: ' + this.artStyle + '.\n\n' +
+                            'Denoise.\n\n' +
                             'This is a full-body, head-to-toe reference image for this character. ' +
                             'They are standing on an empty white floor in a plain white room. Maintain this pose and adopt the target art style, removing extraneous background elements or special effects.',
                         transfer_type: 'edit'
@@ -750,7 +751,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.log(`With style applied, standingImageUrl = ${standingImageUrl}; making cosmetic adjustments.`);
                 standingImageUrl = await this.generateImage({
                     image: standingImageUrl,
-                    prompt: `Art style: ${this.artStyle}.\n\n Maintain this full-body, head-to-toe composition, but update the character's physical details as-needed to match this description:\n\n` +
+                    prompt: `Art style: ${this.artStyle}.\n\nDenoise.\n\nMaintain this full-body, head-to-toe composition, but update the character's physical details as-needed to match this description:\n\n` +
                         this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt,
                     transfer_type: 'edit'
                 }) || standingImageUrl;
@@ -763,7 +764,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 // Generate neutral from standing:
                 let neutralImageUrl = (await this.generateImage({
                     image: standingImageUrl,
-                    prompt: `Zoom-in and enhance to create a mid-thigh-up portrait of this character. Include a margin above their head/hair.`,
+                    prompt: `Denoise.\n\nZoom-in and enhance to create a mid-thigh-up portrait of this character. Include a margin above their head/hair.`,
                     transfer_type: 'edit'
                 })) || standingImageUrl;
 
@@ -777,7 +778,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } else { // Non-neutral: image2image from neutral
             const imageUrl = (await this.generateImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
-                prompt: `Give this character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,
+                prompt: `Denoise.\n\nGive this character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,
                 transfer_type: 'edit'
             })) ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
             if (imageUrl != '') {
