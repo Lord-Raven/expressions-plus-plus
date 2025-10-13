@@ -741,9 +741,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 // We now have either a plain image generated from a previous image or a new Flux image. Either way, we want to use Qwen to clean it up and ensure it matches the prompt and art style.
                 standingImageUrl = await this.generateImage({
                         image: standingImageUrl,
-                        prompt: 'Art style: ' + this.artStyle + '.\n\n' +
-                            'Denoise.\n\n' +
-                            'Apply this art style: ' + this.artStyle + '\n\n',
+                        prompt: 'Denoise and apply this art style: ' + this.artStyle + '\n\n',
                         transfer_type: 'edit'
                     }) || standingImageUrl;
                 // Finally, manage actual physical details as needed.
@@ -763,7 +761,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 // Generate neutral from standing:
                 let neutralImageUrl = (await this.generateImage({
                     image: standingImageUrl,
-                    prompt: `Denoise.\n\nZoom in for a mid-thigh-up portrait. Include a margin above the character's head/hair.`,
+                    prompt: `Zoom in for a thigh-up portrait. Include a margin above the character's head/hair.`,
                     transfer_type: 'edit'
                 })) || standingImageUrl;
 
@@ -771,6 +769,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 neutralImageUrl = await this.removeBackground(neutralImageUrl, `${outfitKey}_${Emotion.neutral}.png`);
                 // Re-initialize this pack entirely with just the neutral and standing images:
                 this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images = {[Emotion.neutral]: neutralImageUrl, [Emotion.standing]: standingImageUrl};
+                console.log("Initialized outfit images:");
+                console.log(this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images);
             } else {
                 console.warn(`Failed to generate a ${emotion} image for ${speaker.name}.`);
             }
