@@ -1012,7 +1012,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getSpeakerEmotion(anonymizedId: string): Emotion {
-        console.log(`getSpeakerEmotion(${anonymizedId}): ${this.messageState.activeSpeaker}. ${this.messageState.speakerEmotion[anonymizedId] as Emotion}`);
         return this.messageState.activeSpeaker != anonymizedId ? Emotion.standing : (this.messageState.speakerEmotion[anonymizedId] as Emotion ?? Emotion.neutral);
     }
 
