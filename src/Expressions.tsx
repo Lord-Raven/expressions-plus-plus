@@ -751,7 +751,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 console.log(`With style applied, standingImageUrl = ${standingImageUrl}; making cosmetic adjustments.`);
                 standingImageUrl = await this.generateImage({
                     image: standingImageUrl,
-                    prompt: `Art style: ${this.artStyle}.\n\nDenoise.\n\nMaintain this full-body, head-to-toe composition, but update the character's physical details as-needed to match this description:\n\n` +
+                    prompt: `Denoise.\n\nUpdate the character's appearance to reflect this outfit:\n\n` +
                         this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt,
                     transfer_type: 'edit'
                 }) || standingImageUrl;
