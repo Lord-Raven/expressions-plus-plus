@@ -167,6 +167,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     private messageHandle?: MessageQueueHandle;
     private speakerSettingsHandle?: SpeakerSettingsHandle;
     private backgroundSettingsHandle?: BackgroundSettingsHandle;
+    alphaMode = false;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
         super(data);
@@ -206,7 +207,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         this.generateCharacters = (config?.generateCharacters ?? "True") == "True";
         this.generateBackgrounds = (config?.generateBackgrounds ?? "True") == "True";
         this.useBackgroundDepth = (config?.useBackgroundDepth ?? "True") == "True";
-        //this.alphaMode = (config?.alphaMode ?? "False") == "True";
+        this.alphaMode = (config?.alphaMode ?? "False") == "True";
         this.artStyle = config?.artStyle ?? 'Vibrant, visual novel style illustration, clean lines';
     }
 
@@ -356,7 +357,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             try {
                 const emotionResult = (await this.emotionPipeline.predict("/predict", {
                     param_0: content,
-                }))
+                }));
                 console.log(`Emotion result: `);
                 console.log(emotionResult.data[0].confidences);
                 newEmotion = emotionResult.data[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.1)?.label ?? newEmotion;
@@ -376,11 +377,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const lowerContent = content.toLowerCase();
         const newOutfitIds = Object.keys(this.wardrobes[speaker.anonymizedId].outfits).filter(outfitId => {
             const outfit = this.wardrobes[speaker.anonymizedId].outfits[outfitId];
-            console.log(`Testing outfit keywords for ${outfit.name} (${outfitId}): ${outfit.triggerWords}`);
+            //console.log(`Testing outfit keywords for ${outfit.name} (${outfitId}): ${outfit.triggerWords}`);
             return outfit.triggerWords.split(',').map(word => word.trim().toLowerCase()).some(word => word.length > 0 && lowerContent.includes(word));
         });
         if (newOutfitIds.length > 0 && !newOutfitIds.includes(this.messageState.speakerOutfit[speaker.anonymizedId])) {
-            console.log(`Setting auto outfit to ${newOutfitIds[0]} for ${speaker.name} based on key words.`);
+            console.log(`Setting auto outfit to ${newOutfitIds[0]} for ${speaker.name} based on keywords.`);
             this.messageState.speakerOutfit[speaker.anonymizedId] = newOutfitIds[0];
         }
 
@@ -1012,6 +1013,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getSpeakerEmotion(anonymizedId: string): Emotion {
+        if (this.alphaMode) {
+            console.log(`${anonymizedId} activeSpeaker=${this.messageState.activeSpeaker}, speakerEmotion=${JSON.stringify(this.messageState.speakerEmotion)}`);
+        }
         return this.messageState.activeSpeaker != anonymizedId ? Emotion.standing : (this.messageState.speakerEmotion[anonymizedId] as Emotion ?? Emotion.neutral);
     }
 
