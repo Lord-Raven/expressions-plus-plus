@@ -672,26 +672,26 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async generateSpeakerImagePrompt(speaker: Speaker, outfitKey: string): Promise<void> {
         // Must first build a visual description for this character:
-        console.log(`Generating a physical description of ${speaker.name}.`);
         const outfitName = this.wardrobes[speaker.anonymizedId].outfits[outfitKey].name;
+        console.log(`Generating an art prompt for ${speaker.name} (${outfitName}).`);
         const imageDescription = await this.generator.textGen({
             prompt:
                 `Chat History:\n{{messages}}\n\n` +
                 (outfitName != DEFAULT_OUTFIT_NAME ? `New Outfit:\n${outfitName}\n\n` : '') +
                 `Information about ${speaker.name}:\n${this.getSpeakerDescription(speaker)}\n\n` +
-                `Instruction:\nThe goal of this request is to digest the information about ${speaker.name} and construct a simple, comprehensive, and functional visual description of ${speaker.name}. ` +
+                `Instruction:\nThe goal of this request is to digest the information about ${speaker.name} and construct a simple, comprehensive visual description of ${speaker.name}. ` +
                 `The chat history may involve other characters, but this system response will fixate on ${speaker.name}, forsaking other characters or background details. ` +
                 `The result will be fed directly into an image generator, which is unfamiliar with this character, ` +
-                `so use concise tags and keywords to convey all essential visual details about them, ` +
+                `so use concise language to convey all essential visual details about them, ` +
                 `presenting ample and exhaustive character appearance notes--particularly if they seem obvious: gender, race, skin tone, hair do/color, physique, body shape, outfit, fashion, setting/theme, style, etc. ` +
                 (outfitName != DEFAULT_OUTFIT_NAME ?
                     `Describe and emphasize that ${speaker.name} is wearing this prescribed outfit or vibe: ${outfitName}. Develop authentic visual details for the outfit. Aside from that, ` :
                     `Chat history is provided for potential context on ${speaker.name}'s current look; `) +
                 `focus on persistent physical details over fleeting ones as this description will be applied to a variety of situations. Output the final visual description below.\n\n` +
 
-                `Sample Response:\nWoman, tall, youthful, dark flowing hair, dark brown hair, loose wavy hair, tanned skin, muscular, modern clothes, worn jeans, dark red bomber jacket, dark brown eyes, thin lips, red and white running shoes, white tanktop.\n\n` +
-                `Sample Response:\nMan in a billowing tattered cloak, Medieval fantasy, sinister appearance, dark hair, middle-aged, hair graying at temples, sallow face, elaborate wooden staff, green gem in staff, dark robes with green highlights.\n\n` +
-                `Sample Response:\nA willowy androgynous figure, short spiky hair, pale skin, wearing a sleek black bodysuit with silver accents, futuristic cyberpunk style, glowing blue tattoos on arms, piercing blue eyes.\n\n` +
+                `Sample Response:\nA tall young woman with tanned skin, dark brown, flowing, wavy hair. She is athletic and toned, wearing modern clothes: worn jeans, red and white running shoes, and a dark red bomber jacket over a white tank-top. She has dark brown eyes and thin lips.\n\n` +
+                `Sample Response:\nAn aging, sinister man in a billowing, tattered, dark green cloak (with bright green trim). His dark hair is graying at the temples around his sallow face, and he wields an elaborate wooden staff with a foreboding green gem at the head.\n\n` +
+                `Sample Response:\nA pale, willowy androgynous figure with short, spiky pink hair. They're wearing a sleek black bodysuit with silver accents. Their futuristic glowing blue tattoo sleeves match their augmented blue eyes.\n\n` +
                 '',
             min_tokens: 50,
             max_tokens: 140,
@@ -718,42 +718,61 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
         console.log(`Generating ${emotion} image for ${speaker.name} (${outfitName}).`)
         if (emotion == Emotion.neutral) {
-            // First, generate a standing image; if from outfit is provided, this will use image2image
+            /* The goal is to create a standing and neutral (thigh-up) image for this outfit.
+             * There are five elements to nail for a good set of images:
+             * 1. Composition: full-body and thigh-up portrait with margins. White background.
+             * 2. Pose: natural, characteristic pose for standing; neutral expression.
+             * 3. Appearance: consistent character appearance and outfit details.
+             * 4. Art style: should suit the style set by the stage configuration.
+             * 5. "Qwenification": Qwen needs to touch the image at some point to ensure all subsequent art generated from the image also matches; Flux and Qwen have distinct styles that become apparent.
+             */
+            // First, generate a standing image.
             let standingImageUrl;
-            // If fromOutfitKey is provided and it has a distinct standing image, use this initially.
             if (fromOutfitKey && this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] && this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] != this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral]) {
+                // If fromOutfitKey is provided, and it has a distinct standing image, use this initially. This image will have items 1, 2, 4, and 5. Just not 3: appearance.
                 standingImageUrl = this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing];
-            } else {
-                console.log('Generating a new standing image.');
+                // Apply outfit with image2image:
+                standingImageUrl = await this.generateImage({
+                        image: standingImageUrl,
+                        prompt: `Denoise.\n\nApply the outfit described here: ` +
+                            this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt,
+                        transfer_type: 'edit'
+                    }) || standingImageUrl;
+            } else if (fromOutfitKey) {
+                // If fromOutfitKey is provided, but no distinct standing image found, we'll generate from the neutral image (which could just be a random candid image of a character.
+                // The initial result will only have items 1, 2, and 5. We'll need to apply art style and outfit.
                 standingImageUrl = await this.generateImage(
-                    fromOutfitKey ?
-                         {
-                                // From outfit has a standing image, use that
-                            image: this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] || this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral],
-                            prompt: substitute('Denoise.\n\nCreate a full-body, head-to-toe reference image for this person in a natural, characteristic pose with a neutral expression. They are standing on an empty white floor in a plain white room.'),
-                            transfer_type: 'edit',
-                        } : {
+                    {
+                        // From outfit has a standing image, use that
+                        image: this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral],
+                        prompt: substitute('Denoise.\n\nCreate a full-body, head-to-toe reference image for this person in a natural, characteristic pose with a neutral expression. They are standing on an empty white floor in a plain white room.'),
+                        transfer_type: 'edit',
+                    });
+                standingImageUrl = await this.generateImage({
+                        image: standingImageUrl,
+                        prompt: 'Denoise and apply this art style: ' + this.artStyle + '\n\n',
+                        transfer_type: 'edit'
+                    }) || standingImageUrl;
+                standingImageUrl = await this.generateImage({
+                        image: standingImageUrl,
+                        prompt: `Denoise.\n\nApply the outfit described here: ` +
+                            this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt,
+                        transfer_type: 'edit'
+                    }) || standingImageUrl;
+            } else {
+                // No fromOutfitKey provided; generate from scratch with text-to-image. This will have items 1, 2, 3, and 4. Just need Qwen to touch it, to achieve that Qwen style.
+                standingImageUrl = await this.generateImage(
+                    {
                             prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing)),
                             negative_prompt: CHARACTER_NEGATIVE_PROMPT,
                             aspect_ratio: AspectRatio.WIDESCREEN_VERTICAL
-                        }
-                    );
-                console.log(`Initial standingImageUrl = ${standingImageUrl}; proceeding with art style application.`);
+                        });
                 // We now have either a plain image generated from a previous image or a new Flux image. Either way, we want to use Qwen to clean it up and ensure it matches the prompt and art style.
                 standingImageUrl = await this.generateImage({
                         image: standingImageUrl,
                         prompt: 'Denoise and apply this art style: ' + this.artStyle + '\n\n',
                         transfer_type: 'edit'
                     }) || standingImageUrl;
-                // Finally, manage actual physical details as needed.
-                console.log(`With style applied, standingImageUrl = ${standingImageUrl}; making cosmetic adjustments.`);
-                standingImageUrl = await this.generateImage({
-                    image: standingImageUrl,
-                    prompt: `Denoise.\n\nApply the outfit described here: ` +
-                        this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt,
-                    transfer_type: 'edit'
-                }) || standingImageUrl;
-                console.log(`Penultimate standingImageUrl = ${standingImageUrl}; remove background`);
             }
 
             if (standingImageUrl != '') {
@@ -1013,9 +1032,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getSpeakerEmotion(anonymizedId: string): Emotion {
-        if (this.alphaMode) {
-            console.log(`${anonymizedId} activeSpeaker=${this.messageState.activeSpeaker}, speakerEmotion=${JSON.stringify(this.messageState.speakerEmotion)}`);
-        }
         return this.messageState.activeSpeaker != anonymizedId ? Emotion.standing : (this.messageState.speakerEmotion[anonymizedId] as Emotion ?? Emotion.neutral);
     }
 
