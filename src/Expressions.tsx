@@ -358,11 +358,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 const emotionResult = (await this.emotionPipeline.predict("/predict", {
                     param_0: content,
                 }));
-                console.log(`Emotion result: `);
+                console.log(`Emotion result:`);
                 console.log(emotionResult.data[0].confidences);
                 newEmotion = emotionResult.data[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.1)?.label ?? newEmotion;
             } catch (except: any) {
-                console.warn(`Error classifying expression, error: ${except}`);
+                console.warn(`Error classifying expression, error:`);
+                console.warn(except);
                 newEmotion = this.fallbackClassify(content);
             }
         } else {
@@ -421,7 +422,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const lowered = text.toLowerCase();
         let result = 'neutral';
         Object.values(Emotion).forEach(emotion => {
-            if(lowered.includes(emotion.toLowerCase())) {
+            if (emotion != Emotion.standing && lowered.includes(emotion.toLowerCase())) {
                 result = emotion;
             }
         });
@@ -734,7 +735,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 // Apply outfit with image2image:
                 standingImageUrl = await this.generateImage({
                         image: standingImageUrl,
-                        prompt: `Denoise.\n\nApply the outfit described here: ` +
+                        prompt: `Denoise.\n\nThey are now wearing this appearance instead: ` +
                             this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt,
                         transfer_type: 'edit'
                     }) || standingImageUrl;
@@ -745,7 +746,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     {
                         // From outfit has a standing image, use that
                         image: this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral],
-                        prompt: substitute('Denoise.\n\nCreate a full-body, head-to-toe reference image for this person in a natural, characteristic pose with a neutral expression. They are standing on an empty white floor in a plain white room.'),
+                        prompt: 'Create a full-body, head-to-toe reference image for this person in a natural, characteristic pose with a neutral expression. They are standing on an empty white floor in a plain white room.',
                         transfer_type: 'edit',
                     });
                 standingImageUrl = await this.generateImage({
@@ -755,7 +756,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     }) || standingImageUrl;
                 standingImageUrl = await this.generateImage({
                         image: standingImageUrl,
-                        prompt: `Denoise.\n\nApply the outfit described here: ` +
+                        prompt: `Denoise.\n\nThey are now wearing this appearance instead: ` +
                             this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt,
                         transfer_type: 'edit'
                     }) || standingImageUrl;
