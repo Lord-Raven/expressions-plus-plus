@@ -540,7 +540,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         console.log(`Outfit ${outfitKey} exists in both existing and backup wardrobes for ${speakerId}. Checking images...`);
 
                         const existingImages = remoteWardrobes[speakerId].outfits[outfitKey].images || {};
-                        const backupImages = this.backupWardrobes[speakerId].outfits[outfitKey].images || {};
+                        const backupImages = this.backupWardrobes[speakerId]?.outfits[outfitKey]?.images || {};
                         const currentImages = this.wardrobes[speakerId].outfits[outfitKey].images || {};
                         
                         // Compare each emotion/image key

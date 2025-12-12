@@ -73,6 +73,7 @@ creator_notes: >
       <div class="panel-content">
         <h2>Updates!</h2>
         <ul>
+          <li>2025.12.12: Just fixing a saving bug.</li>
           <li>2025.10.13: Moving to Qwen for expression generation and new outfit cloning. Lots of small changes and some other new features incoming.</li>
           <li>2025.09.08: Addressing a sensitive storage change.</li>
           <li>2025.08.29: Pushing uploaded images to storage and referencing by URL.</li>
@@ -134,7 +135,7 @@ config_schema:
       enum: ["True", "False"]
     alphaMode:
       title: Alpha Mode
-      description: Enable experimental stuff. Maybe don't use this if your username isn't Ravenok.
+      description: Enable experimental stuff. Maybe don't use this if your username isn't JakeH.
       type: string
       default: "False"
       enum: ["True", "False"]
