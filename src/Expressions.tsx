@@ -269,6 +269,33 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         for (let charAnonId of Object.keys(this.speakers)) {
             if ('partial_extensions' in this.speakers[charAnonId]) {
                 const character: Character = this.speakers[charAnonId] as Character;
+                /*
+                 structure is:
+                 character {
+                    partial_extensions: {
+                        chub: {
+                            expressions: {
+                                // This represents a single expressions pack
+                            }
+                            alt_expressions: {
+                                something: {
+                                    // This represents an alternate expressions pack
+                                }
+                                something_else: {
+                                    // This represents another alternate expressions pack
+                                }
+                            }
+                        }
+                    }
+                }
+                 */
+
+                // I want to create an array of all of the expressions packs in the partial_extensions/chub structure:
+
+                const chub_expressions = [character.partial_extensions?.chub?.expressions ?? null, ...Object.values(character.partial_extensions?.chub?.alt_expressions || {})].filter(pack => pack != null);
+                console.log(`Character ${charAnonId} has the following expressions packs:`);
+                console.log(chub_expressions);
+
                 if (character.partial_extensions?.chub?.expressions?.expressions != null) {
                     console.log(`Character ${charAnonId} has an expressions pack.`);
                     // Generate outfit entries for each expressions pack, marked non-generated.
