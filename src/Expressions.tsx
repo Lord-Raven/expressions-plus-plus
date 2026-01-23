@@ -269,35 +269,15 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         for (let charAnonId of Object.keys(this.speakers)) {
             if ('partial_extensions' in this.speakers[charAnonId]) {
                 const character: Character = this.speakers[charAnonId] as Character;
-                /*
-                 structure is:
-                 character {
-                    partial_extensions: {
-                        chub: {
-                            expressions: {
-                                // This represents a single expressions pack
-                            }
-                            alt_expressions: {
-                                something: {
-                                    // This represents an alternate expressions pack
-                                }
-                                something_else: {
-                                    // This represents another alternate expressions pack
-                                }
-                            }
-                        }
-                    }
-                }
-                 */
 
-                // I want to create an array of all of the expressions packs in the partial_extensions/chub structure:
+                const chub_expressions = [character.partial_extensions?.chub?.expressions ?? null,
+                    ...Object.values(character.partial_extensions?.chub?.alt_expressions || {})]
+                    // Remove null entries and those with only default images
+                    .filter(pack => pack != null && pack.expressions != null && Object.values(pack.expressions).some(imageUrl => !(imageUrl as String).includes('lfs.charhub.io/lfs')));
 
-                const chub_expressions = [character.partial_extensions?.chub?.expressions ?? null, ...Object.values(character.partial_extensions?.chub?.alt_expressions || {})].filter(pack => pack != null);
-                console.log(`Character ${charAnonId} has the following expressions packs:`);
-                console.log(chub_expressions);
-
-                if (character.partial_extensions?.chub?.expressions?.expressions != null) {
-                    console.log(`Character ${charAnonId} has an expressions pack.`);
+                if (chub_expressions.length > 0) {
+                    console.log(`Character ${charAnonId} has the following expressions packs:`);
+                    console.log(chub_expressions);
                     // Generate outfit entries for each expressions pack, marked non-generated.
                     if (!this.wardrobes[charAnonId]) {
                         this.wardrobes[charAnonId] = {
@@ -305,9 +285,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                             outfits: {}
                         };
                     }
-                    for (let expressionPack of Object.values([character.partial_extensions.chub.expressions])) {
+                    for (let expressionPack of Object.values(chub_expressions)) {
+                        const images = expressionPack!.expressions;
+                        // Override any default images with undefined, so they are not used.
+                        for (let emotionKey of Object.keys(images)) {
+                            if ((images[emotionKey] as String).includes('lfs.charhub.io/lfs')) {
+                                images[emotionKey] = undefined;
+                            }
+                        }
+                        console.log(`Adding outfit for expressions pack ${expressionPack!.version} for character ${charAnonId}:`);
+                        console.log(images);
                         this.wardrobes[charAnonId].outfits[expressionPack.version] = {
-                            images: expressionPack.expressions,
+                            images: images,
                             name: expressionPack.version,
                             triggerWords: '',
                             artPrompt: '',
