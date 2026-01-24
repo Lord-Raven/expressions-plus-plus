@@ -273,7 +273,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 const chub_expressions = [character.partial_extensions?.chub?.expressions ?? null,
                     ...Object.values(character.partial_extensions?.chub?.alt_expressions || {})]
                     // Remove null entries and those with only default images
-                    .filter(pack => pack != null && pack.expressions != null && Object.values(pack.expressions).some(imageUrl => !(imageUrl as String).includes('lfs.charhub.io/lfs')));
+                    .filter(pack => pack != null && pack.expressions != null && Object.values(pack.expressions).some(imageUrl => !(imageUrl as String).includes("emotions/1/")));
 
                 if (chub_expressions.length > 0) {
                     console.log(`Character ${charAnonId} has the following expressions packs:`);
@@ -289,7 +289,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                         const images = expressionPack!.expressions;
                         // Override any default images with undefined, so they are not used.
                         for (let emotionKey of Object.keys(images)) {
-                            if ((images[emotionKey] as String).includes('lfs.charhub.io/lfs')) {
+                            if ((images[emotionKey] as String).includes("emotions/1/")) {
                                 images[emotionKey] = undefined;
                             }
                         }
