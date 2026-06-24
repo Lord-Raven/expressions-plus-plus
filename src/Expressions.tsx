@@ -751,12 +751,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async uploadHfBlob(pipeline: Pipeline, blob: Blob, filename: string): Promise<string> {
-        const base64 = await this.blobToDataURL(blob);
+        const form = new FormData();
+        form.append('file', blob, filename);
         const basePipeline = pipeline.split('/')[0];
         const response = await fetch(`https://${basePipeline}/gradio_api/upload`, {
-            method: 'POST',
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ data: [{data: base64, name: filename}] })
+            method: "POST",
+            body: form,
         });
 
         return await response.json();
