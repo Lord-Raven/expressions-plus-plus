@@ -748,7 +748,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         try {
             //const imageBlob = await response.blob();
             //console.log(imageBlob);
-            const backgroundlessResponse = await this.callPipeline(Pipeline.REMOVE_BACKGROUND, {url: imageUrl});
+            const backgroundlessResponse = await this.callPipeline(Pipeline.REMOVE_BACKGROUND, {path: imageUrl});
             // await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
             // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
             return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
@@ -975,7 +975,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (this.useBackgroundDepth) {
             try {
                 // This endpoint takes actual image data and not a URL; need to load data from imageUrl
-                const depthPromise = await this.callPipeline(Pipeline.DEPTH, {url: background.backgroundUrl});
+                const depthPromise = await this.callPipeline(Pipeline.DEPTH, {path: background.backgroundUrl});
                 // this.depthPipeline.predict("/predict_depth", {image: imageBlob});
 
                 // Need to get a HtmlImageElement for getPalette:
