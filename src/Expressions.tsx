@@ -366,7 +366,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
     }
 
-    async callPipeline(pipeline: 'ravenok-emotions.hf.space/run/predict'|'ravenok-statosphere-backend.hf.space/run/predict'|'ravenok-Depth-Anything-V2.hf.space/run/predict', input: any): Promise<any> {
+    async callPipeline(pipeline: 'ravenok-emotions.hf.space/predict'|'ravenok-statosphere-backend.hf.space/predict'|'ravenok-Depth-Anything-V2.hf.space/predict_depth'|'ravenok-Depth-Anything-V2.hf.space/remove_background', input: any): Promise<any> {
         let retries = 3;
         while (retries > 0) {
             try {
@@ -389,7 +389,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async updateEmotion(speaker: Speaker, content: string) {
         let newEmotion = 'neutral';
         try {
-            const emotionResult = await this.callPipeline('ravenok-emotions.hf.space/run/predict', {param_0: content});
+            const emotionResult = await this.callPipeline('ravenok-emotions.hf.space/predict', {param_0: content});
             console.log('Emotion result:', emotionResult[0].confidences);
             newEmotion = emotionResult[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.1)?.label ?? newEmotion;
         } catch (except: any) {
@@ -706,7 +706,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log(`removeBackground(${imageUrl}, ${storageName})`);
         const response = await fetch(imageUrl);
         try {
-            const backgroundlessResponse = await this.callPipeline('ravenok-statosphere-backend.hf.space/run/predict', {param_0: await response.blob()});
+            const backgroundlessResponse = await this.callPipeline('ravenok-Depth-Anything-V2.hf.space/remove_background', {param_0: await response.blob()});
             // await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
             // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
             return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
@@ -935,7 +935,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 // This endpoint takes actual image data and not a URL; need to load data from imageUrl
                 const response = await fetch(background.backgroundUrl);
                 const imageBlob = await response.blob();
-                const depthPromise = await this.callPipeline('ravenok-Depth-Anything-V2.hf.space/run/predict', {image: imageBlob});
+                const depthPromise = await this.callPipeline('ravenok-Depth-Anything-V2.hf.space/predict_depth', {image: imageBlob});
                 // this.depthPipeline.predict("/predict_depth", {image: imageBlob});
 
                 // Need to get a HtmlImageElement for getPalette:
@@ -1047,7 +1047,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const MULTI_CHARACTER_LABEL = `multiple characters named ${speaker.name}`;
         const NARRATOR_LABEL = 'a narrator, setting, or scenario';
         try {
-            const response = await this.callPipeline('ravenok-statosphere-backend.hf.space/run/predict', {data_string: JSON.stringify({
+            const response = await this.callPipeline('ravenok-statosphere-backend.hf.space/predict', {data_string: JSON.stringify({
                     sequence: `Name: ${speaker.name}\nDescription: ${this.getSpeakerDescription(speaker)}`,
                     candidate_labels: [SINGLE_CHARACTER_LABEL, MULTI_CHARACTER_LABEL, NARRATOR_LABEL],
                     hypothesis_template: `The focus is {}.`,
