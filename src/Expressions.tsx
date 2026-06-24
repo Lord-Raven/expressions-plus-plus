@@ -744,11 +744,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async removeBackground(imageUrl: string, storageName: string) {
         if (!imageUrl) return imageUrl;
         console.log(`removeBackground(${imageUrl}, ${storageName})`);
-        const response = await fetch(imageUrl);
+        //const response = await fetch(imageUrl);
         try {
-            const imageBlob = await response.blob();
-            console.log(imageBlob);
-            const backgroundlessResponse = await this.callPipeline(Pipeline.REMOVE_BACKGROUND, {image: imageBlob});
+            //const imageBlob = await response.blob();
+            //console.log(imageBlob);
+            const backgroundlessResponse = await this.callPipeline(Pipeline.REMOVE_BACKGROUND, {url: imageUrl});
             // await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
             // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
             return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
@@ -975,9 +975,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (this.useBackgroundDepth) {
             try {
                 // This endpoint takes actual image data and not a URL; need to load data from imageUrl
-                const response = await fetch(background.backgroundUrl);
-                const imageBlob = await response.blob();
-                const depthPromise = await this.callPipeline(Pipeline.DEPTH, {image: imageBlob});
+                //const response = await fetch(background.backgroundUrl);
+                //const imageBlob = await response.blob();
+                const depthPromise = await this.callPipeline(Pipeline.DEPTH, {url: background.backgroundUrl});
                 // this.depthPipeline.predict("/predict_depth", {image: imageBlob});
 
                 // Need to get a HtmlImageElement for getPalette:
