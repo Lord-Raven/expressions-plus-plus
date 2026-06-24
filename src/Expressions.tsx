@@ -741,14 +741,23 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         return `No art prompt yet available for ${speaker.name} (${outfit}). Enter a custom prompt below or leave it blank to have the LLM craft an art prompt from context.`;
     }
 
+    async blobToDataURL(blob: Blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);  // this is the data:image/... string
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+
     async removeBackground(imageUrl: string, storageName: string) {
         if (!imageUrl) return imageUrl;
         console.log(`removeBackground(${imageUrl}, ${storageName})`);
-        const response = await fetch(imageUrl);
         try {
+            const response = await fetch(imageUrl);
             const imageBlob = await response.blob();
             console.log(imageBlob);
-            const backgroundlessResponse = await this.callPipeline(Pipeline.REMOVE_BACKGROUND, {data: imageBlob});
+            const backgroundlessResponse = await this.callPipeline(Pipeline.REMOVE_BACKGROUND, {data: await this.blobToDataURL(imageBlob)});
             // await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
             // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
             return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
