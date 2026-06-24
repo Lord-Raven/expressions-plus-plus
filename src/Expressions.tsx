@@ -750,6 +750,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         });
     }
 
+    async uploadHfBlob(pipeline: Pipeline, blob: Blob, filename: string): Promise<string> {
+        const base64 = await this.blobToDataURL(blob);
+        const basePipeline = pipeline.split('/')[0];
+        const response = await fetch(`https://${basePipeline}/gradio_api/upload`, {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data: [{data: base64, name: filename}] })
+        });
+
+        return await response.json();
+    }
+
     async removeBackground(imageUrl: string, storageName: string) {
         if (!imageUrl) return imageUrl;
         console.log(`removeBackground(${imageUrl}, ${storageName})`);
@@ -757,6 +769,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             const response = await fetch(imageUrl);
             const imageBlob = await response.blob();
             console.log(imageBlob);
+            const uploadResponse = await this.uploadHfBlob(Pipeline.REMOVE_BACKGROUND, imageBlob, storageName);
+            console.log(uploadResponse);
             const backgroundlessResponse = await this.callPipeline(Pipeline.REMOVE_BACKGROUND,
                 {orig_name: storageName,
                     url: imageUrl,
