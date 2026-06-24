@@ -21,6 +21,7 @@ import {Emotion, EMOTION_MAPPING, EMOTION_PROMPTS, EmotionPack} from "./Emotion.
 import { Background, DEFAULT_BORDER_COLOR, DEFAULT_HIGHLIGHT_COLOR, BACKGROUND_ART_PROMPT } from "./Background.tsx";
 import BackgroundSettings, { BackgroundSettingsHandle } from "./BackgroundSettings.tsx";
 import { generateUUID } from "three/src/math/MathUtils.js";
+import {Client} from "@gradio/client";
 
 enum Pipeline {
     EMOTION = 'ravenok-emotions.hf.space/gradio_api/call/predict',
@@ -143,7 +144,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     backupBackgrounds: {[key: string]: Background} = {};
 
     // Not saved:
-    //emotionPipeline: any = null;
+    emotionPipeline: any = null;
     //zeroShotPipeline: any = null;
     //depthPipeline: any = null;
     generateCharacters: boolean;
@@ -218,12 +219,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
 
         try {
-            /*this.emotionPipeline = await Client.connect("ravenok/emotions");
-            this.zeroShotPipeline = await Client.connect("ravenok/statosphere-backend");
+            this.emotionPipeline = await Client.connect("ravenok/emotions");
+            /*this.zeroShotPipeline = await Client.connect("ravenok/statosphere-backend");
             this.depthPipeline = await Client.connect("ravenok/Depth-Anything-V2");*/
         } catch (except: any) {
             console.error(`Error loading pipelines, error: ${except}`);
-            return { success: false, error: except }
+            //return { success: false, error: except }
         }
         
         // Test whether userId has storage access to update canonical character data and update owns accordingly
@@ -754,12 +755,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const form = new FormData();
         form.append('files', blob, filename);
         const basePipeline = pipeline.split('/')[0];
-        const response = await fetch(`https://${basePipeline}/gradio_api/upload`, {
+        const response = await fetch(`https://${basePipeline}/file/upload`, {
             method: "POST",
-            body: form,
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
+            body: form
         });
 
         return await response.json();
