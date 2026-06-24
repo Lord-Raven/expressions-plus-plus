@@ -757,6 +757,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const response = await fetch(`https://${basePipeline}/gradio_api/upload`, {
             method: "POST",
             body: form,
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
         });
 
         return await response.json();
