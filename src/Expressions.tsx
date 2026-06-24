@@ -375,7 +375,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({data: [input]}),
+                    body: JSON.stringify(input),
                     credentials: "omit"
                 });
                 return (await request).json();
@@ -706,7 +706,9 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.log(`removeBackground(${imageUrl}, ${storageName})`);
         const response = await fetch(imageUrl);
         try {
-            const backgroundlessResponse = await this.callPipeline('ravenok-Depth-Anything-V2.hf.space/remove_background', {image: await response.blob()});
+            const imageBlob = await response.blob();
+            console.log(imageBlob);
+            const backgroundlessResponse = await this.callPipeline('ravenok-Depth-Anything-V2.hf.space/remove_background', {image: imageBlob});
             // await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
             // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
             return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
