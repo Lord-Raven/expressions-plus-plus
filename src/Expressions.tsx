@@ -757,7 +757,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             const response = await fetch(imageUrl);
             const imageBlob = await response.blob();
             console.log(imageBlob);
-            const backgroundlessResponse = await this.callPipeline(Pipeline.REMOVE_BACKGROUND, {name: 'toUpdate.png', data: await this.blobToDataURL(imageBlob)});
+            const backgroundlessResponse = await this.callPipeline(Pipeline.REMOVE_BACKGROUND,
+                {orig_name: storageName,
+                    url: imageUrl,
+                    meta: {_type: "gradio.FileData"}
+                });
             // await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
             // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
             return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
