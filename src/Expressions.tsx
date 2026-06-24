@@ -417,7 +417,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     credentials: "omit"
                 });
                 const { event_id } = await request.json();
-                return (await this.awaitPipeline(pipeline, event_id)).json();
+                return (await this.awaitPipeline(pipeline, event_id));
             } catch (exception) {
                 console.warn(`Error calling pipeline ${pipeline}, retries left: ${retries - 1}, error: ${exception}`);
                 retries--;
