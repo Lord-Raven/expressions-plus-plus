@@ -975,12 +975,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (this.useBackgroundDepth) {
             try {
                 // This endpoint takes actual image data and not a URL; need to load data from imageUrl
-                //const response = await fetch(background.backgroundUrl);
-                //const imageBlob = await response.blob();
                 const depthPromise = await this.callPipeline(Pipeline.DEPTH, {url: background.backgroundUrl});
                 // this.depthPipeline.predict("/predict_depth", {image: imageBlob});
 
                 // Need to get a HtmlImageElement for getPalette:
+                const response = await fetch(background.backgroundUrl);
+                const imageBlob = await response.blob();
                 const imageElement = document.createElement('img');
                 imageElement.src = URL.createObjectURL(imageBlob);
                 // Wait for the image to load before calling getPalette
