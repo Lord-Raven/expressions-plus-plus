@@ -25,7 +25,7 @@ import { generateUUID } from "three/src/math/MathUtils.js";
 enum Pipeline {
     EMOTION = 'ravenok-emotions.hf.space/gradio_api/call/predict',
     ZERO_SHOT = 'ravenok-statosphere-backend.hf.space/gradio_api/call/predict',
-    DEPTH = 'ravenok-Depth-Anything-V2.hf.space/gradio_api/call/predict_depth',
+    DEPTH = 'ravenok-depth-anything-v2.hf.space/gradio_api/call/predict_depth',
     REMOVE_BACKGROUND = 'ravenok-depth-anything-v2.hf.space/gradio_api/call/remove_background'
 }
 
