@@ -380,7 +380,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify(input),
+                    body: JSON.stringify({data: input}),
                     credentials: "omit"
                 });
                 return (await request).json();
