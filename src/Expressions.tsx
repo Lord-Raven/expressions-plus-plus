@@ -371,19 +371,53 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
     }
 
+    async awaitPipeline(pipeline: Pipeline, eventId: any): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const url = `https://${pipeline}/${eventId}`;
+            const evtSource = new EventSource(url, {withCredentials: false});
+
+            evtSource.onmessage = (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+                    resolve(data);
+                    evtSource.close();
+                } catch (exception) {
+                    reject(exception);
+                }
+            };
+
+            evtSource.addEventListener("complete", (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+                    resolve(data);
+                } catch (exception) {
+                    reject(exception);
+                } finally {
+                    evtSource.close();
+                }
+            });
+
+            evtSource.onerror = (e) => {
+                evtSource.close();
+                reject(e);
+            };
+        });
+    }
+
     async callPipeline(pipeline: Pipeline, input: any): Promise<any> {
         let retries = 3;
         while (retries > 0) {
             try {
-                const request = fetch(`https://${pipeline}`, {
+                const request = await fetch(`https://${pipeline}`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({data: input}),
+                    body: JSON.stringify({data: [input]}),
                     credentials: "omit"
                 });
-                return (await request).json();
+                const { event_id } = await request.json();
+                return (await this.awaitPipeline(pipeline, event_id)).json();
             } catch (exception) {
                 console.warn(`Error calling pipeline ${pipeline}, retries left: ${retries - 1}, error: ${exception}`);
                 retries--;
