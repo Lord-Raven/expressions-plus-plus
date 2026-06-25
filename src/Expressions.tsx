@@ -776,7 +776,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log(backgroundlessResponse);
             // await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
             // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
-            return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
+            return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse[1].url)).blob(), {type: 'image/png'});
         } catch (error) {
             console.error(`Error removing background or storing result: ${error}`);
             return imageUrl;
@@ -1028,7 +1028,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 background.depthUrl = '';
                 const depthResponse = await depthPromise;
                 // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
-                background.depthUrl = await this.uploadBlob(`${background.id}_depth.png`, await (await fetch(depthResponse.data[1].url)).blob(), {type: 'image/png'});
+                background.depthUrl = await this.uploadBlob(`${background.id}_depth.png`, await (await fetch(depthResponse[1].url)).blob(), {type: 'image/png'});
                 await this.updateBackgroundsStorage();
             } catch (err) {
                 console.warn('Failed to generate palette or depth map for background image:', err);
