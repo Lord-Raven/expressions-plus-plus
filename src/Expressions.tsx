@@ -776,7 +776,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             console.log(backgroundlessResponse);
             // await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
             // Depth URL is the HF URL; back it up to Chub by creating a File from the image data:
-            return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[0].url)).blob(), {type: 'image/png'});
+            return await this.uploadBlob(storageName, await (await fetch(backgroundlessResponse.data[1].url)).blob(), {type: 'image/png'});
         } catch (error) {
             console.error(`Error removing background or storing result: ${error}`);
             return imageUrl;
