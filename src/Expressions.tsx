@@ -759,7 +759,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             method: "POST",
             body: form
         });
-
         return await response.json();
     }
 
