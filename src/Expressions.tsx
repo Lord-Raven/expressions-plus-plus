@@ -755,7 +755,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         const form = new FormData();
         form.append('files', blob, filename);
         const basePipeline = pipeline.split('/')[0];
-        const response = await fetch(`https://${basePipeline}/file/upload`, {
+        const response = await fetch(`https://${basePipeline}/gradio_api/upload`, {
             method: "POST",
             body: form
         });
