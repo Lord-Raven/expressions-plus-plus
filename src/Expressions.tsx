@@ -999,12 +999,16 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
         if (this.useBackgroundDepth) {
             try {
+                console.log(`Generating color palette and depth map for background image: ${background.backgroundUrl}`);
                 const response = await fetch(background.backgroundUrl);
                 const imageBlob = await response.blob();
 
+                console.log(imageBlob);
+
                 // This endpoint takes actual image data and not a URL; need to load data from imageUrl
                 const uploadResponse = await this.uploadHfBlob(Pipeline.DEPTH, imageBlob, `${background.id}.png`);
-                const depthPromise = await this.callPipeline(Pipeline.DEPTH, {path: uploadResponse[0]});
+                console.log(uploadResponse);
+                const depthPromise = this.callPipeline(Pipeline.DEPTH, {path: uploadResponse[0]});
                 // this.depthPipeline.predict("/predict_depth", {image: imageBlob});
 
                 // Need to get a HtmlImageElement for getPalette:
