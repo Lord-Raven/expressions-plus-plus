@@ -421,7 +421,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
                 return (await this.awaitPipeline(pipeline, event_id));
             } catch (exception) {
-                console.warn(`Error calling pipeline ${pipeline}, retries left: ${retries - 1}, error: ${exception}`);
+                console.warn(`Error calling pipeline ${pipeline}, retries left: ${retries - 1}, error:`);
+                console.warn(exception);
                 retries--;
             }
         }
