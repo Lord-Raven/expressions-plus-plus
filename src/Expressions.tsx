@@ -1002,7 +1002,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 const imageBlob = await response.blob();
 
                 // This endpoint takes actual image data and not a URL; need to load data from imageUrl
-                const uploadResponse = await this.uploadHfBlob(Pipeline.DEPTH, imageBlob, 'backgroundDepth.png');
+                const uploadResponse = await this.uploadHfBlob(Pipeline.DEPTH, imageBlob, `${background.id}.png`);
                 const depthPromise = await this.callPipeline(Pipeline.DEPTH, {path: uploadResponse[0]});
                 // this.depthPipeline.predict("/predict_depth", {image: imageBlob});
 
