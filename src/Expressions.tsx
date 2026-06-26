@@ -21,7 +21,6 @@ import {Emotion, EMOTION_MAPPING, EMOTION_PROMPTS, EmotionPack} from "./Emotion.
 import { Background, DEFAULT_BORDER_COLOR, DEFAULT_HIGHLIGHT_COLOR, BACKGROUND_ART_PROMPT } from "./Background.tsx";
 import BackgroundSettings, { BackgroundSettingsHandle } from "./BackgroundSettings.tsx";
 import { generateUUID } from "three/src/math/MathUtils.js";
-import {Client} from "@gradio/client";
 
 enum Pipeline {
     EMOTION = 'ravenok-emotions.hf.space/gradio_api/call/predict',
@@ -219,8 +218,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
 
         try {
-            this.emotionPipeline = await Client.connect("ravenok/emotions");
-            /*this.zeroShotPipeline = await Client.connect("ravenok/statosphere-backend");
+            /*this.emotionPipeline = await Client.connect("ravenok/emotions");
+            this.zeroShotPipeline = await Client.connect("ravenok/statosphere-backend");
             this.depthPipeline = await Client.connect("ravenok/Depth-Anything-V2");*/
         } catch (except: any) {
             console.error(`Error loading pipelines, error: ${except}`);
@@ -1011,7 +1010,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 const depthPromise = this.callPipeline(Pipeline.DEPTH, {path: uploadResponse[0]});
                 // this.depthPipeline.predict("/predict_depth", {image: imageBlob});
 
-                // Need to get a HtmlImageElement for getPalette:
+                // Need to get a HtmlImageElement for getPalette:await this.depthPipeline.predict("/remove_background", {image: await response.blob()});
                 const imageElement = document.createElement('img');
                 imageElement.src = URL.createObjectURL(imageBlob);
                 // Wait for the image to load before calling getPalette
