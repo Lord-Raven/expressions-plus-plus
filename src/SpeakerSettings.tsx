@@ -83,6 +83,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
     const [outfitKeys, setOutfitKeys] = useState<string[]>([]);
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
     const NEW_OUTFIT_NAME = 'Unnamed Outfit';
+    const emotionLabel = (emotion: string): string => emotion === Emotion.standing ? 'base' : emotion;
     // Delete tab with Delete key if not focused on input/textarea/contenteditable
     useEffect(() => {
         if (!speaker) return;
@@ -199,8 +200,8 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                 {speaker && outfitMap[outfitKey] && (
                     <OutfitInfoIcon
                         isLocked={locked}
-                        isAltered={stage.buildArtPrompt(speaker, value, Emotion.neutral) != substitute(stage.buildArtPrompt(speaker, value, Emotion.neutral))}
-                        isErrored={stage.getSpeakerImage(speaker.anonymizedId, value, Emotion.neutral, silhouetteUrl) == ''}/>
+                        isAltered={stage.buildArtPrompt(speaker, value, Emotion.standing) != substitute(stage.buildArtPrompt(speaker, value, Emotion.standing))}
+                        isErrored={stage.getSpeakerImage(speaker.anonymizedId, value, Emotion.standing, silhouetteUrl) == ''}/>
                 )}
             </span>
         );
@@ -243,7 +244,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                 </DialogTitle>
                 <DialogContent sx={{p: 1, backgroundColor: "#333"}} ref={dialogContentRef}>
                     <Typography variant="body2">
-                        For each outfit, a physical description and neutral image are generated and other emotions are created from the neutral base image. Rename or remove additional outfits by double-clicking their tabs; an outfit's name will help steer its generation.
+                        For each outfit, a physical description and base image are generated and other emotions are created from the base image. Rename or remove additional outfits by double-clicking their tabs; an outfit's name will help steer its generation.
                     </Typography>
                     <Tabs
                         value={selectedOutfit || outfitKeys[0]}
@@ -306,7 +307,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 silhouetteUrl
                             );
 
-                            const isDefault = (emotion != Emotion.neutral && image == stage.getSpeakerImage(speaker.anonymizedId, selectedOutfit, Emotion.neutral)) || (image == silhouetteUrl);
+                            const isDefault = (emotion != Emotion.standing && image == stage.getSpeakerImage(speaker.anonymizedId, selectedOutfit, Emotion.standing)) || (image == silhouetteUrl);
                             const locked = checkIsLocked(selectedOutfit);
 
                             return (
@@ -344,7 +345,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                           width: "100%",
                                           textAlign: "center"
                                       }}>
-                                        {emotion}
+                                            {emotionLabel(emotion)}
                                       </span>
                                     </Button>
                                 </Grid>) : (<></>))
@@ -538,11 +539,11 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                     </Box>
                     <Box sx={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                         <Typography sx={{ mb: 2 }}>
-                            <b>{speaker.name}</b> — <b>{confirmEmotion}</b> emotion
+                            <b>{speaker.name}</b> — <b>{emotionLabel(confirmEmotion as string)}</b> emotion
                         </Typography>
                         <Typography variant="caption" color="text.secondary" sx={{ mb: 2 }}>
                             You can drag/drop or upload a new image, or click Regenerate to create one.
-                            {confirmEmotion == 'neutral' && <><br />Regenerating "neutral" will generate a new visual summary and invalidate ALL emotion images for this outfit.</>}
+                            {confirmEmotion == 'standing' && <><br />Regenerating "base" will generate a new visual summary and invalidate ALL emotion images for this outfit.</>}
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: 'center', width: '100%' }}>
                             <Button
@@ -554,15 +555,27 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                         onRegenerate(speaker, selectedOutfit ?? "", confirmEmotion, "");
                                     }
                                 }}
-                            >Regenerate</Button>
+                            >{confirmEmotion == Emotion.standing && outfitMap[selectedOutfit]?.images?.[Emotion.standing] ? "Regenerate from Description" : "Regenerate"}</Button>
+                            {confirmEmotion == Emotion.standing && outfitMap[selectedOutfit]?.images?.[Emotion.standing] && (
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    onClick={() => {
+                                        setConfirmEmotion(null);
+                                        if (onRegenerate) {
+                                            onRegenerate(speaker, selectedOutfit ?? "", Emotion.standing, selectedOutfit ?? "");
+                                        }
+                                    }}
+                                >Regenerate from Current Image</Button>
+                            )}
                         </Box>
-                        {/* "Clone From" drop-down for selecting a different outfit to create this outfit from; if this is neutral and an outfit exists
-                        allow it to be generated from the neutral image of another outfit.
-                        This drop-down allows selection of any outfit, and will use that image and a simplified prompt to render a new neutral image. */}
-                        {confirmEmotion == 'neutral' && outfitKeys.filter(key => outfitMap[key].images[Emotion.neutral]).length > 0
+                        {/* "Clone From" drop-down for selecting a different outfit to create this outfit from; if this is the base/standing emotion and an outfit exists
+                        allow it to be generated from the base/standing image of another outfit.
+                        This drop-down allows selection of any outfit, and will use that image and a simplified prompt to render a new base image. */}
+                        {confirmEmotion == 'standing' && outfitKeys.filter(key => outfitMap[key].images[Emotion.standing]).length > 0
                         && (<Box sx={{ mt: 4, width: '100%', textAlign: 'center' }}>
                             <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
-                                Or clone from an existing outfit. You may choose this outfit to re-generate from the current image; this allows you to upload any picture of a character and convert it into a standing portrait:
+                                Or clone from an existing outfit. You may choose this outfit to re-generate from the current base image; this allows you to upload any picture of a character and convert it into a standing portrait:
                             </Typography>
                             <TextField
                                 select
@@ -572,7 +585,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                     if (fromOutfit && fromOutfit in outfitMap) {
                                         setConfirmEmotion(null);
                                         if (onRegenerate) {
-                                            onRegenerate(speaker, selectedOutfit ?? "", Emotion.neutral, fromOutfit);
+                                            onRegenerate(speaker, selectedOutfit ?? "", Emotion.standing, fromOutfit);
                                         }
                                     }
                                 }}
@@ -581,7 +594,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                 sx={{ minWidth: 200 }}
                             >
                                 <MenuItem value="" disabled>Clone from...</MenuItem>
-                                {outfitKeys.filter(key => outfitMap[key].images[Emotion.neutral]).map(k => (
+                                {outfitKeys.filter(key => outfitMap[key].images[Emotion.standing]).map(k => (
                                     <MenuItem key={`cloneFrom_${k}`} value={k}>{outfitMap[k]?.name || k}</MenuItem>
                                 ))}
                             </TextField>

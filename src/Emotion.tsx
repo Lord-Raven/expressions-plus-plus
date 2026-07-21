@@ -1,4 +1,5 @@
 export enum Emotion {
+    standing = 'standing',
     neutral = 'neutral',
     admiration = 'admiration',
     amusement = 'amusement',
@@ -26,8 +27,7 @@ export enum Emotion {
     relief = 'relief',
     remorse = 'remorse',
     sadness = 'sadness',
-    surprise = 'surprise',
-    standing = 'standing'
+    surprise = 'surprise'
 }
 
 export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
