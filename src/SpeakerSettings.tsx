@@ -555,7 +555,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                         onRegenerate(speaker, selectedOutfit ?? "", confirmEmotion, "");
                                     }
                                 }}
-                            >{confirmEmotion == Emotion.standing && outfitMap[selectedOutfit]?.images?.[Emotion.standing] ? "Regenerate from Description" : "Regenerate"}</Button>
+                            >{confirmEmotion == Emotion.standing && outfitMap[selectedOutfit]?.images?.[Emotion.standing] ? "Regen from Description" : "Regenerate"}</Button>
                             {confirmEmotion == Emotion.standing && outfitMap[selectedOutfit]?.images?.[Emotion.standing] && (
                                 <Button
                                     variant="contained"
@@ -566,7 +566,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
                                             onRegenerate(speaker, selectedOutfit ?? "", Emotion.standing, selectedOutfit ?? "");
                                         }
                                     }}
-                                >Regenerate from Current Image</Button>
+                                >Regen from Image</Button>
                             )}
                         </Box>
                         {/* "Clone From" drop-down for selecting a different outfit to create this outfit from; if this is the base/standing emotion and an outfit exists
