@@ -831,39 +831,18 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
              */
             // First, generate a standing image.
             let standingImageUrl;
-            if (fromOutfitKey && this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] && this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing] != this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral]) {
+            if (fromOutfitKey && this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing]) {
                 // If fromOutfitKey is provided, and it has a distinct standing image, use this initially. This image will have items 1, 2, 4, and 5. Just not 3: appearance.
                 standingImageUrl = this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.standing];
                 // Apply outfit with image2image:
                 standingImageUrl = await this.generateImage({
                         image: standingImageUrl,
-                        prompt: `Denoise.\n\nThey are now wearing this appearance instead: ` +
-                            this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt,
-                        transfer_type: 'edit'
-                    }) || standingImageUrl;
-            } else if (fromOutfitKey) {
-                // If fromOutfitKey is provided, but no distinct standing image found, we'll generate from the neutral image (which could just be a random candid image of a character.
-                // The initial result will only have items 1, 2, and 5. We'll need to apply art style and outfit.
-                standingImageUrl = await this.generateImage(
-                    {
-                        // From outfit has a standing image, use that
-                        image: this.wardrobes[speaker.anonymizedId].outfits[fromOutfitKey].images[Emotion.neutral],
-                        prompt: 'Create a full-body, head-to-toe reference image for this person in a natural, characteristic pose with a neutral expression. They are standing on an empty white floor in a plain white room.',
-                        transfer_type: 'edit',
-                    });
-                standingImageUrl = await this.generateImage({
-                        image: standingImageUrl,
-                        prompt: 'Denoise and apply this art style: ' + this.artStyle + '\n\n',
-                        transfer_type: 'edit'
-                    }) || standingImageUrl;
-                standingImageUrl = await this.generateImage({
-                        image: standingImageUrl,
-                        prompt: `Denoise.\n\nThey are now wearing this appearance instead: ` +
+                        prompt: `This character is now wearing this appearance instead: ` +
                             this.wardrobes[speaker.anonymizedId].outfits[outfitKey].artPrompt,
                         transfer_type: 'edit'
                     }) || standingImageUrl;
             } else {
-                // No fromOutfitKey provided; generate from scratch with text-to-image. This will have items 1, 2, 3, and 4. Just need Qwen to touch it, to achieve that Qwen style.
+                // Generate from scratch with text-to-image. This will have items 1, 2, 3, and 4. Just need Qwen to touch it, to achieve that Qwen style.
                 standingImageUrl = await this.generateImage(
                     {
                             prompt: substitute(this.buildArtPrompt(speaker, outfitKey, Emotion.standing)),
@@ -900,7 +879,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         } else { // Non-neutral: image2image from neutral
             const imageUrl = (await this.generateImage({
                 image: this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral],
-                prompt: `Denoise.\n\nGive this character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,
+                prompt: `Give this character a ${EMOTION_PROMPTS[emotion]} and/or gesture.`,
                 transfer_type: 'edit'
             })) ?? this.wardrobes[speaker.anonymizedId].outfits[outfitKey].images[Emotion.neutral] ?? '';
             if (imageUrl != '') {
