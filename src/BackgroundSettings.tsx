@@ -373,7 +373,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                                     updateStageBackgrounds(updatedBackgrounds);
                                                 }
                                             },
-                                            /*{
+                                            {
                                                 type: 'keywords',
                                                 label: 'Comma-Delimited Trigger Words',
                                                 value: currentBackground.triggerWords || "",
@@ -381,7 +381,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
                                                     const updatedBackgrounds = { ...backgrounds, [selectedBackground]: { ...currentBackground, triggerWords: val } };
                                                     updateStageBackgrounds(updatedBackgrounds);
                                                 }
-                                            },*/
+                                            },
                                             {
                                                 type: 'borderColor',
                                                 label: 'Border Color',

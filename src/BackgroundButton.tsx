@@ -5,6 +5,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LandscapeIcon from '@mui/icons-material/Landscape';
 import AddIcon from '@mui/icons-material/Add';
 import { Background } from "./Background";
+import AutoFixNormalIcon from "@mui/icons-material/AutoFixNormal";
 
 type BackgroundButtonProps = {
     stage: any;
@@ -124,12 +125,58 @@ const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, 
                         style={{overflow: "hidden"}}
                     >
                         <motion.div style={{display: "flex", flexDirection: "column", gap: 6, width: "100%"}}>
+                            {/* Auto option at the top. */}
+                            <ButtonBase
+                                key={`background_option_auto`}
+                                onClick={() => {
+                                    stage.chatState.autoBackground = true;
+                                    stage.updateChatState();
+                                }}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "flex-start",
+                                    gap: 1.5,
+                                    width: "100%",
+                                    padding: "6px 12px",
+                                    borderRadius: 8,
+                                    transition: "background-color 0.2s ease",
+                                    textAlign: "left",
+                                    backgroundColor: stage.chatState.autoBackground ?
+                                        "rgba(255,255,255,0.15)" : "transparent",
+                                    "&:hover": {
+                                        backgroundColor: "rgba(255,255,255,0.08)",
+                                    },
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: "50%",
+                                        background: "#888",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "#fff",
+                                        fontWeight: 700,
+                                        fontSize: 16,
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    <AutoFixNormalIcon fontSize="small" sx={{color: "white"}}/>
+                                </Box>
+                                <Typography color="text.primary" sx={{ fontWeight: 600, textTransform: "capitalize" }}>
+                                    Auto
+                                </Typography>
+                            </ButtonBase>
                             {Object.values(stage.backgrounds).map((background) => {
                                 const bg = background as Background;
                                 return (
                                     <ButtonBase
                                         key={`background_option_${bg.id}`}
                                         onClick={() => {
+                                            stage.chatState.autoBackground = false;
                                             stage.setSelectedBackground(bg.id);
                                         }}
                                         sx={{
@@ -142,7 +189,7 @@ const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, 
                                             borderRadius: 8,
                                             transition: "background-color 0.2s ease",
                                             textAlign: "left",
-                                            backgroundColor: bg.id === stage.chatState.selectedBackground ? 
+                                            backgroundColor: !stage.chatState.autoBackground && bg.id === stage.chatState.selectedBackground ?
                                                 "rgba(255,255,255,0.15)" : "transparent",
                                             "&:hover": {
                                                 backgroundColor: "rgba(255,255,255,0.08)",

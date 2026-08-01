@@ -35,6 +35,7 @@ type ChatStateType = {
     generatedDescriptions:{[key: string]: string};
     speakerVisible:{[key: string]: boolean};
     selectedBackground: string;
+    autoBackground: boolean;
 }
 
 type OutfitType = {
@@ -205,7 +206,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             selectedOutfit: chatState?.selectedOutfit ?? {},
             generatedDescriptions: chatState?.generatedDescriptions ?? {},
             speakerVisible: chatState?.speakerVisible ?? {},
-            selectedBackground: chatState?.selectedBackground ?? ''
+            selectedBackground: chatState?.selectedBackground ?? '',
+            autoBackground: chatState?.autoBackground ?? true
         };
 
         this.generateCharacters = (config?.generateCharacters ?? "True") == "True";
@@ -426,25 +428,8 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
             newEmotion = emotionResult[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.1)?.label ?? newEmotion;
         } catch (except: any) {
             console.warn(`Error classifying expression, error:`, except);
-            newEmotion = this.fallbackClassify(content);
         }
 
-        /*if (this.emotionPipeline != null) {
-            try {
-                const emotionResult = (await this.emotionPipeline.predict("/predict", {
-                    param_0: content,
-                }));
-                console.log(`Emotion result:`);
-                console.log(emotionResult.data[0].confidences);
-                newEmotion = emotionResult.data[0].confidences.find((confidence: {label: string, score: number}) => confidence.label != 'neutral' && confidence.score > 0.1)?.label ?? newEmotion;
-            } catch (except: any) {
-                console.warn(`Error classifying expression, error:`);
-                console.warn(except);
-                newEmotion = this.fallbackClassify(content);
-            }
-        } else {
-            newEmotion = this.fallbackClassify(content);
-        }*/
         console.info(`New emotion for ${speaker.name}: ${newEmotion}`);
         this.messageState.speakerEmotion[speaker.anonymizedId] = newEmotion;
         this.messageState.activeSpeaker = speaker.anonymizedId;
@@ -472,7 +457,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 !this.canEdit.includes(speaker?.anonymizedId || "") || // Outfits belonging to characters this user can't edit
                 (outfit.global && !this.owns.includes(speaker?.anonymizedId || "")); // Global outfits not owned by user are immutable
             if (!outfit.images[newEmotion] && !locked) {
-                this.wrapPromise(
+                void this.wrapPromise(
                     this.generateSpeakerImage(speaker, outfitId, newEmotion as Emotion, ''),
                     `Generating ${newEmotion} for ${speaker.name} (${outfitId}).`);
             }
@@ -484,7 +469,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         if (this.isSpeakerVisible(this.speakers[userMessage.anonymizedId])) {
             await this.updateEmotion(this.speakers[userMessage.anonymizedId], userMessage.content);
         }
-        // await this.backgroundCheck(userMessage.content);
+        await this.backgroundCheck(userMessage.content);
         return {
             stageDirections: null,
             messageState: this.messageState,
@@ -494,25 +479,12 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         };
     }
 
-    fallbackClassify(text: string): string {
-        const lowered = text.toLowerCase();
-        let result = 'neutral';
-        Object.values(Emotion).forEach(emotion => {
-            if (emotion != Emotion.standing && lowered.includes(emotion.toLowerCase())) {
-                result = emotion;
-            }
-        });
-        return result;
-    }
-
     async afterResponse(botMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
 
         if (this.isSpeakerVisible(this.speakers[botMessage.anonymizedId])) {
             await this.updateEmotion(this.speakers[botMessage.anonymizedId], botMessage.content);
         }
-
-        // await this.backgroundCheck(botMessage.content);
-
+        await this.backgroundCheck(botMessage.content);
         return {
             stageDirections: null,
             messageState: this.messageState,
@@ -930,7 +902,16 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     async backgroundCheck(content: string): Promise<void> {
-        // Repurpose this for triggering background swaps to known backgrounds based on keywords
+        const lowerContent = content.toLowerCase();
+
+        const newBackgrounds = Object.keys(this.backgrounds).filter(backgroundId => {
+            const background = this.backgrounds[backgroundId];
+            return background.triggerWords.split(',').map(word => word.trim().toLowerCase()).some(word => word.length > 0 && lowerContent.includes(word));
+        });
+        if (newBackgrounds.length > 0 && this.chatState.autoBackground) {
+            console.log(`Setting auto background to ${newBackgrounds[0]} based on keywords.`);
+            await this.setSelectedBackground(newBackgrounds[0]);
+        }
     }
 
     async generateBackgroundImage(character: Speaker, background: Background, content: string): Promise<void> {
