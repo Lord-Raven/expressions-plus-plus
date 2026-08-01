@@ -78,7 +78,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
     useEffect(() => {
         setBackgrounds( stage.backgrounds ?? {});
         setBackgroundIds(Object.keys(stage.backgrounds ?? {}));
-        setSelectedBackground(stage.chatState.selectedBackground ?? Object.keys(stage.backgrounds ?? {})[0] ?? '');
+        setSelectedBackground(selectedBackground ?? stage.chatState.selectedBackground ?? Object.keys(stage.backgrounds ?? {})[0] ?? '');
         stage.updateBackgroundsStorage();
     }, [open, stage.backgrounds, stage.chatState.selectedBackground]);
 
