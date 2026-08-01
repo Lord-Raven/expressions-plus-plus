@@ -117,6 +117,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
         setBackgrounds(newBackgrounds);
         setBackgroundIds(Object.keys(newBackgrounds));
         // If selected background no longer exists, select the first available one
+        console.log(`Updating stage backgrounds. New backgrounds: ${Object.keys(newBackgrounds).join(", ")}, selected background: ${stage.chatState.selectedBackground}`);
         if (!(stage.chatState.selectedBackground in newBackgrounds)) {
             const firstId = Object.keys(newBackgrounds)[0];
             if (firstId) {
