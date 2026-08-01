@@ -1,4 +1,5 @@
 export enum Emotion {
+    standing = 'standing',
     neutral = 'neutral',
     admiration = 'admiration',
     amusement = 'amusement',
@@ -26,11 +27,11 @@ export enum Emotion {
     relief = 'relief',
     remorse = 'remorse',
     sadness = 'sadness',
-    surprise = 'surprise',
-    standing = 'standing'
+    surprise = 'surprise'
 }
 
 export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
+    standing: Emotion.neutral,
     admiration: Emotion.joy,
     approval: Emotion.amusement,
     caring: Emotion.neutral,
@@ -40,10 +41,10 @@ export const EMOTION_MAPPING: {[emotion in Emotion]?: Emotion} = {
     realization: Emotion.surprise,
     relief: Emotion.gratitude,
     remorse: Emotion.sadness,
-    standing: Emotion.neutral
 }
 
 export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
+    standing: 'calm expression',
     neutral: 'calm expression',
     admiration: 'admiring, appreciative expression',
     amusement: 'subtle smirk, amused expression',
@@ -72,7 +73,6 @@ export const EMOTION_PROMPTS: {[emotion in Emotion]?: string} = {
     remorse: 'regretful, apologetic expression',
     sadness: 'sad, upset expression, teary-eyed',
     surprise: 'surprised expression',
-    standing: 'calm expression',
 }
 
 export type EmotionPack = {[key: string]: string};
