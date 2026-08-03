@@ -111,7 +111,7 @@ config_schema:
   properties:
     generateCharacters:
       title: Generate Character Art
-      description: Generate an expression pack for characters (will expend daily credits); this is basically all the stage currently does, so maybe leave this one on.
+      description: Generate an expression pack for characters (will expend daily credits).
       type: string
       default: "True"
       enum: ["True", "False"]

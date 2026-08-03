@@ -456,7 +456,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
                 !outfit.generated || // Non-generated outfits are immutable
                 !this.canEdit.includes(speaker?.anonymizedId || "") || // Outfits belonging to characters this user can't edit
                 (outfit.global && !this.owns.includes(speaker?.anonymizedId || "")); // Global outfits not owned by user are immutable
-            if (!outfit.images[newEmotion] && !locked) {
+            if (!outfit.images[newEmotion] && !locked && this.generateCharacters) {
                 void this.wrapPromise(
                     this.generateSpeakerImage(speaker, outfitId, newEmotion as Emotion, ''),
                     `Generating ${newEmotion} for ${speaker.name} (${outfitId}).`);
