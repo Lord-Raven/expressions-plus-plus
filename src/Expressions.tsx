@@ -1109,7 +1109,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     }
 
     getSpeakerEmotion(anonymizedId: string): Emotion {
-        return this.messageState.activeSpeaker != anonymizedId ? Emotion.standing : (this.messageState.speakerEmotion[anonymizedId] as Emotion ?? Emotion.neutral);
+        return this.messageState.speakerEmotion[anonymizedId] as Emotion ?? Emotion.neutral;
     }
 
     getSpeakerImage(anonymizedId: string, outfitId: string, emotion: Emotion, defaultUrl: string): string {
