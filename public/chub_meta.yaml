@@ -132,9 +132,15 @@ config_schema:
       type: string
       default: "True"
       enum: ["True", "False"]
+    processAllKeywords:
+      title: Process All Keywords
+      description: All outfit keywords will be processed for every message, not just for the owner's messages.
+      type: string
+      default: "False"
+      enum: [ "True", "False" ]
     alphaMode:
       title: Alpha Mode
-      description: Enable experimental stuff. Maybe don't use this if your username isn't JakeH.
+      description: Enable experimental stuff.
       type: string
       default: "False"
       enum: ["True", "False"]

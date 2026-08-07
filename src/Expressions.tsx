@@ -64,7 +64,8 @@ type ConfigType = {
     generateBackgrounds?: string;
     selected?: {[key: string]: string} | null;
     alphaMode?: string;
-    useBackgroundDepth?: boolean;
+    useBackgroundDepth?: string;
+    processAllKeywords?: string;
 };
 
 type InitStateType = null;
@@ -144,12 +145,10 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
     backupBackgrounds: {[key: string]: Background} = {};
 
     // Not saved:
-    emotionPipeline: any = null;
-    //zeroShotPipeline: any = null;
-    //depthPipeline: any = null;
     generateCharacters: boolean;
     generateBackgrounds: boolean;
     useBackgroundDepth: boolean;
+    processAllKeywords: boolean;
     artStyle: string;
     speakers: {[key: string]: Speaker};
     owns: string[] = []; // List of speakerIds that this client owns (generally themself and their owned characters).
@@ -213,6 +212,7 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         this.generateCharacters = (config?.generateCharacters ?? "True") == "True";
         this.generateBackgrounds = (config?.generateBackgrounds ?? "True") == "True";
         this.useBackgroundDepth = (config?.useBackgroundDepth ?? "True") == "True";
+        this.processAllKeywords = (config?.processAllKeywords ?? "False") == "True";
         this.alphaMode = (config?.alphaMode ?? "False") == "True";
         this.artStyle = config?.artStyle ?? 'Vibrant, visual novel style illustration, clean lines';
     }
@@ -420,6 +420,20 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         }
     }
 
+    async updateOutfit(speaker: Speaker, content: string) {
+        // Auto-swap outfits based on trigger words:
+        const lowerContent = content.toLowerCase();
+        const newOutfitIds = Object.keys(this.wardrobes[speaker.anonymizedId].outfits).filter(outfitId => {
+            const outfit = this.wardrobes[speaker.anonymizedId].outfits[outfitId];
+            //console.log(`Testing outfit keywords for ${outfit.name} (${outfitId}): ${outfit.triggerWords}`);
+            return outfit.triggerWords.split(',').map(word => word.trim().toLowerCase()).some(word => word.length > 0 && lowerContent.includes(word));
+        });
+        if (newOutfitIds.length > 0 && !newOutfitIds.includes(this.messageState.speakerOutfit[speaker.anonymizedId])) {
+            console.log(`Setting auto outfit to ${newOutfitIds[0]} for ${speaker.name} based on keywords.`);
+            this.messageState.speakerOutfit[speaker.anonymizedId] = newOutfitIds[0];
+        }
+    }
+
     async updateEmotion(speaker: Speaker, content: string) {
         let newEmotion = 'neutral';
         try {
@@ -433,19 +447,6 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
         console.info(`New emotion for ${speaker.name}: ${newEmotion}`);
         this.messageState.speakerEmotion[speaker.anonymizedId] = newEmotion;
         this.messageState.activeSpeaker = speaker.anonymizedId;
-
-
-        // Auto-swap outfits based on trigger words:
-        const lowerContent = content.toLowerCase();
-        const newOutfitIds = Object.keys(this.wardrobes[speaker.anonymizedId].outfits).filter(outfitId => {
-            const outfit = this.wardrobes[speaker.anonymizedId].outfits[outfitId];
-            //console.log(`Testing outfit keywords for ${outfit.name} (${outfitId}): ${outfit.triggerWords}`);
-            return outfit.triggerWords.split(',').map(word => word.trim().toLowerCase()).some(word => word.length > 0 && lowerContent.includes(word));
-        });
-        if (newOutfitIds.length > 0 && !newOutfitIds.includes(this.messageState.speakerOutfit[speaker.anonymizedId])) {
-            console.log(`Setting auto outfit to ${newOutfitIds[0]} for ${speaker.name} based on keywords.`);
-            this.messageState.speakerOutfit[speaker.anonymizedId] = newOutfitIds[0];
-        }
 
         // Potentially generate new image for new emotion; outfit will be the selected outfit, as the current speaker outfit (as an empty selected outfit ('') means auto outfit).
         const outfitId = this.chatState.selectedOutfit[speaker.anonymizedId] || this.messageState.speakerOutfit[speaker.anonymizedId];
@@ -466,6 +467,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async beforePrompt(userMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
 
+        for (let speakerId of Object.keys(this.speakers)) {
+            if ((speakerId === userMessage.anonymizedId || this.processAllKeywords) && this.isSpeakerVisible(this.speakers[speakerId])) {
+                await this.updateOutfit(this.speakers[speakerId], userMessage.content);
+            }
+        }
         if (this.isSpeakerVisible(this.speakers[userMessage.anonymizedId])) {
             await this.updateEmotion(this.speakers[userMessage.anonymizedId], userMessage.content);
         }
@@ -481,6 +487,11 @@ export class Expressions extends StageBase<InitStateType, ChatStateType, Message
 
     async afterResponse(botMessage: Message): Promise<Partial<StageResponse<ChatStateType, MessageStateType>>> {
 
+        for (let speakerId of Object.keys(this.speakers)) {
+            if ((speakerId === botMessage.anonymizedId || this.processAllKeywords) && this.isSpeakerVisible(this.speakers[speakerId])) {
+                await this.updateOutfit(this.speakers[speakerId], botMessage.content);
+            }
+        }
         if (this.isSpeakerVisible(this.speakers[botMessage.anonymizedId])) {
             await this.updateEmotion(this.speakers[botMessage.anonymizedId], botMessage.content);
         }
