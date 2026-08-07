@@ -133,7 +133,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 top: 0,
                                 width: '100%',
                                 height: '100%',
-                                filter: 'url(#${tintFilterId}) blur(2.5px)',
+                                filter: `url(#${tintFilterId}) blur(2.5px)`,
                                 zIndex: 4,
                                 transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                                 ...(isTalking && {
@@ -159,7 +159,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 top: 0,
                                 width: '100%',
                                 height: '100%',
-                                filter: 'url(#${tintFilterId}) blur(2.5px)',
+                                filter: `url(#${tintFilterId}) blur(2.5px)`,
                                 zIndex: 4,
                                 transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                                 ...(isTalking && {
@@ -185,7 +185,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 top: 0,
                                 width: '100%',
                                 height: '100%',
-                                filter: 'url(#${tintFilterId})',
+                                filter: `url(#${tintFilterId})`,
                                 opacity: 0.75,
                                 zIndex: 5,
                                 transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
