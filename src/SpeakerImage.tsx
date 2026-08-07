@@ -117,6 +117,9 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                 initial='absent'
                 exit='absent'
                 animate={isTalking ? 'talking' : 'idle'}
+                transformTemplate={(_, generatedTransform) => {
+                    return `translate(calc(${modX}vw - 50%), ${modY}vh)`;
+                }}
                 style={{position: 'absolute', width: 'auto', aspectRatio, transformOrigin: 'bottom center', overflow: 'visible'}}>
                 {/* Blurred background layer */}
                 <AnimatePresence>
@@ -135,7 +138,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 height: '100%',
                                 filter: `url(#${tintFilterId}) blur(2.5px)`,
                                 zIndex: 4,
-                                transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                                 WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
                                 maskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)'
                             }}
@@ -159,7 +161,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 height: '100%',
                                 filter: `url(#${tintFilterId}) blur(2.5px)`,
                                 zIndex: 4,
-                                transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                                 WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
                                 maskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)'
                             }}
@@ -184,7 +185,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 filter: `url(#${tintFilterId})`,
                                 opacity: 0.75,
                                 zIndex: 5,
-                                transform: `translate(calc(${modX}vw - 50%), ${modY}vh)`,
                                 WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
                                 maskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)'
                             }}
