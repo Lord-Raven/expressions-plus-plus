@@ -40,19 +40,21 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
 
     // Process image with color multiplication
     useEffect(() => {
-        setProcessedImageUrl(imageUrl);
         if (!imageUrl) {
+            setProcessedImageUrl('');
             return;
         }
 
         const img = new Image();
-        img.crossOrigin = 'anonymous';
         img.onload = () => {
                 // Set aspect ratio based on image dimensions
                 if (img.naturalWidth && img.naturalHeight) {
                     setAspectRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
                 }
+                setProcessedImageUrl(imageUrl);
         };
+        img.src = imageUrl;
+
     }, [imageUrl, highlightColor]);
 
     // Track previous processed image for fade transition
@@ -118,10 +120,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                 exit='absent'
                 animate={isTalking ? 'talking' : 'idle'}
                 transformTemplate={(_, generatedTransform) => {
-                    const baseTransform = generatedTransform?.trim() || '';
-                    return baseTransform
-                        ? `${baseTransform} translate(calc(${modX}vw - 50%), ${modY}vh)`
-                        : `translate(calc(${modX}vw - 50%), ${modY}vh)`;
+                    return `translate(calc(${modX}vw - 50%), ${modY}vh)`;
                 }}
                 style={{position: 'absolute', width: 'auto', aspectRatio, transformOrigin: 'bottom center', overflow: 'visible'}}>
                 {/* Blurred background layer */}
@@ -139,7 +138,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 top: 0,
                                 width: '100%',
                                 height: '100%',
-                                filter: 'blur(2.5px)',
+                                filter: 'url(#${tintFilterId}) blur(2.5px)',
                                 zIndex: 4,
                                 ...(isTalking && {
                                     WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
@@ -164,7 +163,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 top: 0,
                                 width: '100%',
                                 height: '100%',
-                                filter: 'blur(2.5px)',
+                                filter: 'url(#${tintFilterId}) blur(2.5px)',
                                 zIndex: 4,
                                 ...(isTalking && {
                                     WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
@@ -189,6 +188,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 top: 0,
                                 width: '100%',
                                 height: '100%',
+                                filter: 'url(#${tintFilterId})',
                                 opacity: 0.75,
                                 zIndex: 5,
                                 ...(isTalking && {
