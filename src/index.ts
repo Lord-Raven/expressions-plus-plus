@@ -1,1 +1,1 @@
-export {Expressions as Stage} from "./Stage.tsx";
+export {Stage} from "./Stage.tsx";
