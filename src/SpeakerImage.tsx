@@ -76,7 +76,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         absent: {
             opacity: 0,
             x: `150vw`,
-            bottom: baseY,
+            bottom: `${baseY}vh`,
             height: `${IDLE_HEIGHT - yPosition * 2}vh`,
             filter: 'brightness(0.8)',
             zIndex: zIndex,
@@ -84,8 +84,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         },
         talking: {
             opacity: 1,
-            x: baseX,
-            bottom: baseY,
+            x: `${baseX}vw`,
+            bottom: `${baseY}vh`,
             height: `${SPEAKING_HEIGHT}vh`,
             filter: 'brightness(1)',
             zIndex: 100,
@@ -93,8 +93,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         },
         idle: {
             opacity: 1,
-            x: baseX,
-            bottom: baseY,
+            x: `${baseX}vw`,
+            bottom: `${baseY}vh`,
             height: `${IDLE_HEIGHT - yPosition * 2}vh`,
             filter: 'brightness(0.8)',
             zIndex: zIndex,
