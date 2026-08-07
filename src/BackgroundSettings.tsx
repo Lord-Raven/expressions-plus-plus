@@ -12,6 +12,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { Background } from "./Background";
 import EditModeFields, { EditModeFieldConfig } from "./EditModeFields";
+import {sortByName} from "./Expressions.tsx";
 
 export interface BackgroundSettingsHandle {
     setOpen: (open: boolean) => void;
@@ -77,7 +78,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
 
     useEffect(() => {
         setBackgrounds( stage.backgrounds ?? {});
-        setBackgroundIds(Object.keys(stage.backgrounds ?? {}));
+        setBackgroundIds(Object.keys(stage.backgrounds ?? {}).map(backgroundId => {return {id: backgroundId, name: stage.backgrounds[backgroundId].name}}).sort(sortByName).map(bg => bg.id));
         if (!selectedBackground) {
             setSelectedBackground(stage.chatState.selectedBackground ?? Object.keys(stage.backgrounds ?? {})[0] ?? '');
         }
@@ -117,7 +118,7 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({register, stage,
     const updateStageBackgrounds = (newBackgrounds: {[key: string]: Background}) => {
         stage.backgrounds = newBackgrounds;
         setBackgrounds(newBackgrounds);
-        setBackgroundIds(Object.keys(newBackgrounds));
+        setBackgroundIds(Object.keys(newBackgrounds).map(backgroundId => {return {id: backgroundId, name: newBackgrounds[backgroundId].name}}).sort(sortByName).map(bg => bg.id));
         // If selected background no longer exists, select the first available one
         console.log(`Updating stage backgrounds. New backgrounds: ${Object.keys(newBackgrounds).join(", ")}, selected background: ${stage.chatState.selectedBackground}`);
         if (!newBackgrounds[stage.chatState.selectedBackground]) {

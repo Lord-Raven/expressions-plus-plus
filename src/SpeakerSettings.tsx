@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from "react";
-import {substitute} from "./Expressions";
+import {sortByName, substitute} from "./Expressions";
 import { Speaker } from "@chub-ai/stages-ts";
 import {motion} from "framer-motion";
 import {
@@ -118,7 +118,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
             console.log(stage.wardrobes[speaker.anonymizedId].outfits);
             setSelectedOutfit((stage.chatState.selectedOutfit[speaker.anonymizedId] || stage.messageState.speakerOutfit[speaker.anonymizedId] || Object.keys(stage.wardrobes[speaker.anonymizedId].outfits)[0]) || "");
             setOutfitMap((stage.wardrobes[speaker.anonymizedId].outfits) ?? {});
-            setOutfitKeys(Object.keys(stage.wardrobes[speaker.anonymizedId].outfits) ?? []);
+            setOutfitKeys(Object.keys(stage.wardrobes[speaker.anonymizedId].outfits).map(outfitId => {return {id: outfitId, name: stage.wardrobes[speaker.anonymizedId].outfits[outfitId].name}}).sort(sortByName).map(outfit => outfit.id) ?? []);
         }
     }, [speaker]);
 
@@ -131,7 +131,7 @@ const SpeakerSettings: React.FC<SpeakerSettingsProps> = ({register, stage, borde
         if (speaker) {
             stage.wardrobes[speaker.anonymizedId].outfits = newMap;
             setOutfitMap(newMap);
-            setOutfitKeys(Object.keys(newMap));
+            setOutfitKeys(Object.keys(newMap).map(outfitId => {return {id: outfitId, name: newMap[outfitId].name}}).sort(sortByName).map(outfit => outfit.id) ?? []);
             if (stage.chatState.selectedOutfit[speaker.anonymizedId] && !(stage.chatState.selectedOutfit[speaker.anonymizedId] in stage.wardrobes[speaker.anonymizedId].outfits)) {
                 stage.chatState.selectedOutfit[speaker.anonymizedId] = Object.keys(stage.wardrobes[speaker.anonymizedId].outfits).length > 0 ? 
                         Object.keys(stage.wardrobes[speaker.anonymizedId].outfits)[0] : 

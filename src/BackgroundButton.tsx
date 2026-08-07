@@ -6,9 +6,10 @@ import LandscapeIcon from '@mui/icons-material/Landscape';
 import AddIcon from '@mui/icons-material/Add';
 import { Background } from "./Background";
 import AutoFixNormalIcon from "@mui/icons-material/AutoFixNormal";
+import {sortByName, Stage} from "./Expressions";
 
 type BackgroundButtonProps = {
-    stage: any;
+    stage: Stage;
     borderColor: string;
     onOpenSettings: (background: Background) => void;
 };
@@ -20,7 +21,7 @@ const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, 
     const handleCreateNewBackground = () => {
         const newBackground = stage.createNewBackground();
         stage.backgrounds[newBackground.id] = newBackground;
-        stage.wrapPromise(stage.generateBackgroundImage(newBackground, Object.values(stage.speakers)[0], ''), `Generating background for ${newBackground.name}.`).then(() => {stage.setSelectedBackground(newBackground.id)});
+        stage.wrapPromise(stage.generateBackgroundImage(Object.values(stage.speakers)[0], newBackground, ''), `Generating background for ${newBackground.name}.`).then(() => {void stage.setSelectedBackground(newBackground.id)});
     };
 
     const containerVariants = {
@@ -130,7 +131,7 @@ const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, 
                                 key={`background_option_auto`}
                                 onClick={() => {
                                     stage.chatState.autoBackground = true;
-                                    stage.updateChatState();
+                                    void stage.updateChatState();
                                 }}
                                 sx={{
                                     display: "flex",
@@ -170,14 +171,14 @@ const BackgroundButton: React.FC<BackgroundButtonProps> = ({stage, borderColor, 
                                     Auto
                                 </Typography>
                             </ButtonBase>
-                            {Object.values(stage.backgrounds).map((background) => {
+                            {Object.values(stage.backgrounds).sort(sortByName).map((background) => {
                                 const bg = background as Background;
                                 return (
                                     <ButtonBase
                                         key={`background_option_${bg.id}`}
                                         onClick={() => {
                                             stage.chatState.autoBackground = false;
-                                            stage.setSelectedBackground(bg.id);
+                                            void stage.setSelectedBackground(bg.id);
                                         }}
                                         sx={{
                                             display: "flex",

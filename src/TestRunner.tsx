@@ -1,4 +1,4 @@
-import {Expressions} from "./Expressions";
+import {Stage} from "./Expressions";
 import {useEffect, useState} from "react";
 import {StageBase, InitialData} from "@chub-ai/stages-ts";
 import InitData from './assets/test-init.json';
@@ -11,7 +11,7 @@ export const TestExtensionRunner = <ExtensionType extends StageBase<InitStateTyp
     InitStateType, ChatStateType, MessageStateType, ConfigType>({ factory }: TestExtensionRunnerProps<ExtensionType, InitStateType, ChatStateType, MessageStateType, ConfigType>) => {
 
     // @ts-ignore the linter doesn't like the idea of reading the imaginary Emotion type arbitrarily from strings
-    const [extension, _setExtension] = useState(new Expressions(InitData));
+    const [extension, _setExtension] = useState(new Stage(InitData));
 
     // This is what forces the node to re-render.
     const [node, setNode] = useState(new Date());

@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {DEFAULT_OUTFIT_NAME} from "./Expressions";
+import {DEFAULT_OUTFIT_NAME, sortByName} from "./Expressions";
 import { Speaker } from "@chub-ai/stages-ts";
 import {AnimatePresence, motion} from "framer-motion";
 import {Typography, IconButton, ButtonBase, Box} from "@mui/material";
@@ -10,11 +10,12 @@ import CheckroomIcon from '@mui/icons-material/Checkroom';
 import silhouetteUrl from './assets/silhouette.png'
 import { Emotion } from "./Emotion";
 import AutoFixNormalIcon from "@mui/icons-material/AutoFixNormal";
+import { Stage } from "./Expressions";
 
 
 type SpeakerButtonProps = {
     speaker: Speaker;
-    stage: any;
+    stage: Stage;
     borderColor: string;
     onOpenSettings: (speaker: Speaker) => void;
 };
@@ -43,7 +44,7 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
         const id = speaker.anonymizedId;
         const prev = stage.isSpeakerVisible(speaker);
         stage.chatState.speakerVisible[id] = !prev;
-        stage.updateChatState();
+        void stage.updateChatState();
     };
 
     const containerVariants = {
@@ -143,7 +144,7 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                                 key={`outfit_option_auto`}
                                 onClick={() => {
                                     stage.chatState.selectedOutfit[speaker.anonymizedId] = '';
-                                    stage.updateChatState();
+                                    void stage.updateChatState();
                                 }}
                                 sx={{
                                     display: "flex",
@@ -182,12 +183,12 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                                     Auto
                                 </Typography>
                             </ButtonBase>
-                            {(Object.keys(stage.wardrobes[speaker.anonymizedId].outfits).map((outfit) => (
+                            {(Object.keys(stage.wardrobes[speaker.anonymizedId].outfits).map((outfitId) => {return {id: outfitId, name: stage.wardrobes[speaker.anonymizedId].outfits[outfitId].name}}).sort(sortByName).map((outfit) => (
                                 <ButtonBase
-                                    key={`outfit_option_${outfit}`}
+                                    key={`outfit_option_${outfit.id}`}
                                     onClick={() => {
-                                        stage.chatState.selectedOutfit[speaker.anonymizedId] = outfit;
-                                        stage.updateChatState();
+                                        stage.chatState.selectedOutfit[speaker.anonymizedId] = outfit.id;
+                                        void stage.updateChatState();
                                     }}
                                     sx={{
                                         display: "flex",
@@ -199,7 +200,7 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                                         borderRadius: 8,
                                         transition: "background-color 0.2s ease",
                                         textAlign: "left",
-                                        backgroundColor: stage.chatState.selectedOutfit[speaker.anonymizedId] === outfit ? "rgba(255,255,255,0.08)" : undefined,
+                                        backgroundColor: stage.chatState.selectedOutfit[speaker.anonymizedId] === outfit.id ? "rgba(255,255,255,0.08)" : undefined,
                                         "&:hover": {
                                             backgroundColor: "rgba(255,255,255,0.08)",
                                         },
@@ -210,14 +211,14 @@ const SpeakerButton: React.FC<SpeakerButtonProps> = ({speaker, stage, borderColo
                                             width: 32,
                                             height: 32,
                                             borderRadius: "50%",
-                                            backgroundImage: `url(${stage.getSpeakerImage(speaker.anonymizedId, outfit, Emotion.neutral, silhouetteUrl)})`,
+                                            backgroundImage: `url(${stage.getSpeakerImage(speaker.anonymizedId, outfit.id, Emotion.neutral, silhouetteUrl)})`,
                                             backgroundSize: "200% 356%",
                                             backgroundPosition: "center top",
                                             flexShrink: 0,
                                         }}
                                     />
                                     <Typography color="text.primary" sx={{ fontWeight: 600, textTransform: "capitalize" }}>
-                                        {stage.wardrobes[speaker.anonymizedId].outfits[outfit].name}
+                                        {outfit.name}
                                     </Typography>
                                 </ButtonBase>
                             )))}

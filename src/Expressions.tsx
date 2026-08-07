@@ -125,7 +125,12 @@ export function substitute(input: string) {
     return input;
 }
 
-export class Expressions extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
+
+export const sortByName = <T extends { name?: string }>(a: String | T, b: String | T) =>
+    (a instanceof String ? a : a.name ?? '').trim().localeCompare((b instanceof String ? b : b.name ?? '').trim(), undefined, { sensitivity: 'base' });
+
+
+export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
 
     // Chat state:
     chatState: ChatStateType;
