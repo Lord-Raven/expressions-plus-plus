@@ -118,8 +118,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                 exit='absent'
                 animate={isTalking ? 'talking' : 'idle'}
                 transformTemplate={(_, generatedTransform) => {
-                    return `translate(calc(${modX}vw - 50%), ${modY}vh)`;
+                    const baseTransform = generatedTransform?.trim() || '';
+                    return `${baseTransform} translateX(calc(${modX}vw - 50%)) translateY(${modY}vh)`;
                 }}
+
                 style={{position: 'absolute', width: 'auto', aspectRatio, transformOrigin: 'bottom center', overflow: 'visible'}}>
                 {/* Blurred background layer */}
                 <AnimatePresence>
