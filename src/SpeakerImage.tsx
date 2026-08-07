@@ -140,7 +140,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 top: 0,
                                 width: '100%',
                                 height: '100%',
-                                filter: 'url(#${tintFilterId}) blur(2.5px)',
+                                filter: 'blur(2.5px)',
                                 zIndex: 4,
                                 ...(isTalking && {
                                     WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
@@ -165,7 +165,7 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 top: 0,
                                 width: '100%',
                                 height: '100%',
-                                filter: 'url(#${tintFilterId}) blur(2.5px)',
+                                filter: 'blur(2.5px)',
                                 zIndex: 4,
                                 ...(isTalking && {
                                     WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
@@ -191,7 +191,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                                 width: '100%',
                                 height: '100%',
                                 opacity: 0.75,
-                                filter: 'url(#${tintFilterId})',
                                 zIndex: 5,
                                 ...(isTalking && {
                                     WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
