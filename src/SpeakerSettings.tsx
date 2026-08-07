@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from "react";
-import {sortByName, substitute} from "./Expressions";
+import {sortByName, substitute} from "./Stage.tsx";
 import { Speaker } from "@chub-ai/stages-ts";
 import {motion} from "framer-motion";
 import {

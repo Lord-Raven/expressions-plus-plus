@@ -6,7 +6,7 @@ import LandscapeIcon from '@mui/icons-material/Landscape';
 import AddIcon from '@mui/icons-material/Add';
 import { Background } from "./Background";
 import AutoFixNormalIcon from "@mui/icons-material/AutoFixNormal";
-import {sortByName, Stage} from "./Expressions";
+import {sortByName, Stage} from "./Stage.tsx";
 
 type BackgroundButtonProps = {
     stage: Stage;

@@ -1,5 +1,5 @@
 import {ReactRunner} from "@chub-ai/stages-ts";
-import {Stage} from "./Expressions";
+import {Stage} from "./Stage.tsx";
 import {TestExtensionRunner} from "./TestRunner";
 
 function App() {

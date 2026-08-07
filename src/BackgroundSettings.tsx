@@ -12,7 +12,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { Background } from "./Background";
 import EditModeFields, { EditModeFieldConfig } from "./EditModeFields";
-import {sortByName} from "./Expressions.tsx";
+import {sortByName} from "./Stage.tsx";
 
 export interface BackgroundSettingsHandle {
     setOpen: (open: boolean) => void;

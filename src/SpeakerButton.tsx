@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {DEFAULT_OUTFIT_NAME, sortByName} from "./Expressions";
+import {DEFAULT_OUTFIT_NAME, sortByName} from "./Stage.tsx";
 import { Speaker } from "@chub-ai/stages-ts";
 import {AnimatePresence, motion} from "framer-motion";
 import {Typography, IconButton, ButtonBase, Box} from "@mui/material";
@@ -10,7 +10,7 @@ import CheckroomIcon from '@mui/icons-material/Checkroom';
 import silhouetteUrl from './assets/silhouette.png'
 import { Emotion } from "./Emotion";
 import AutoFixNormalIcon from "@mui/icons-material/AutoFixNormal";
-import { Stage } from "./Expressions";
+import { Stage } from "./Stage.tsx";
 
 
 type SpeakerButtonProps = {

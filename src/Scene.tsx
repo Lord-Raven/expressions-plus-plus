@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FC, useState, useEffect, useMemo, useRef } from "react";
-import { Expressions } from "./Expressions";
+import { Stage } from "./Stage.tsx";
 import SpeakerImage from "./SpeakerImage";
 import DepthPlane from "./DepthPlane";
 import { Canvas } from "@react-three/fiber";
@@ -9,7 +9,7 @@ import { DEFAULT_BORDER_COLOR, DEFAULT_HIGHLIGHT_COLOR } from "./Background";
 interface SceneProps {
     imageUrl: string;
     depthUrl: string;
-    stage: Expressions;
+    stage: Stage;
 }
 
 const FRAME_START_LEFT = "100vw";

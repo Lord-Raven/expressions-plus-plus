@@ -1,4 +1,4 @@
-import {Stage} from "./Expressions";
+import {Stage} from "./Stage.tsx";
 import {useEffect, useState} from "react";
 import {StageBase, InitialData} from "@chub-ai/stages-ts";
 import InitData from './assets/test-init.json';
