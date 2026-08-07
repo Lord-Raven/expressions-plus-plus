@@ -121,10 +121,10 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                 transformTemplate={(_, generatedTransform) => {
                     const baseTransform = generatedTransform?.trim() || '';
                     return baseTransform
-                        ? `${baseTransform} translateX(calc(${modX}vw - 50%) translateY(${modY}vh)`
-                        : `translateX(calc(${modX}vw - 50%) translateY(${modY}vh)`;
+                        ? `${baseTransform} translate(calc(${modX}vw - 50%), ${modY}vh)`
+                        : `translate(calc(${modX}vw - 50%), ${modY}vh)`;
                 }}
-                style={{position: 'absolute', width: 'auto', aspectRatio, overflow: 'visible'}}>
+                style={{position: 'absolute', width: 'auto', aspectRatio, transformOrigin: 'bottom center', overflow: 'visible'}}>
                 {/* Blurred background layer */}
                 <AnimatePresence>
                     {prevImageUrl && prevImageUrl !== processedImageUrl && (
