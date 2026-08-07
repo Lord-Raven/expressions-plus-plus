@@ -40,8 +40,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
 
     // Process image with color multiplication
     useEffect(() => {
+        setProcessedImageUrl(imageUrl);
         if (!imageUrl) {
-            setProcessedImageUrl(imageUrl);
             return;
         }
 
@@ -53,7 +53,6 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                     setAspectRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
                 }
         };
-        img.src = imageUrl;
     }, [imageUrl, highlightColor]);
 
     // Track previous processed image for fade transition
