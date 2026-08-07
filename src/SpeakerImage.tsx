@@ -69,14 +69,12 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
     const depth = (50 - baseY) / 50;
     const modX = ((panX * depth * 1.8) * 100);
     const modY = ((panY * depth * 1.8) * 100);
-    const finalX = `${baseX + modX}vw`;
-    const finalY = `${baseY + modY}vh`;
 
     const variants: Variants = {
         absent: {
             opacity: 0,
             x: `150vw`,
-            bottom: finalY,
+            bottom: baseY,
             height: `${IDLE_HEIGHT - yPosition * 2}vh`,
             filter: 'brightness(0.8)',
             zIndex: zIndex,
@@ -84,8 +82,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         },
         talking: {
             opacity: 1,
-            x: finalX,
-            bottom: finalY,
+            x: baseX,
+            bottom: baseY,
             height: `${SPEAKING_HEIGHT}vh`,
             filter: 'brightness(1)',
             zIndex: 100,
@@ -93,8 +91,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
         },
         idle: {
             opacity: 1,
-            x: finalX,
-            bottom: finalY,
+            x: baseX,
+            bottom: baseY,
             height: `${IDLE_HEIGHT - yPosition * 2}vh`,
             filter: 'brightness(0.8)',
             zIndex: zIndex,
@@ -122,8 +120,8 @@ const SpeakerImage: FC<SpeakerImageProps> = ({
                 transformTemplate={(_, generatedTransform) => {
                     const baseTransform = generatedTransform?.trim() || '';
                     return baseTransform
-                        ? `${baseTransform} translateX(50%)`
-                        : `translate(50%)`;
+                        ? `${baseTransform} translate(calc(${modX}vw - 50%), ${modY}vh)`
+                        : `translate(calc(${modX}vw - 50%), ${modY}vh)`;
                 }}
                 style={{position: 'absolute', width: 'auto', aspectRatio, transformOrigin: 'bottom center', overflow: 'visible'}}>
                 {/* Blurred background layer */}
